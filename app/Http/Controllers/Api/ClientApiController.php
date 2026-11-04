@@ -50,6 +50,10 @@ class ClientApiController extends Controller
                 return $this->checkTicket($request);
             case 'pay_ticket':
                 return $this->payTicket($request);
+            case 'owner_dashboard':
+                return $this->ownerDashboard($request);
+            case 'owner_reports':
+                return $this->ownerReports($request);
             case 'status':
             default:
                 return $this->status($request);
@@ -919,5 +923,273 @@ class ClientApiController extends Controller
                 'receipt_url' => route('receipt.show', $tx->id) . '?type=receipt'
             ]
         ]);
+    }
+
+    /**
+     * 8. OWNER DASHBOARD API (Statistik & Metrik Real-Time untuk Akun Owner di Mobile)
+     */
+    public function ownerDashboard(Request $request): JsonResponse
+    {
+        if ($request->isMethod('OPTIONS')) {
+            return response()->json(['status' => 'ok'], 200);
+        }
+
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now();
+
+        // Finansial
+        $totalRevenue = (int) ParkingTransaction::where('status', 'COMPLETED')->sum('total_fee');
+        $todayRevenue = (int) ParkingTransaction::where('status', 'COMPLETED')
+            ->where(function ($q) use ($today) {
+                $q->whereDate('tap_out_time', $today)
+                  ->orWhere(function ($sub) use ($today) {
+                      $sub->whereNull('tap_out_time')->whereDate('tap_in_time', $today);
+                  });
+            })
+            ->sum('total_fee');
+
+        $totalTransactions = ParkingTransaction::count();
+        $completedTransactions = ParkingTransaction::where('status', 'COMPLETED')->count();
+        $todayTransactions = ParkingTransaction::whereDate('tap_in_time', $today)->count();
+
+        // Utilisasi Slot & Lantai
+        $parkedCount = ParkingTransaction::where('status', 'PARKED')->count();
+        $floor1Parked = ParkingTransaction::where('status', 'PARKED')->where('parking_floor', 1)->count();
+        $floor2Parked = ParkingTransaction::where('status', 'PARKED')->where('parking_floor', 2)->count();
+        $floor1Available = max(0, self::CAPACITY_PER_FLOOR - $floor1Parked);
+        $floor2Available = max(0, self::CAPACITY_PER_FLOOR - $floor2Parked);
+        $availableSlots = max(0, self::TOTAL_CAPACITY - $parkedCount);
+        $occupancyPercent = round(($parkedCount / self::TOTAL_CAPACITY) * 100);
+
+        // Rata-rata durasi & tarif transaksi selesai
+        $avgMinutes = (int) round(ParkingTransaction::where('status', 'COMPLETED')->avg('duration_minutes') ?? 0);
+        $avgFee = (int) round(ParkingTransaction::where('status', 'COMPLETED')->avg('total_fee') ?? 0);
+
+        // 10 Transaksi Terakhir untuk Widget Recent Activity di Mobile
+        $recentTransactions = ParkingTransaction::with(['card', 'user', 'deviceIn', 'deviceOut'])
+            ->orderBy('id', 'desc')
+            ->limit(15)
+            ->get()
+            ->map(function ($t) {
+                $isTicket = !empty($t->ticket_code);
+                $userName = $isTicket ? 'Pengendara Umum' : ($t->user->name ?? 'Member');
+                $codeOrUid = $isTicket ? $t->ticket_code : ($t->card->license_plate ?? ($t->card->uid ?? '-'));
+                return [
+                    'id' => $t->id,
+                    'ticket_code' => $t->ticket_code,
+                    'is_ticket' => $isTicket,
+                    'access_type' => $isTicket ? 'KARCIS' : 'RFID',
+                    'parking_floor' => $t->parking_floor ?? 1,
+                    'parking_floor_label' => ($t->parking_floor == 2) ? 'Lantai 2 (LT 2)' : 'Lantai 1 (LT 1)',
+                    'name' => $userName,
+                    'user_name' => $userName,
+                    'code' => $codeOrUid,
+                    'license_plate' => $t->card->license_plate ?? ($isTicket ? 'Karcis' : '-'),
+                    'uid' => $t->card->uid ?? ($isTicket ? $t->ticket_code : '-'),
+                    'tap_in_time' => $t->tap_in_time ? Carbon::parse($t->tap_in_time)->toDateTimeString() : null,
+                    'tap_out_time' => $t->tap_out_time ? Carbon::parse($t->tap_out_time)->toDateTimeString() : null,
+                    'tap_in_formatted' => $t->tap_in_time ? Carbon::parse($t->tap_in_time)->format('d/m/Y H:i') : '-',
+                    'tap_out_formatted' => $t->tap_out_time ? Carbon::parse($t->tap_out_time)->format('d/m/Y H:i') : '-',
+                    'duration_minutes' => (int) $t->duration_minutes,
+                    'duration_formatted' => $t->duration_minutes ? $t->duration_minutes . ' menit' : '-',
+                    'total_fee' => (int) $t->total_fee,
+                    'total_fee_formatted' => 'Rp ' . number_format($t->total_fee ?? 0, 0, ',', '.'),
+                    'status' => $t->status,
+                    'payment_method' => $t->payment_method ?? ($isTicket ? 'cash' : 'card'),
+                ];
+            });
+
+        $payload = [
+            'status' => 'success',
+            'message' => 'Owner dashboard data fetched successfully',
+            'server_time' => $now->toDateTimeString(),
+            'total_revenue' => $totalRevenue,
+            'total_revenue_formatted' => 'Rp ' . number_format($totalRevenue, 0, ',', '.'),
+            'today_revenue' => $todayRevenue,
+            'today_revenue_formatted' => 'Rp ' . number_format($todayRevenue, 0, ',', '.'),
+            'total_transactions' => $totalTransactions,
+            'today_transactions' => $todayTransactions,
+            'completed_transactions' => $completedTransactions,
+            'completed_count' => $completedTransactions,
+            'active_parked' => $parkedCount,
+            'parked_count' => $parkedCount,
+            'parked_lt1' => $floor1Parked,
+            'parked_lt2' => $floor2Parked,
+            'available_slots' => $availableSlots,
+            'capacity' => self::TOTAL_CAPACITY,
+            'total_capacity' => self::TOTAL_CAPACITY,
+            'occupancy_percentage' => $occupancyPercent,
+            'occupancy_rate_percent' => $occupancyPercent,
+            'avg_duration_minutes' => $avgMinutes,
+            'avg_fee' => $avgFee,
+            'rate_per_hour' => self::RATE_PER_HOUR,
+            'floors' => [
+                'lt1' => [
+                    'floor_number' => 1,
+                    'floor_code' => 'LT 1',
+                    'capacity' => self::CAPACITY_PER_FLOOR,
+                    'parked' => $floor1Parked,
+                    'available' => $floor1Available,
+                    'is_full' => $floor1Available <= 0,
+                ],
+                'lt2' => [
+                    'floor_number' => 2,
+                    'floor_code' => 'LT 2',
+                    'capacity' => self::CAPACITY_PER_FLOOR,
+                    'parked' => $floor2Parked,
+                    'available' => $floor2Available,
+                    'is_full' => $floor2Available <= 0,
+                ],
+            ],
+            'recent_transactions' => $recentTransactions,
+            'transactions' => $recentTransactions,
+        ];
+
+        // Duplikasi ke 'data' untuk kompatibilitas Flutter model
+        $payload['data'] = [
+            'total_revenue' => $totalRevenue,
+            'today_revenue' => $todayRevenue,
+            'total_transactions' => $totalTransactions,
+            'today_transactions' => $todayTransactions,
+            'completed_transactions' => $completedTransactions,
+            'parked_count' => $parkedCount,
+            'available_slots' => $availableSlots,
+            'capacity' => self::TOTAL_CAPACITY,
+            'occupancy_rate_percent' => $occupancyPercent,
+            'recent_transactions' => $recentTransactions,
+            'transactions' => $recentTransactions,
+        ];
+
+        return response()->json($payload);
+    }
+
+    /**
+     * 9. OWNER REPORTS API (Daftar Riwayat Laporan Transaksi untuk Akun Owner di Mobile)
+     */
+    public function ownerReports(Request $request): JsonResponse
+    {
+        if ($request->isMethod('OPTIONS')) {
+            return response()->json(['status' => 'ok'], 200);
+        }
+
+        $preset = $request->input('preset', $request->query('preset', 'all'));
+        $search = trim($request->input('search', $request->query('search', '')));
+        $startDate = $request->input('start_date', $request->query('start_date', ''));
+        $endDate = $request->input('end_date', $request->query('end_date', ''));
+        $statusFilter = $request->input('status', $request->query('status', 'all'));
+        $accessType = $request->input('access_type', $request->query('access_type', 'all'));
+        $floorFilter = $request->input('floor', $request->query('floor', 'all'));
+        $limit = (int) $request->input('limit', $request->query('limit', 100));
+        if ($limit <= 0 || $limit > 500) {
+            $limit = 100;
+        }
+
+        if ($preset === 'today') {
+            $startDate = Carbon::today()->toDateString();
+            $endDate = Carbon::today()->toDateString();
+        } elseif ($preset === 'yesterday') {
+            $startDate = Carbon::yesterday()->toDateString();
+            $endDate = Carbon::yesterday()->toDateString();
+        } elseif ($preset === 'week') {
+            $startDate = Carbon::now()->subDays(6)->toDateString();
+            $endDate = Carbon::today()->toDateString();
+        } elseif ($preset === 'month') {
+            $startDate = Carbon::now()->startOfMonth()->toDateString();
+            $endDate = Carbon::now()->endOfMonth()->toDateString();
+        }
+
+        $query = ParkingTransaction::with(['card', 'user', 'deviceIn', 'deviceOut']);
+
+        if (!empty($startDate) && !empty($endDate)) {
+            $query->whereBetween('tap_in_time', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        } elseif (!empty($startDate)) {
+            $query->where('tap_in_time', '>=', $startDate . ' 00:00:00');
+        } elseif (!empty($endDate)) {
+            $query->where('tap_in_time', '<=', $endDate . ' 23:59:59');
+        }
+
+        if ($statusFilter === 'COMPLETED' || $statusFilter === 'PARKED') {
+            $query->where('status', $statusFilter);
+        }
+
+        if ($accessType === 'ticket') {
+            $query->whereNotNull('ticket_code');
+        } elseif ($accessType === 'card') {
+            $query->whereNull('ticket_code')->whereNotNull('card_id');
+        }
+
+        if ($floorFilter === '1') {
+            $query->where('parking_floor', 1);
+        } elseif ($floorFilter === '2') {
+            $query->where('parking_floor', 2);
+        }
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                  ->orWhere('ticket_code', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($qu) use ($search) {
+                      $qu->where('name', 'like', "%{$search}%")
+                         ->orWhere('phone', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('card', function ($qc) use ($search) {
+                      $qc->where('uid', 'like', "%{$search}%")
+                         ->orWhere('license_plate', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $totalRecords = (clone $query)->count();
+        $totalRevenue = (int) (clone $query)->where('status', 'COMPLETED')->sum('total_fee');
+
+        $transactions = $query->orderBy('id', 'desc')->limit($limit)->get()->map(function ($t) {
+            $isTicket = !empty($t->ticket_code);
+            $userName = $isTicket ? 'Pengendara Umum' : ($t->user->name ?? 'Member');
+            $codeOrUid = $isTicket ? $t->ticket_code : ($t->card->license_plate ?? ($t->card->uid ?? '-'));
+            return [
+                'id' => $t->id,
+                'ticket_code' => $t->ticket_code,
+                'is_ticket' => $isTicket,
+                'access_type' => $isTicket ? 'KARCIS' : 'RFID',
+                'parking_floor' => $t->parking_floor ?? 1,
+                'parking_floor_label' => ($t->parking_floor == 2) ? 'Lantai 2 (LT 2)' : 'Lantai 1 (LT 1)',
+                'name' => $userName,
+                'user_name' => $userName,
+                'code' => $codeOrUid,
+                'license_plate' => $t->card->license_plate ?? ($isTicket ? 'Karcis' : '-'),
+                'uid' => $t->card->uid ?? ($isTicket ? $t->ticket_code : '-'),
+                'tap_in_time' => $t->tap_in_time ? Carbon::parse($t->tap_in_time)->toDateTimeString() : null,
+                'tap_out_time' => $t->tap_out_time ? Carbon::parse($t->tap_out_time)->toDateTimeString() : null,
+                'tap_in_formatted' => $t->tap_in_time ? Carbon::parse($t->tap_in_time)->format('d/m/Y H:i') : '-',
+                'tap_out_formatted' => $t->tap_out_time ? Carbon::parse($t->tap_out_time)->format('d/m/Y H:i') : '-',
+                'duration_minutes' => (int) $t->duration_minutes,
+                'duration_formatted' => $t->duration_minutes ? $t->duration_minutes . ' menit' : '-',
+                'total_fee' => (int) $t->total_fee,
+                'total_fee_formatted' => 'Rp ' . number_format($t->total_fee ?? 0, 0, ',', '.'),
+                'status' => $t->status,
+                'payment_method' => $t->payment_method ?? ($isTicket ? 'cash' : 'card'),
+                'gate_in_code' => $t->deviceIn ? $t->deviceIn->device_code : 'Gate In',
+                'gate_out_code' => $t->deviceOut ? $t->deviceOut->device_code : 'Gate Out',
+            ];
+        });
+
+        $payload = [
+            'status' => 'success',
+            'preset' => $preset,
+            'total_records' => $totalRecords,
+            'total_count' => $totalRecords,
+            'total_revenue' => $totalRevenue,
+            'total_revenue_formatted' => 'Rp ' . number_format($totalRevenue, 0, ',', '.'),
+            'transactions' => $transactions,
+            'reports' => $transactions,
+            'data' => $transactions,
+            'stats' => [
+                'total_records' => $totalRecords,
+                'total_revenue' => $totalRevenue,
+                'total_revenue_formatted' => 'Rp ' . number_format($totalRevenue, 0, ',', '.'),
+            ]
+        ];
+
+        return response()->json($payload);
     }
 }
