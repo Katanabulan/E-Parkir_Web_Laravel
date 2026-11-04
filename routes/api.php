@@ -32,7 +32,9 @@ Route::match(['get', 'post', 'options'], '/client/slots', [ClientApiController::
 Route::match(['get', 'post', 'options'], '/client/history', [ClientApiController::class, 'history']);
 Route::match(['get', 'post', 'options'], '/client/topup', [ClientApiController::class, 'topup']);
 Route::match(['get', 'post', 'options'], '/client/owner_dashboard', [ClientApiController::class, 'ownerDashboard']);
+Route::match(['get', 'post', 'options'], '/client/dashboard', [ClientApiController::class, 'ownerDashboard']);
 Route::match(['get', 'post', 'options'], '/client/owner_reports', [ClientApiController::class, 'ownerReports']);
+Route::match(['get', 'post', 'options'], '/client/reports', [ClientApiController::class, 'ownerReports']);
 
 // Status check umum
 Route::match(['get', 'post', 'options'], '/status', [ClientApiController::class, 'slots']);

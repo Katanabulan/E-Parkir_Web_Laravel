@@ -50,9 +50,13 @@ class ClientApiController extends Controller
                 return $this->checkTicket($request);
             case 'pay_ticket':
                 return $this->payTicket($request);
+            case 'dashboard':
             case 'owner_dashboard':
+            case 'admin_dashboard':
                 return $this->ownerDashboard($request);
             case 'owner_reports':
+            case 'admin_reports':
+            case 'reports':
                 return $this->ownerReports($request);
             case 'status':
             default:
@@ -352,6 +356,14 @@ class ClientApiController extends Controller
             $totalMinutes = (int) (clone $completedTrips)->sum('duration_minutes');
         }
 
+        // Finansial & Operasional Global (Owner / Admin)
+        $totalRevenueAll = (int) ParkingTransaction::where('status', 'COMPLETED')->sum('total_fee');
+        $todayRevenueAll = (int) ParkingTransaction::where('status', 'COMPLETED')
+            ->whereDate('tap_in_time', Carbon::today()->toDateString())
+            ->sum('total_fee');
+        $totalTransactionsAll = ParkingTransaction::count();
+        $completedTransactionsAll = ParkingTransaction::where('status', 'COMPLETED')->count();
+
         // Okupansi Slot Area Parkir (Real-Time per lantai & total)
         $floor1Parked = ParkingTransaction::where('status', 'PARKED')->where('parking_floor', 1)->count();
         $floor2Parked = ParkingTransaction::where('status', 'PARKED')->where('parking_floor', 2)->count();
@@ -416,6 +428,16 @@ class ClientApiController extends Controller
             'total_spent' => $totalSpent,
             'total_spent_formatted' => 'Rp ' . number_format($totalSpent, 0, ',', '.'),
             'total_minutes' => $totalMinutes,
+            'total_revenue' => $totalRevenueAll,
+            'total_revenue_formatted' => 'Rp ' . number_format($totalRevenueAll, 0, ',', '.'),
+            'total_income' => $totalRevenueAll,
+            'total_income_formatted' => 'Rp ' . number_format($totalRevenueAll, 0, ',', '.'),
+            'today_revenue' => $todayRevenueAll,
+            'today_revenue_formatted' => 'Rp ' . number_format($todayRevenueAll, 0, ',', '.'),
+            'today_income' => $todayRevenueAll,
+            'today_income_formatted' => 'Rp ' . number_format($todayRevenueAll, 0, ',', '.'),
+            'total_transactions' => $totalTransactionsAll,
+            'completed_transactions' => $completedTransactionsAll,
         ];
 
         $slotData = [
@@ -469,6 +491,15 @@ class ClientApiController extends Controller
         return response()->json([
             'status' => 'success',
             'server_time' => now()->toDateTimeString(),
+            'total_revenue' => $totalRevenueAll,
+            'total_revenue_formatted' => 'Rp ' . number_format($totalRevenueAll, 0, ',', '.'),
+            'total_income' => $totalRevenueAll,
+            'total_income_formatted' => 'Rp ' . number_format($totalRevenueAll, 0, ',', '.'),
+            'today_revenue' => $todayRevenueAll,
+            'today_revenue_formatted' => 'Rp ' . number_format($todayRevenueAll, 0, ',', '.'),
+            'today_income' => $todayRevenueAll,
+            'today_income_formatted' => 'Rp ' . number_format($todayRevenueAll, 0, ',', '.'),
+            'total_transactions' => $totalTransactionsAll,
             'is_parked' => $isParked,
             'status_code' => $statusCode,
             'status_label' => $statusLabel,
@@ -479,8 +510,16 @@ class ClientApiController extends Controller
             'stats' => $statsData,
             'parking_slots' => $slotData,
             'parking_area' => $slotData,
+            'floors' => $slotData['floors'],
             // Wrapper data untuk fleksibilitas klien
             'data' => [
+                'total_revenue' => $totalRevenueAll,
+                'total_revenue_formatted' => 'Rp ' . number_format($totalRevenueAll, 0, ',', '.'),
+                'total_income' => $totalRevenueAll,
+                'today_revenue' => $todayRevenueAll,
+                'today_revenue_formatted' => 'Rp ' . number_format($todayRevenueAll, 0, ',', '.'),
+                'today_income' => $todayRevenueAll,
+                'total_transactions' => $totalTransactionsAll,
                 'is_parked' => $isParked,
                 'status_code' => $statusCode,
                 'status_label' => $statusLabel,
@@ -490,6 +529,7 @@ class ClientApiController extends Controller
                 'history' => $history,
                 'stats' => $statsData,
                 'slots' => $slotData,
+                'floors' => $slotData['floors'],
             ]
         ]);
     }
@@ -936,6 +976,10 @@ class ClientApiController extends Controller
 
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
+        $startOfMonth = Carbon::now()->startOfMonth()->toDateTimeString();
+        $endOfMonth = Carbon::now()->endOfMonth()->toDateTimeString();
+        $startOfWeek = Carbon::now()->subDays(6)->startOfDay()->toDateTimeString();
+        $endOfWeek = Carbon::now()->endOfDay()->toDateTimeString();
 
         // Finansial
         $totalRevenue = (int) ParkingTransaction::where('status', 'COMPLETED')->sum('total_fee');
@@ -946,6 +990,14 @@ class ClientApiController extends Controller
                       $sub->whereNull('tap_out_time')->whereDate('tap_in_time', $today);
                   });
             })
+            ->sum('total_fee');
+
+        $monthRevenue = (int) ParkingTransaction::where('status', 'COMPLETED')
+            ->whereBetween('tap_in_time', [$startOfMonth, $endOfMonth])
+            ->sum('total_fee');
+
+        $weekRevenue = (int) ParkingTransaction::where('status', 'COMPLETED')
+            ->whereBetween('tap_in_time', [$startOfWeek, $endOfWeek])
             ->sum('total_fee');
 
         $totalTransactions = ParkingTransaction::count();
@@ -965,10 +1017,40 @@ class ClientApiController extends Controller
         $avgMinutes = (int) round(ParkingTransaction::where('status', 'COMPLETED')->avg('duration_minutes') ?? 0);
         $avgFee = (int) round(ParkingTransaction::where('status', 'COMPLETED')->avg('total_fee') ?? 0);
 
-        // 10 Transaksi Terakhir untuk Widget Recent Activity di Mobile
+        // Trend 7 Hari Terakhir untuk Grafik / Chart di Mobile
+        $last7Days = [];
+        $chartLabels = [];
+        $chartValues = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $d = Carbon::today()->subDays($i);
+            $dStr = $d->toDateString();
+            $dRev = (int) ParkingTransaction::where('status', 'COMPLETED')
+                ->where(function ($q) use ($dStr) {
+                    $q->whereDate('tap_out_time', $dStr)
+                      ->orWhere(function ($sub) use ($dStr) {
+                          $sub->whereNull('tap_out_time')->whereDate('tap_in_time', $dStr);
+                      });
+                })
+                ->sum('total_fee');
+            $dTx = ParkingTransaction::whereDate('tap_in_time', $dStr)->count();
+            $last7Days[] = [
+                'date' => $dStr,
+                'label' => $d->format('d/m'),
+                'day' => $d->format('D'),
+                'revenue' => $dRev,
+                'income' => $dRev,
+                'total_fee' => $dRev,
+                'transactions' => $dTx,
+                'count' => $dTx,
+            ];
+            $chartLabels[] = $d->format('d/m');
+            $chartValues[] = $dRev;
+        }
+
+        // 20 Transaksi Terakhir untuk Widget Recent Activity di Mobile
         $recentTransactions = ParkingTransaction::with(['card', 'user', 'deviceIn', 'deviceOut'])
             ->orderBy('id', 'desc')
-            ->limit(15)
+            ->limit(20)
             ->get()
             ->map(function ($t) {
                 $isTicket = !empty($t->ticket_code);
@@ -999,66 +1081,118 @@ class ClientApiController extends Controller
                 ];
             });
 
-        $payload = [
-            'status' => 'success',
-            'message' => 'Owner dashboard data fetched successfully',
-            'server_time' => $now->toDateTimeString(),
+        $floorsData = [
+            'lt1' => [
+                'floor_number' => 1,
+                'floor_code' => 'LT 1',
+                'name' => 'Lantai 1',
+                'capacity' => self::CAPACITY_PER_FLOOR,
+                'parked' => $floor1Parked,
+                'parked_count' => $floor1Parked,
+                'available' => $floor1Available,
+                'available_slots' => $floor1Available,
+                'is_full' => $floor1Available <= 0,
+            ],
+            'lt2' => [
+                'floor_number' => 2,
+                'floor_code' => 'LT 2',
+                'name' => 'Lantai 2',
+                'capacity' => self::CAPACITY_PER_FLOOR,
+                'parked' => $floor2Parked,
+                'parked_count' => $floor2Parked,
+                'available' => $floor2Available,
+                'available_slots' => $floor2Available,
+                'is_full' => $floor2Available <= 0,
+            ],
+        ];
+
+        $summaryData = [
             'total_revenue' => $totalRevenue,
             'total_revenue_formatted' => 'Rp ' . number_format($totalRevenue, 0, ',', '.'),
+            'total_income' => $totalRevenue,
+            'total_income_formatted' => 'Rp ' . number_format($totalRevenue, 0, ',', '.'),
+            'revenue' => $totalRevenue,
+            'income' => $totalRevenue,
+            'total_earnings' => $totalRevenue,
+            'earnings' => $totalRevenue,
             'today_revenue' => $todayRevenue,
             'today_revenue_formatted' => 'Rp ' . number_format($todayRevenue, 0, ',', '.'),
+            'today_income' => $todayRevenue,
+            'today_income_formatted' => 'Rp ' . number_format($todayRevenue, 0, ',', '.'),
+            'revenue_today' => $todayRevenue,
+            'income_today' => $todayRevenue,
+            'month_revenue' => $monthRevenue,
+            'month_revenue_formatted' => 'Rp ' . number_format($monthRevenue, 0, ',', '.'),
+            'monthly_revenue' => $monthRevenue,
+            'month_income' => $monthRevenue,
+            'monthly_income' => $monthRevenue,
+            'week_revenue' => $weekRevenue,
+            'weekly_revenue' => $weekRevenue,
+            'week_income' => $weekRevenue,
             'total_transactions' => $totalTransactions,
+            'transactions_count' => $totalTransactions,
+            'total_tx' => $totalTransactions,
             'today_transactions' => $todayTransactions,
+            'today_tx' => $todayTransactions,
             'completed_transactions' => $completedTransactions,
             'completed_count' => $completedTransactions,
+            'total_completed' => $completedTransactions,
             'active_parked' => $parkedCount,
             'parked_count' => $parkedCount,
+            'total_parked' => $parkedCount,
+            'parked_vehicles' => $parkedCount,
+            'currently_parked' => $parkedCount,
             'parked_lt1' => $floor1Parked,
             'parked_lt2' => $floor2Parked,
             'available_slots' => $availableSlots,
+            'empty_slots' => $availableSlots,
+            'slots_available' => $availableSlots,
             'capacity' => self::TOTAL_CAPACITY,
             'total_capacity' => self::TOTAL_CAPACITY,
+            'slots_capacity' => self::TOTAL_CAPACITY,
             'occupancy_percentage' => $occupancyPercent,
             'occupancy_rate_percent' => $occupancyPercent,
+            'occupancy_rate' => $occupancyPercent,
+            'occupancy' => $occupancyPercent,
             'avg_duration_minutes' => $avgMinutes,
             'avg_fee' => $avgFee,
             'rate_per_hour' => self::RATE_PER_HOUR,
-            'floors' => [
-                'lt1' => [
-                    'floor_number' => 1,
-                    'floor_code' => 'LT 1',
-                    'capacity' => self::CAPACITY_PER_FLOOR,
-                    'parked' => $floor1Parked,
-                    'available' => $floor1Available,
-                    'is_full' => $floor1Available <= 0,
-                ],
-                'lt2' => [
-                    'floor_number' => 2,
-                    'floor_code' => 'LT 2',
-                    'capacity' => self::CAPACITY_PER_FLOOR,
-                    'parked' => $floor2Parked,
-                    'available' => $floor2Available,
-                    'is_full' => $floor2Available <= 0,
-                ],
-            ],
+            'lt1_available' => $floor1Available,
+            'lt1_parked' => $floor1Parked,
+            'lt1_capacity' => self::CAPACITY_PER_FLOOR,
+            'lt2_available' => $floor2Available,
+            'lt2_parked' => $floor2Parked,
+            'lt2_capacity' => self::CAPACITY_PER_FLOOR,
+            'floors' => $floorsData,
+            'floor_1' => $floorsData['lt1'],
+            'floor_2' => $floorsData['lt2'],
+            'charts' => $last7Days,
+            'chart' => $last7Days,
+            'chart_data' => $last7Days,
+            'trend' => $last7Days,
+            'trend_data' => $last7Days,
+            'daily_trend' => $last7Days,
+            'weekly_trend' => $last7Days,
+            'chart_labels' => $chartLabels,
+            'chart_values' => $chartValues,
             'recent_transactions' => $recentTransactions,
             'transactions' => $recentTransactions,
+            'recent' => $recentTransactions,
+            'history' => $recentTransactions,
         ];
 
-        // Duplikasi ke 'data' untuk kompatibilitas Flutter model
-        $payload['data'] = [
-            'total_revenue' => $totalRevenue,
-            'today_revenue' => $todayRevenue,
-            'total_transactions' => $totalTransactions,
-            'today_transactions' => $todayTransactions,
-            'completed_transactions' => $completedTransactions,
-            'parked_count' => $parkedCount,
-            'available_slots' => $availableSlots,
-            'capacity' => self::TOTAL_CAPACITY,
-            'occupancy_rate_percent' => $occupancyPercent,
-            'recent_transactions' => $recentTransactions,
-            'transactions' => $recentTransactions,
-        ];
+        $payload = array_merge([
+            'status' => 'success',
+            'message' => 'Owner dashboard data fetched successfully',
+            'server_time' => $now->toDateTimeString(),
+        ], $summaryData);
+
+        // Duplikasi ke sub-objek untuk menjamin kompatibilitas semua struktur parsing model Flutter
+        $payload['data'] = $summaryData;
+        $payload['stats'] = $summaryData;
+        $payload['summary'] = $summaryData;
+        $payload['overview'] = $summaryData;
+        $payload['metrics'] = $summaryData;
 
         return response()->json($payload);
     }
