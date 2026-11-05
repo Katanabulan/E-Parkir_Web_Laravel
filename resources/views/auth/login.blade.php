@@ -137,11 +137,6 @@
                     <div class="text-[12px] text-black/60 font-medium">Smart Barrier Gate &amp; Billing System</div>
                 </div>
             </div>
-
-            <!-- Live Telemetry Badge (1% Micro-Accent #FFD51E) -->
-            <div class="flex items-center gap-2.5 px-3 py-1.5 rounded text-xs font-medium text-white" style="background-color: #00719C; border: 1.5px solid #005677;">
-                <span class="font-mono text-[11px] text-white" id="live-time">--:--:-- WIB</span>
-            </div>
         </div>
 
         <!-- CENTER STAGE: Architectural Blueprint & Gate Specs -->
@@ -401,18 +396,8 @@
 
     </div>
 
-    <!-- Live Clock & Quick Fill Scripts -->
+    <!-- Scripts -->
     <script>
-        // Clock Ticker in WIB
-        function updateClock() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('id-ID', { hour12: false }) + ' WIB';
-            const el = document.getElementById('live-time');
-            if (el) el.textContent = timeStr;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
         // Password Visibility Toggle
         function togglePasswordVisibility() {
             const pwd = document.getElementById('password');
