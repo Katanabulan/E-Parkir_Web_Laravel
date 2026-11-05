@@ -36,6 +36,14 @@ Route::match(['get', 'post', 'options'], '/client/dashboard', [ClientApiControll
 Route::match(['get', 'post', 'options'], '/client/owner_reports', [ClientApiController::class, 'ownerReports']);
 Route::match(['get', 'post', 'options'], '/client/reports', [ClientApiController::class, 'ownerReports']);
 
+// Direct routes for Owner & Reporting
+Route::match(['get', 'post', 'options'], '/owner/dashboard', [ClientApiController::class, 'ownerDashboard']);
+Route::match(['get', 'post', 'options'], '/owner/reports', [ClientApiController::class, 'ownerReports']);
+Route::match(['get', 'post', 'options'], '/owner_dashboard', [ClientApiController::class, 'ownerDashboard']);
+Route::match(['get', 'post', 'options'], '/owner_reports', [ClientApiController::class, 'ownerReports']);
+Route::match(['get', 'post', 'options'], '/dashboard', [ClientApiController::class, 'ownerDashboard']);
+Route::match(['get', 'post', 'options'], '/reports', [ClientApiController::class, 'ownerReports']);
+
 // Status check umum
 Route::match(['get', 'post', 'options'], '/status', [ClientApiController::class, 'slots']);
 Route::match(['get', 'post', 'options'], '/status.php', [ClientApiController::class, 'slots']);
