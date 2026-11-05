@@ -327,66 +327,6 @@
                 </div>
             </form>
 
-            <!-- QUICK FILL DEMO CARDS (Admin & Client) -->
-            <div class="mt-6 pt-5 clean-border-t space-y-2.5">
-                <div class="text-[10px] font-bold uppercase tracking-wider text-black/50 mb-1">Pilih Kredensial Demo Cepat:</div>
-                
-                <!-- Demo 1: Admin -->
-                <div class="p-3 rounded-lg clean-border flex items-center justify-between gap-3 bg-[#FFFFFF]">
-                    <div class="flex items-center gap-2.5">
-                        <div class="icon-box" style="width: 1.75rem; height: 1.75rem; border: 1.5px solid #005677;">
-                            <i class="fa-solid fa-user-shield text-xs"></i>
-                        </div>
-                        <div>
-                            <div class="text-[11px] font-bold text-black">Akun Administrator</div>
-                            <div class="text-[10px] text-black/60 font-mono">admin@eparkir.local / admin123</div>
-                        </div>
-                    </div>
-                    <button type="button" onclick="fillCredentials('admin@eparkir.local', 'admin123')"
-                        class="px-2.5 py-1 bg-[#FFFFFF] hover:bg-black/5 text-black text-[11px] font-bold rounded clean-border transition cursor-pointer whitespace-nowrap">
-                        Isi Admin
-                    </button>
-                </div>
-
-                <!-- Demo 2: Client -->
-                <div class="p-3 rounded-lg clean-border flex items-center justify-between gap-3 bg-[#FFFFFF]">
-                    <div class="flex items-center gap-2.5">
-                        <div class="icon-box" style="width: 1.75rem; height: 1.75rem; border: 1.5px solid #005677;">
-                            <i class="fa-solid fa-car text-xs"></i>
-                        </div>
-                        <div>
-                            <div class="text-[11px] font-bold text-black">Akun Pengendara (Client)</div>
-                            <div class="text-[10px] text-black/60 font-mono">fardhan@gmail.com / user123</div>
-                        </div>
-                    </div>
-                    <button type="button" onclick="fillCredentials('fardhan@gmail.com', 'user123')"
-                        class="px-2.5 py-1 bg-[#FFFFFF] hover:bg-black/5 text-black text-[11px] font-bold rounded clean-border transition cursor-pointer whitespace-nowrap">
-                        Isi Driver
-                    </button>
-                </div>
-
-                <!-- Demo 3: Owner -->
-                <div class="p-3 rounded-lg clean-border flex items-center justify-between gap-3 bg-[#FFFFFF]">
-                    <div class="flex items-center gap-2.5">
-                        <div class="icon-box" style="width: 1.75rem; height: 1.75rem; border: 1.5px solid #D97706; background-color: #D97706;">
-                            <i class="fa-solid fa-user-tie text-xs text-white"></i>
-                        </div>
-                        <div>
-                            <div class="text-[11px] font-bold text-black flex items-center gap-1.5">
-                                <span>Akun Owner</span>
-                                <span class="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">Laporan Saja</span>
-                            </div>
-                            <div class="text-[10px] text-black/60 font-mono">owner@eparkir.local / owner123</div>
-                        </div>
-                    </div>
-                    <button type="button" onclick="fillCredentials('owner@eparkir.local', 'owner123')"
-                        class="px-2.5 py-1 bg-[#FFFFFF] hover:bg-black/5 text-black text-[11px] font-bold rounded clean-border transition cursor-pointer whitespace-nowrap">
-                        Isi Owner
-                    </button>
-                </div>
-
-            </div>
-
         </div>
 
         <!-- Footer -->
@@ -411,23 +351,6 @@
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
             }
-        }
-
-        // Fill Credentials Helper
-        function fillCredentials(email, pwd) {
-            const emailInput = document.getElementById('email');
-            const pwdInput = document.getElementById('password');
-            
-            emailInput.value = email;
-            pwdInput.value = pwd;
-
-            emailInput.style.borderColor = 'var(--c-blue)';
-            pwdInput.style.borderColor = 'var(--c-blue)';
-            
-            setTimeout(() => {
-                emailInput.style.borderColor = '';
-                pwdInput.style.borderColor = '';
-            }, 600);
         }
     </script>
 </body>
