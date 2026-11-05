@@ -1280,6 +1280,9 @@ class ClientApiController extends Controller
         // 9. Root Payload
         $payload = array_merge([
             'status' => 'success',
+            'success' => true,
+            'code' => 200,
+            'error' => false,
             'message' => 'Owner dashboard data fetched successfully',
             'server_time' => $now->toDateTimeString(),
             'preset' => 'today',
@@ -1314,6 +1317,9 @@ class ClientApiController extends Controller
         // 10. Data Wrapper untuk Mobile Model yang membaca response.data
         $dataWrapper = array_merge($summaryData, [
             'status' => 'success',
+            'success' => true,
+            'code' => 200,
+            'error' => false,
             'message' => 'Owner dashboard data fetched successfully',
             'floors' => $floorsMap,
             'floor_list' => $floorsList,
