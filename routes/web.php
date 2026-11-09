@@ -83,7 +83,13 @@ Route::prefix('client')->group(function () {
 // Alias di Root Web untuk kompatibilitas script lama/mobile
 Route::match(['get', 'post'], '/api_status.php', [ClientApiController::class, 'handle']);
 Route::match(['get', 'post'], '/api-status', [ClientApiController::class, 'handle']);
-Route::get('/owner/reports/export', [\App\Http\Controllers\Owner\ReportController::class, 'exportCsv'])->name('owner.reports.export');
+
+// Fallback Named Routes agar kebal RouteNotFoundException dari legacy links/cache
+Route::redirect('/client/dashboard', '/login')->name('client.dashboard');
+Route::redirect('/owner/dashboard', '/login')->name('owner.dashboard');
+Route::redirect('/owner/reports', '/login')->name('owner.reports.index');
+Route::redirect('/owner/transactions', '/login')->name('owner.transactions.index');
+Route::redirect('/owner/reports/export', '/login')->name('owner.reports.export');
 
 // =========================================================================
 // 3. ADMIN PORTAL (Full Operasional Web: Protected by Auth and Role: admin)

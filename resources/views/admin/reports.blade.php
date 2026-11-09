@@ -156,12 +156,12 @@
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center justify-content-between">
                     <span class="text-uppercase small fw-bold text-secondary">Total Pendapatan</span>
-                    <span class="badge bg-primary p-2 rounded-3 text-white">
+                    <span class="badge bg-success p-2 rounded-3 text-white">
                         <i class="bi bi-cash-stack fs-6"></i>
                     </span>
                 </div>
                 <div class="my-3">
-                    <h3 class="fw-bold text-primary mb-0 font-monospace">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</h3>
+                    <h3 class="fw-bold text-dark mb-0 font-monospace">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</h3>
                     <small class="text-muted">Tarif Flat Rp2.000 / Jam</small>
                 </div>
             </div>
@@ -188,7 +188,7 @@
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center justify-content-between">
                     <span class="text-uppercase small fw-bold text-secondary">Sedang Terparkir</span>
-                    <span class="badge bg-warning p-2 rounded-3 text-dark">
+                    <span class="badge bg-primary p-2 rounded-3 text-white">
                         <i class="bi bi-car-front-fill fs-6"></i>
                     </span>
                 </div>

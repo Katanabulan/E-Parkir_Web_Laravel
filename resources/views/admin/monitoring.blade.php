@@ -145,6 +145,65 @@
             </div>
         </div>
 
+        <!-- BARCODE SCANNER POS KASIR (SIMULASI SCAN TIKET KARCIS) -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white position-relative overflow-hidden">
+            <div class="d-flex align-items-center justify-content-between pb-3 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-danger-subtle text-danger p-2 rounded-3 fs-6">
+                        <i class="bi bi-upc-scan"></i>
+                    </span>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">Barcode Scanner Pos Kasir</h6>
+                        <small class="text-muted">Simulasi scan karcis optik untuk checkout &amp; pembukaan gerbang keluar</small>
+                    </div>
+                </div>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle d-flex align-items-center gap-1 font-monospace px-2 py-1">
+                    <span class="spinner-grow spinner-grow-sm text-danger" style="width: 6px; height: 6px;" role="status"></span>
+                    <span>LASER SCANNER READY</span>
+                </span>
+            </div>
+
+            <!-- Optical Scanner Viewport Animation -->
+            <div class="my-3 p-3 rounded-4 position-relative overflow-hidden" style="background-color: #0b111e; border: 1px solid #1e293b;">
+                <div class="position-relative py-3 d-flex flex-column align-items-center justify-content-center text-center user-select-none" style="min-height: 90px;">
+                    <!-- Laser Scanner Red Line Animation -->
+                    <div id="sim-laser-beam" style="position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: #ef4444; box-shadow: 0 0 12px #ef4444, 0 0 20px rgba(239, 68, 68, 0.8); z-index: 5; transition: all 0.25s ease;"></div>
+                    
+                    <i class="bi bi-upc text-secondary opacity-50" style="font-size: 3rem;"></i>
+                    <div id="scanner-status-text" class="small font-monospace text-white-50 mt-1 z-2">
+                        Arahkan barcode karcis ke sensor atau ketik kode di bawah
+                    </div>
+                </div>
+
+                <!-- Input Scanner Form -->
+                <form onsubmit="handleBarcodeScannerSubmit(event)" class="mt-2">
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-danger font-monospace">
+                            <i class="bi bi-upc-scan me-1"></i> SCAN:
+                        </span>
+                        <input type="text" id="barcode-scan-input" class="form-control bg-dark text-white border-secondary font-monospace" placeholder="Scan / masukkan kode karcis (contoh: LT1-20261109-xxxx)..." autocomplete="off">
+                        <button type="submit" id="btn-submit-barcode" class="btn btn-danger fw-bold d-flex align-items-center gap-1 px-3">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                            <span>Scan Karcis</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Quick-Scan Buttons for Active Parked Tickets -->
+            <div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <small class="text-uppercase fw-bold text-secondary" style="font-size: 0.72rem;">
+                        Karcis Aktif di Parkiran (Klik untuk Simulasi Scan Cepat):
+                    </small>
+                    <small class="text-muted font-monospace" id="quick-ticket-count">0 Karcis</small>
+                </div>
+                <div id="quick-ticket-buttons" class="d-flex flex-wrap gap-2">
+                    <span class="text-muted small fst-italic">Memeriksa karcis aktif...</span>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- RIGHT COLUMN: STATUS PARKIR REAL-TIME (5 Cols) -->
@@ -827,6 +886,123 @@ Memuat struk parkir...
                     `;
                 });
                 listContainer.innerHTML = html;
+            }
+        }
+
+        // Update Quick-Scan Barcode Karcis Aktif
+        const quickTicketContainer = document.getElementById('quick-ticket-buttons');
+        const quickTicketCountEl = document.getElementById('quick-ticket-count');
+        if (quickTicketContainer) {
+            const ticketList = Array.isArray(list) ? list.filter(v => v.is_ticket || Boolean(v.ticket_code)) : [];
+            if (quickTicketCountEl) quickTicketCountEl.textContent = `${ticketList.length} Karcis`;
+
+            if (ticketList.length === 0) {
+                quickTicketContainer.innerHTML = '<span class="text-muted small fst-italic">Tidak ada kendaraan dengan karcis masuk saat ini.</span>';
+            } else {
+                quickTicketContainer.innerHTML = ticketList.map(t => {
+                    const tCode = t.ticket_code || t.uid;
+                    const floorNum = parseInt(t.parking_floor) || 1;
+                    return `
+                        <button type="button" onclick="scanTicketBarcode('${tCode}')" class="btn btn-outline-warning btn-sm rounded-pill font-monospace fw-bold d-flex align-items-center gap-1.5 py-1 px-2.5 shadow-sm" style="font-size: 0.75rem;" title="Klik untuk simulasi scan barcode kasir">
+                            <i class="bi bi-upc-scan text-danger"></i>
+                            <span>${tCode}</span>
+                            <span class="badge bg-warning text-dark ms-1">LT ${floorNum}</span>
+                        </button>
+                    `;
+                }).join('');
+            }
+        }
+    }
+
+    // =========================================================================
+    // SIMULASI SCANNER BARCODE POS KASIR (GIMMICK SCAN KARCIS PARKIR)
+    // =========================================================================
+    function handleBarcodeScannerSubmit(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById('barcode-scan-input');
+        if (!input) return;
+        const code = input.value.trim();
+        if (!code) {
+            showToast('Scan Barcode', 'Silakan masukkan atau scan kode barcode karcis', 'warning');
+            return;
+        }
+        scanTicketBarcode(code);
+        input.value = '';
+    }
+
+    async function scanTicketBarcode(ticketCode) {
+        if (!ticketCode) return;
+        ticketCode = ticketCode.trim().toUpperCase();
+
+        const beam = document.getElementById('sim-laser-beam');
+        const statusText = document.getElementById('scanner-status-text');
+
+        // Visual laser sweep gimmick
+        if (beam) {
+            beam.style.height = '4px';
+            beam.style.boxShadow = '0 0 20px #ef4444, 0 0 35px rgba(255, 0, 0, 0.9)';
+            beam.style.top = '25%';
+            setTimeout(() => { if (beam) beam.style.top = '75%'; }, 180);
+            setTimeout(() => { 
+                if (beam) {
+                    beam.style.top = '50%';
+                    beam.style.height = '2px';
+                    beam.style.boxShadow = '0 0 12px #ef4444, 0 0 20px rgba(239, 68, 68, 0.8)';
+                }
+            }, 380);
+        }
+
+        // Scanner Audio Beep
+        playWebBuzzer(2, 'high');
+
+        if (statusText) {
+            statusText.innerHTML = `<span class="text-warning fw-bold font-monospace">[BEEP!] Memindai Barcode #${ticketCode}...</span>`;
+        }
+
+        showToast('Barcode Di-scan!', `Memindai karcis #${ticketCode}. Menghitung durasi & membuka palang...`, 'info');
+
+        try {
+            const res = await fetch('{{ url('/api/scan') }}', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    device_code: 'GATE_KELUAR_01',
+                    scan_uid: ticketCode
+                })
+            });
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                playWebBuzzer(2);
+                showToast('✅ Karcis Valid!', `${data.message} - Biaya: ${data.data?.total_fee_formatted || ''}`, 'success');
+                if (statusText) {
+                    statusText.innerHTML = `<span class="text-success fw-bold font-monospace">✓ Karcis #${ticketCode} Selesai (${data.data?.total_fee_formatted || ''}) - Palang Dibuka</span>`;
+                }
+
+                openBarrierGate(data.duration_ms || 6000);
+
+                if (data.data && data.data.receipt_id) {
+                    setTimeout(() => {
+                        openReceiptModal(data.data.receipt_id);
+                    }, 800);
+                }
+
+                checkHardwareSync();
+            } else {
+                playWebBuzzer(3, 'low');
+                showToast('❌ Scan Gagal', data.message, 'danger');
+                if (statusText) {
+                    statusText.innerHTML = `<span class="text-danger fw-bold font-monospace">✗ ${data.message}</span>`;
+                }
+            }
+        } catch (err) {
+            console.error('Error scan barcode:', err);
+            showToast('Error', err.message, 'danger');
+            if (statusText) {
+                statusText.innerHTML = `<span class="text-danger small font-monospace">Error: ${err.message}</span>`;
             }
         }
     }

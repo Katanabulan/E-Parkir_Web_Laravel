@@ -147,7 +147,7 @@
                         </div>
 
                         <div class="mt-4 pt-3 border-top d-flex align-items-center gap-2">
-                            <button onclick="openEmergencyModal('{{ $dev->device_code }}')" class="btn btn-danger btn-sm rounded-3 flex-grow-1 d-flex align-items-center justify-content-center gap-2">
+                            <button onclick="openEmergencyModal('{{ $dev->device_code }}')" class="btn btn-warning btn-sm rounded-3 flex-grow-1 d-flex align-items-center justify-content-center gap-2">
                                 <i class="bi bi-shield-lock-fill"></i>
                                 <span>Override Buka</span>
                             </button>

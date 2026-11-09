@@ -126,10 +126,10 @@
                     </a>
                 </div>
 
-                <button type="submit" class="btn btn-secondary btn-sm px-3 rounded-3">Terapkan</button>
+                <button type="submit" class="btn btn-primary btn-sm px-3 rounded-3">Terapkan</button>
             </form>
 
-            <button type="button" onclick="openCreateModal()" class="btn btn-warning rounded-3 fw-bold d-flex align-items-center gap-2">
+            <button type="button" onclick="openCreateModal()" class="btn btn-primary rounded-3 fw-bold d-flex align-items-center gap-2">
                 <i class="bi bi-person-plus-fill"></i>
                 <span>Tambah Akun Baru</span>
             </button>

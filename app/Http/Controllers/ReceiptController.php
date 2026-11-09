@@ -73,7 +73,7 @@ class ReceiptController extends Controller
             'status' => $tx->status,
             'print_time' => $now->format('d/m/Y H:i') . ' WIB',
             'qr_data' => $ticketCode,
-            'pay_ticket_url' => route('client.dashboard') . '?pay_ticket=' . urlencode($ticketCode),
+            'pay_ticket_url' => url('/status') . '?pay_ticket=' . urlencode($ticketCode),
         ];
 
         // Format teks 32 kolom untuk Printer Thermal 58mm (Eppos EP589 V2)
@@ -159,7 +159,7 @@ class ReceiptController extends Controller
             'status' => $tx->status,
             'print_time' => $now->format('d/m/Y H:i') . ' WIB',
             'qr_data' => $ticketCode,
-            'pay_ticket_url' => route('client.dashboard') . '?pay_ticket=' . urlencode($ticketCode),
+            'pay_ticket_url' => url('/status') . '?pay_ticket=' . urlencode($ticketCode),
         ];
 
         $thermalText = $isEntryTicket 
@@ -244,8 +244,8 @@ class ReceiptController extends Controller
         $lines[] = "--------------------------------";
         $lines[] = $center("KARCIS MASUK PARKIR");
         $lines[] = "--------------------------------";
-        $lines[] = $center("KODE TIKET PARKIR:");
-        $lines[] = $center(">>> " . $d['ticket_code'] . " <<<");
+        $lines[] = $center("||| | |||| | || ||||| | ||| ||||");
+        $lines[] = $center("* " . $d['ticket_code'] . " *");
         $lines[] = "--------------------------------";
         $lines[] = $padBetween("Pos Masuk   :", $d['gate_in']);
         $lines[] = $padBetween("Waktu Masuk :", substr($d['tap_in_time'], 0, 16));
@@ -253,7 +253,6 @@ class ReceiptController extends Controller
         $lines[] = $padBetween("Lantai      :", "LANTAI {$floor} (LT {$floor})");
         $lines[] = $padBetween("Tarif / Jam :", "Rp 2.000");
         $lines[] = "--------------------------------";
-        $lines[] = $center("[ SCAN QR CODE TIKET ]");
         $lines[] = "\n\n\n";
 
         return implode("\n", $lines);

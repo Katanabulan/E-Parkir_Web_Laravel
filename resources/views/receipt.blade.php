@@ -135,6 +135,38 @@
             margin: 0 auto;
             image-rendering: pixelated;
         }
+
+        /* 1D Barcode Container & Laser Scanner Gimmick */
+        .barcode-wrapper {
+            position: relative;
+            overflow: hidden;
+            background: #FFFFFF;
+            padding: 6px 4px;
+        }
+
+        .scanner-laser {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0) 0%, rgba(239, 68, 68, 1) 50%, rgba(239, 68, 68, 0) 100%);
+            box-shadow: 0 0 10px #ef4444, 0 0 18px #ef4444;
+            top: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes scanSweep {
+            0% { top: 0%; opacity: 0; }
+            20% { opacity: 1; }
+            50% { top: 85%; opacity: 1; }
+            80% { top: 15%; opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .scanner-laser.active {
+            animation: scanSweep 1.2s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
@@ -219,12 +251,23 @@
 
             <div class="receipt-dashed"></div>
 
-            <!-- KODE TIKET GEDE & JELAS -->
-            <div class="text-center fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.05em;">
-                Kode Tiket Masuk:
+            <div class="barcode-wrapper position-relative text-center my-2 p-2 bg-white rounded border border-dark" id="ticket-barcode-box">
+                <!-- Gambar Barcode dari User Upload -->
+                <img src="{{ asset('assets/images/karcis-barcode.png') }}" alt="Barcode Tiket #{{ $receiptData['ticket_code'] }}" class="img-fluid" style="max-height: 65px; width: auto; display: block; margin: 0 auto; image-rendering: pixelated;">
+                <!-- Garis Laser Merah Gimmick Scan Kasir -->
+                <div id="scanner-laser-line" class="scanner-laser d-none"></div>
+                <div class="fw-bold font-monospace mt-1 text-dark" style="font-size: 13px; letter-spacing: 1.5px;">
+                    * {{ $receiptData['ticket_code'] }} *
+                </div>
             </div>
-            <div class="big-ticket-code font-monospace">
-                {{ $receiptData['ticket_code'] }}
+
+            <!-- Tombol Interaktif Gimmick: Simulasi Scan Kasir Admin -->
+            <div class="d-print-none text-center my-2">
+                <button type="button" onclick="simulateAdminBarcodeScan('{{ $receiptData['ticket_code'] }}')" id="btn-simulate-scan" class="btn btn-sm btn-outline-danger w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2 shadow-sm rounded-3">
+                    <i class="bi bi-upc-scan fs-6"></i>
+                    <span id="scan-btn-label">Simulasikan Scan Kasir Admin</span>
+                </button>
+                <small class="text-white-50 d-block mt-1" style="font-size: 9.5px;">Klik untuk simulasi laser scanner kasir &amp; palang keluar dibuka</small>
             </div>
 
             <div class="receipt-dashed"></div>
@@ -252,9 +295,6 @@
             <div class="receipt-dashed"></div>
 
             <!-- QR CODE TIKET -->
-            <div class="text-center fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.05em;">
-                Scan QR Code Pembayaran:
-            </div>
             <div id="qrcode-container" class="my-2" style="min-height: 140px;"></div>
             <div class="receipt-dashed"></div>
 
@@ -361,10 +401,13 @@
     <!-- Hidden Raw Text untuk ESC/POS Bluetooth -->
     <textarea id="raw-escpos-text" class="d-none">{{ $thermalText }}</textarea>
 
-    <!-- Offline Inline QRCode Library -->
+    <!-- Offline Inline QRCode & JsBarcode Libraries -->
     @php
         $qrJsFile = public_path('assets/js/qrcode.min.js');
         $inlineQrJs = file_exists($qrJsFile) ? file_get_contents($qrJsFile) : '';
+
+        $barcodeJsFile = public_path('assets/js/JsBarcode.all.min.js');
+        $inlineBarcodeJs = file_exists($barcodeJsFile) ? file_get_contents($barcodeJsFile) : '';
     @endphp
     @if(!empty($inlineQrJs))
         <script>{!! $inlineQrJs !!}</script>
@@ -372,7 +415,110 @@
         <script src="{{ asset('assets/js/qrcode.min.js') }}"></script>
     @endif
 
+    @if(!empty($inlineBarcodeJs))
+        <script>{!! $inlineBarcodeJs !!}</script>
+    @else
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    @endif
+
     <script>
+        // 1. Generate 1D Barcode (Code 128) dari Kode Tiket
+        function renderBarcode() {
+            const ticketCode = "{{ $receiptData['ticket_code'] ?? '' }}";
+            if (!ticketCode || !document.getElementById("barcode-svg")) return;
+
+            try {
+                if (typeof JsBarcode !== 'undefined') {
+                    JsBarcode("#barcode-svg", ticketCode, {
+                        format: "CODE128",
+                        width: 1.8,
+                        height: 48,
+                        displayValue: false,
+                        margin: 2,
+                        lineColor: "#000000",
+                        background: "#ffffff"
+                    });
+                }
+            } catch (e) {
+                console.warn("JsBarcode Render Warning:", e);
+            }
+        }
+
+        // Web Audio Scanner Beep Simulator
+        function playBarcodeScannerBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(2600, audioCtx.currentTime); // Frekuensi scanner supermarket ~2.6 kHz
+                gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.12);
+            } catch (e) {}
+        }
+
+        // Gimmick: Simulasi Scan Barcode oleh Admin Kasir
+        async function simulateAdminBarcodeScan(ticketCode) {
+            const laser = document.getElementById('scanner-laser-line');
+            const btn = document.getElementById('btn-simulate-scan');
+            const label = document.getElementById('scan-btn-label');
+
+            if (laser) {
+                laser.classList.remove('d-none');
+                laser.classList.add('active');
+            }
+
+            playBarcodeScannerBeep();
+
+            if (btn) btn.disabled = true;
+            if (label) label.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> [BEEP!] Men-scan Barcode...';
+
+            try {
+                const res = await fetch('{{ url("/api/scan") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        device_code: 'GATE_KELUAR_01',
+                        scan_uid: ticketCode
+                    })
+                });
+
+                const data = await res.json();
+
+                setTimeout(() => {
+                    if (laser) {
+                        laser.classList.remove('active');
+                        laser.classList.add('d-none');
+                    }
+                    if (btn) btn.disabled = false;
+                    if (label) label.innerText = 'Simulasikan Scan Kasir Admin';
+
+                    if (data.status === 'success') {
+                        playBarcodeScannerBeep();
+                        alert(`✅ SCAN BARCODE BERHASIL!\n\nKode Tiket: ${ticketCode}\nStatus: ${data.message}\nTotal Biaya: ${data.data?.total_fee_formatted || 'Rp 2.000'}\n\nPalang keluar terbuka! Membuka bukti pembayaran.`);
+                        window.location.href = '{{ request()->fullUrlWithQuery(['type' => 'receipt']) }}';
+                    } else {
+                        alert(`❌ Hasil Scan Barcode: ${data.message}`);
+                    }
+                }, 900);
+
+            } catch (err) {
+                if (laser) {
+                    laser.classList.remove('active');
+                    laser.classList.add('d-none');
+                }
+                if (btn) btn.disabled = false;
+                if (label) label.innerText = 'Simulasikan Scan Kasir Admin';
+                alert('Gagal simulasi scan: ' + err.message);
+            }
+        }
         // 1. Generate QR Code Secara Resilient & Instan
         function renderQrCode() {
             const qrContainer = document.getElementById("qrcode-container");
@@ -414,10 +560,15 @@
             }, 50);
         }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', renderQrCode);
-        } else {
+        function initCodes() {
+            renderBarcode();
             renderQrCode();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCodes);
+        } else {
+            initCodes();
         }
 
         // 2. Auto print jika dipanggil dengan parameter ?autoprint=1

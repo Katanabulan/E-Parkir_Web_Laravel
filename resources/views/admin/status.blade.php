@@ -5,24 +5,35 @@
 @section('header_subtitle', 'Pemantauan realtime ketersediaan area parkir, okupansi slot, dan kendaraan yang sedang terparkir')
 
 @section('content')
+@php
+    $hasVehicles = $parkedCount > 0;
+@endphp
 <div class="d-flex flex-column gap-4">
 
     <!-- 1. BIG HERO STATUS CARD -->
     <div id="status-hero-card" class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white position-relative overflow-hidden">
-        <div id="status-hero-line" class="position-absolute top-0 start-0 end-0 bg-primary" style="height: 4px;"></div>
+        <div id="status-hero-line" class="position-absolute top-0 start-0 end-0 {{ $hasVehicles ? 'bg-warning' : 'bg-success' }}" style="height: 4px;"></div>
 
         <div class="row align-items-center g-4">
             <!-- Left: Icon & Info -->
             <div class="col-lg-8 d-flex flex-column flex-md-row align-items-center text-center text-md-start gap-4">
-                <div id="status-hero-iconbox" class="badge bg-primary p-3 p-md-4 rounded-4 fs-1 shadow-sm">
-                    <i id="status-hero-icon" class="bi bi-car-front-fill"></i>
+                <div id="status-hero-iconbox" class="badge {{ $hasVehicles ? 'bg-warning text-dark' : 'bg-success text-white' }} p-3 p-md-4 rounded-4 fs-1 shadow-sm">
+                    <i id="status-hero-icon" class="bi {{ $hasVehicles ? 'bi-car-front-fill' : 'bi-check-circle-fill' }}"></i>
                 </div>
                 <div>
                     <h3 id="status-hero-title" class="fw-bold text-dark mb-1">
-                        Memeriksa Okupansi Area Parkir...
+                        @if ($hasVehicles)
+                            Ada <span class="text-warning">{{ $parkedCount }} Kendaraan</span> Sedang Parkir
+                        @else
+                            Area Parkir Kosong &amp; Siap Digunakan
+                        @endif
                     </h3>
                     <p id="status-hero-desc" class="text-secondary small mb-0">
-                        Sinkronisasi otomatis dengan sensor gerbang ESP8266 dan database parkir aktif.
+                        @if ($hasVehicles)
+                            Sisa {{ $availableSlots }} slot dari total kapasitas {{ $totalCapacity }} kendaraan. Tarif aktif berjalan Rp2.000 / Jam.
+                        @else
+                            Tidak ada kendaraan di dalam area parkir. Semua {{ $totalCapacity }} slot dalam kondisi kosong.
+                        @endif
                     </p>
                 </div>
             </div>
@@ -32,12 +43,16 @@
                 <div class="card bg-light border p-3 rounded-4">
                     <span class="text-uppercase small fw-bold text-secondary">Kapasitas Slot Total</span>
                     <div class="d-flex align-items-baseline justify-content-center gap-1 my-1">
-                        <span id="stat-hero-parked" class="display-5 fw-bold text-primary font-monospace">0</span>
+                        <span id="stat-hero-parked" class="display-5 fw-bold {{ $hasVehicles ? 'text-warning' : 'text-success' }} font-monospace">{{ $parkedCount }}</span>
                         <span class="text-muted fw-bold">/ <span id="stat-hero-capacity">{{ $totalCapacity }}</span></span>
                     </div>
                     <div>
-                        <span id="stat-hero-available-tag" class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1">
-                            {{ $totalCapacity }} Slot Kosong
+                        <span id="stat-hero-available-tag" class="badge {{ $hasVehicles ? 'bg-warning-subtle text-warning border border-warning-subtle' : 'bg-success-subtle text-success border border-success-subtle' }} px-3 py-1">
+                            @if ($hasVehicles)
+                                Sisa {{ $availableSlots }} Slot Kosong
+                            @else
+                                Semua {{ $totalCapacity }} Slot Kosong
+                            @endif
                         </span>
                     </div>
                     <div class="d-flex justify-content-center gap-2 mt-2 pt-2 border-top font-monospace small">
@@ -61,7 +76,7 @@
                     </span>
                 </div>
                 <div class="d-flex align-items-baseline gap-1 my-1">
-                    <h3 id="stat-parked-count" class="fw-bold text-dark font-monospace mb-0">0</h3>
+                    <h3 id="stat-parked-count" class="fw-bold text-dark font-monospace mb-0">{{ $parkedCount }}</h3>
                     <small class="text-muted">kendaraan</small>
                 </div>
                 <small class="text-success mt-auto pt-2 border-top d-flex align-items-center gap-1">
@@ -80,7 +95,7 @@
                     </span>
                 </div>
                 <div class="d-flex align-items-baseline gap-1 my-1">
-                    <h3 id="stat-available-count" class="fw-bold text-success font-monospace mb-0">{{ $totalCapacity }}</h3>
+                    <h3 id="stat-available-count" class="fw-bold text-success font-monospace mb-0">{{ $availableSlots }}</h3>
                     <small class="text-muted">slot kosong</small>
                 </div>
                 <small class="text-muted mt-auto pt-2 border-top">
@@ -204,20 +219,24 @@
         const heroDesc = document.getElementById('status-hero-desc');
         const heroAvailTag = document.getElementById('stat-hero-available-tag');
 
+        const heroStatParked = document.getElementById('stat-hero-parked');
+
         if (data.has_vehicles) {
             heroLine.className = 'position-absolute top-0 start-0 end-0 bg-warning';
             heroIconBox.className = 'badge bg-warning text-dark p-3 p-md-4 rounded-4 fs-1 shadow-sm';
-            heroTitle.innerHTML = `Ada <span class="text-primary">${data.parked_count} Kendaraan</span> Sedang Parkir`;
+            heroTitle.innerHTML = `Ada <span class="text-warning">${data.parked_count} Kendaraan</span> Sedang Parkir`;
             heroDesc.innerText = `Sisa ${data.available_slots} slot dari total kapasitas ${data.capacity} kendaraan. Tarif aktif berjalan Rp2.000 / Jam.`;
             heroAvailTag.className = 'badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-1';
             heroAvailTag.innerText = `Sisa ${data.available_slots} Slot Kosong`;
+            if (heroStatParked) heroStatParked.className = 'display-5 fw-bold text-warning font-monospace';
         } else {
             heroLine.className = 'position-absolute top-0 start-0 end-0 bg-success';
-            heroIconBox.className = 'badge bg-success p-3 p-md-4 rounded-4 fs-1 shadow-sm';
+            heroIconBox.className = 'badge bg-success text-white p-3 p-md-4 rounded-4 fs-1 shadow-sm';
             heroTitle.innerHTML = `Area Parkir Kosong &amp; Siap Digunakan`;
             heroDesc.innerText = `Tidak ada kendaraan di dalam area parkir. Semua ${data.capacity} slot dalam kondisi kosong.`;
             heroAvailTag.className = 'badge bg-success-subtle text-success border border-success-subtle px-3 py-1';
             heroAvailTag.innerText = `Semua ${data.capacity} Slot Kosong`;
+            if (heroStatParked) heroStatParked.className = 'display-5 fw-bold text-success font-monospace';
         }
 
         const grid = document.getElementById('admin-vehicle-grid');

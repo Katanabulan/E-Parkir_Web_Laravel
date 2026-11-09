@@ -74,24 +74,40 @@
     <!-- MAIN CONTENT -->
     <main class="container-fluid flex-grow-1">
 
+        @php
+            $hasVehicles = $parkedCount > 0;
+        @endphp
+
         <!-- 1. BIG HERO BANNER -->
         <div id="hero-banner" class="card border-0 shadow-lg bg-dark rounded-4 p-4 p-md-5 mb-4 position-relative overflow-hidden">
             <div class="row align-items-center g-4">
                 <div class="col-lg-8 d-flex flex-column flex-md-row align-items-center text-center text-md-start gap-4">
-                    <div id="hero-icon-box" class="badge bg-primary p-4 rounded-4 fs-1 shadow">
-                        <i id="hero-icon" class="bi bi-car-front-fill"></i>
+                    <div id="hero-icon-box" class="badge {{ $hasVehicles ? 'bg-warning text-dark' : 'bg-success text-white' }} p-4 rounded-4 fs-1 shadow">
+                        <i id="hero-icon" class="bi {{ $hasVehicles ? 'bi-car-front-fill' : 'bi-check-circle-fill' }}"></i>
                     </div>
                     <div>
                         <div class="mb-2">
-                            <span id="hero-pill" class="badge bg-secondary px-3 py-1 text-uppercase">
-                                Memeriksa Status...
+                            <span id="hero-pill" class="badge {{ $hasVehicles ? 'bg-warning text-dark' : 'bg-success text-white' }} px-3 py-1 text-uppercase fw-bold">
+                                @if ($hasVehicles)
+                                    AREA TERISI ({{ $parkedCount }} KENDARAAN)
+                                @else
+                                    SEMUA SLOT TERSEDIA
+                                @endif
                             </span>
                         </div>
                         <h2 id="hero-title" class="fw-bold text-white mb-2">
-                            Menghubungkan ke Sistem Parkir...
+                            @if ($hasVehicles)
+                                Ada <span class="text-warning">{{ $parkedCount }} Kendaraan</span> Sedang Parkir
+                            @else
+                                <span class="text-success">Area Parkir Kosong</span> &amp; Siap Digunakan
+                            @endif
                         </h2>
                         <p id="hero-subtitle" class="text-secondary mb-0">
-                            Memuat data kendaraan terparkir secara realtime dari sensor gerbang IoT.
+                            @if ($hasVehicles)
+                                Sisa {{ $availableSlots }} slot dari total {{ $totalCapacity }} kapasitas. Tarif aktif berjalan Rp2.000 / Jam.
+                            @else
+                                Semua {{ $totalCapacity }} slot parkir dalam kondisi kosong dan siap menerima kendaraan baru.
+                            @endif
                         </p>
                     </div>
                 </div>
@@ -100,10 +116,12 @@
                     <div class="card bg-black bg-opacity-50 border border-secondary border-opacity-25 p-4 rounded-4">
                         <span class="text-uppercase small fw-bold text-secondary">Kendaraan Terparkir</span>
                         <div class="d-flex align-items-baseline justify-content-center gap-1 my-2">
-                            <span id="hero-parked-count" class="display-4 fw-bold text-warning font-monospace">0</span>
-                            <span class="text-secondary fw-bold fs-5">/ <span id="hero-capacity">20</span></span>
+                            <span id="hero-parked-count" class="display-4 fw-bold {{ $hasVehicles ? 'text-warning' : 'text-success' }} font-monospace">{{ $parkedCount }}</span>
+                            <span class="text-secondary fw-bold fs-5">/ <span id="hero-capacity">{{ $totalCapacity }}</span></span>
                         </div>
-                        <span id="hero-slot-info" class="badge bg-success-subtle text-success fs-6 fw-bold">20 Slot Tersedia</span>
+                        <span id="hero-slot-info" class="badge {{ $hasVehicles ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success' }} fs-6 fw-bold">
+                            {{ $availableSlots }} Slot Tersedia
+                        </span>
                         <div class="d-flex justify-content-center gap-2 mt-3 pt-3 border-top border-secondary border-opacity-25 font-monospace small">
                             <span class="badge bg-info-subtle text-info border border-info-subtle">LT 1: <strong id="status-lt1">{{ $parkedLt1 }}</strong>/10</span>
                             <span class="badge bg-warning-subtle text-warning border border-warning-subtle">LT 2: <strong id="status-lt2">{{ $parkedLt2 }}</strong>/10</span>
@@ -123,7 +141,7 @@
                         <i class="bi bi-car-front-fill text-warning fs-5"></i>
                     </div>
                     <div class="d-flex align-items-baseline gap-2">
-                        <h3 id="stat-parked" class="fw-bold text-white font-monospace mb-0">0</h3>
+                        <h3 id="stat-parked" class="fw-bold text-white font-monospace mb-0">{{ $parkedCount }}</h3>
                         <small class="text-secondary">Kendaraan</small>
                     </div>
                 </div>
@@ -137,7 +155,7 @@
                         <i class="bi bi-check-circle-fill text-success fs-5"></i>
                     </div>
                     <div class="d-flex align-items-baseline gap-2">
-                        <h3 id="stat-available" class="fw-bold text-success font-monospace mb-0">20</h3>
+                        <h3 id="stat-available" class="fw-bold text-success font-monospace mb-0">{{ $availableSlots }}</h3>
                         <small class="text-secondary">Siap Pakai</small>
                     </div>
                 </div>
@@ -215,7 +233,7 @@
             <div class="d-flex align-items-center gap-3">
                 <span>Auto-Sync 1.5s</span>
                 <span>&bull;</span>
-                <a href="{{ route('client.dashboard') }}" class="text-decoration-none text-info">Portal Pengendara (Mobile)</a>
+                <a href="{{ route('login') }}" class="text-decoration-none text-info">Portal Login</a>
             </div>
         </div>
     </footer>

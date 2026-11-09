@@ -124,8 +124,8 @@ class ReceiptPrinterService
         $lines[] = "--------------------------------";
         $lines[] = $center("KARCIS MASUK PARKIR");
         $lines[] = "--------------------------------";
-        $lines[] = $center("KODE TIKET PARKIR:");
-        $lines[] = $center(">>> " . $ticketCode . " <<<");
+        $lines[] = $center("||| | |||| | || ||||| | ||| ||||");
+        $lines[] = $center("* " . $ticketCode . " *");
         $lines[] = "--------------------------------";
         $lines[] = $padBetween("Pos Masuk   :", $gateIn);
         $lines[] = $padBetween("Waktu Masuk :", $inTime->format('d/m/Y H:i'));
@@ -133,7 +133,6 @@ class ReceiptPrinterService
         $lines[] = $padBetween("Lantai      :", "LANTAI {$floor} (LT {$floor})");
         $lines[] = $padBetween("Tarif / Jam :", "Rp 2.000");
         $lines[] = "--------------------------------";
-        $lines[] = $center("[ SCAN QR CODE TIKET ]");
         $lines[] = "\n\n\n";
 
         return implode("\n", $lines);

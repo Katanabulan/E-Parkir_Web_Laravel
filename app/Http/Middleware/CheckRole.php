@@ -26,7 +26,7 @@ class CheckRole
         $user = Auth::user();
 
         if (!in_array($user->role, $roles)) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['status' => 'error', 'message' => 'Unauthorized role'], 403);
             }
 
@@ -34,11 +34,11 @@ class CheckRole
                 return redirect()->route('admin.dashboard')->with('error', 'Akses ditolak: Anda terautentikasi sebagai Administrator.');
             }
 
-            if ($user->role === 'owner') {
-                return redirect()->route('owner.reports.index')->with('error', 'Akses ditolak: Akun Owner hanya memiliki hak akses ke Portal Laporan.');
-            }
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
-            return redirect()->route('client.dashboard')->with('error', 'Akses ditolak.');
+            return redirect()->route('login')->with('error', 'Akses web hanya untuk Administrator. Akun Pengendara dan Owner silakan akses melalui aplikasi Mobile.');
         }
 
         return $next($request);
