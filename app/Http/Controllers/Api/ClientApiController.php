@@ -133,6 +133,11 @@ class ClientApiController extends Controller
             'name' => (string) $user->name,
             'email' => (string) $user->email,
             'phone' => (string) ($user->phone ?? ''),
+            'avatar' => $user->avatar,
+            'avatar_url' => $user->avatar_url,
+            'can_change_name' => $user->can_change_name,
+            'name_changes_count' => (int) ($user->name_changes_count ?? 0),
+            'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
             'role' => (string) $user->role,
         ];
 
@@ -233,6 +238,11 @@ class ClientApiController extends Controller
             'name' => (string) $user->name,
             'email' => (string) $user->email,
             'phone' => (string) ($user->phone ?? ''),
+            'avatar' => $user->avatar,
+            'avatar_url' => $user->avatar_url,
+            'can_change_name' => $user->can_change_name,
+            'name_changes_count' => (int) ($user->name_changes_count ?? 0),
+            'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
             'role' => (string) $user->role,
         ];
 
@@ -267,8 +277,15 @@ class ClientApiController extends Controller
     public function status(Request $request): JsonResponse
     {
         $userId = (int) $request->input('user_id', $request->query('user_id', 0));
+        if ($userId <= 0 && $request->bearerToken()) {
+            $decoded = base64_decode($request->bearerToken(), true);
+            if ($decoded && str_contains($decoded, '|')) {
+                $parts = explode('|', $decoded);
+                $userId = (int) $parts[0];
+            }
+        }
         if ($userId <= 0 && Auth::check()) {
-            $userId = Auth::id();
+            $userId = (int) Auth::id();
         }
 
         $uid = trim($request->input('uid', $request->query('uid', '')));
@@ -388,6 +405,11 @@ class ClientApiController extends Controller
             'name' => (string) $user->name,
             'email' => (string) $user->email,
             'phone' => (string) ($user->phone ?? ''),
+            'avatar' => $user->avatar,
+            'avatar_url' => $user->avatar_url,
+            'can_change_name' => $user->can_change_name,
+            'name_changes_count' => (int) ($user->name_changes_count ?? 0),
+            'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
             'role' => (string) $user->role,
         ] : null;
 
@@ -546,8 +568,15 @@ class ClientApiController extends Controller
     public function history(Request $request): JsonResponse
     {
         $userId = (int) $request->input('user_id', $request->query('user_id', 0));
+        if ($userId <= 0 && $request->bearerToken()) {
+            $decoded = base64_decode($request->bearerToken(), true);
+            if ($decoded && str_contains($decoded, '|')) {
+                $parts = explode('|', $decoded);
+                $userId = (int) $parts[0];
+            }
+        }
         if ($userId <= 0 && Auth::check()) {
-            $userId = Auth::id();
+            $userId = (int) Auth::id();
         }
 
         $card = null;
@@ -610,8 +639,15 @@ class ClientApiController extends Controller
         }
 
         $userId = (int) $request->input('user_id', $request->query('user_id', 0));
+        if ($userId <= 0 && $request->bearerToken()) {
+            $decoded = base64_decode($request->bearerToken(), true);
+            if ($decoded && str_contains($decoded, '|')) {
+                $parts = explode('|', $decoded);
+                $userId = (int) $parts[0];
+            }
+        }
         if ($userId <= 0 && Auth::check()) {
-            $userId = Auth::id();
+            $userId = (int) Auth::id();
         }
         $uid = trim($request->input('uid', $request->query('uid', '')));
 
@@ -653,8 +689,15 @@ class ClientApiController extends Controller
     public function profile(Request $request): JsonResponse
     {
         $userId = (int) $request->input('user_id', $request->query('user_id', 0));
+        if ($userId <= 0 && $request->bearerToken()) {
+            $decoded = base64_decode($request->bearerToken(), true);
+            if ($decoded && str_contains($decoded, '|')) {
+                $parts = explode('|', $decoded);
+                $userId = (int) $parts[0];
+            }
+        }
         if ($userId <= 0 && Auth::check()) {
-            $userId = Auth::id();
+            $userId = (int) Auth::id();
         }
 
         $user = User::with('rfidCard')->find($userId);
@@ -670,6 +713,11 @@ class ClientApiController extends Controller
             'name' => (string) $user->name,
             'email' => (string) $user->email,
             'phone' => (string) ($user->phone ?? ''),
+            'avatar' => $user->avatar,
+            'avatar_url' => $user->avatar_url,
+            'can_change_name' => $user->can_change_name,
+            'name_changes_count' => (int) ($user->name_changes_count ?? 0),
+            'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
             'role' => (string) $user->role,
         ];
 
@@ -764,16 +812,33 @@ class ClientApiController extends Controller
     }
 
     /**
-     * 8. UPDATE PROFIL PENGENDARA
+     * 8. UPDATE PROFIL PENGENDARA (Foto Profil, Nama 1x Ganti, Nomor HP)
      */
     public function updateProfile(Request $request): JsonResponse
     {
         $userId = (int) $request->input('user_id', $request->query('user_id', 0));
-        if ($userId <= 0 && Auth::check()) {
-            $userId = Auth::id();
+        
+        // Coba ekstrak user ID dari Bearer token jika user_id tidak dikirim di body
+        if ($userId <= 0 && $request->bearerToken()) {
+            $decoded = base64_decode($request->bearerToken(), true);
+            if ($decoded && str_contains($decoded, '|')) {
+                $parts = explode('|', $decoded);
+                $userId = (int) $parts[0];
+            }
         }
 
-        $user = User::find($userId);
+        if ($userId <= 0 && Auth::check()) {
+            $userId = (int) Auth::id();
+        }
+
+        if ($userId <= 0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Parameter user_id atau otentikasi wajib disertakan!'
+            ], 400);
+        }
+
+        $user = User::with('rfidCard')->find($userId);
         if (!$user) {
             return response()->json([
                 'status' => 'error',
@@ -781,29 +846,132 @@ class ClientApiController extends Controller
             ], 404);
         }
 
+        // 1. ATURAN GANTI NAMA: HANYA BOLEH 1 KALI SEUMUR HIDUP
         if ($request->has('name')) {
-            $user->name = trim($request->input('name'));
+            $newName = trim((string) $request->input('name'));
+            if ($newName === '') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Nama tidak boleh kosong!'
+                ], 422);
+            }
+
+            if ($newName !== $user->name) {
+                if ((int) ($user->name_changes_count ?? 0) >= 1) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Nama hanya dapat diubah 1 kali saja. Anda sudah pernah mengubah nama sebelumnya!',
+                        'can_change_name' => false,
+                        'name_changes_count' => (int) $user->name_changes_count,
+                        'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
+                    ], 422);
+                }
+
+                $user->name = $newName;
+                $user->name_changes_count = ((int) ($user->name_changes_count ?? 0)) + 1;
+                $user->name_changed_at = Carbon::now();
+            }
         }
+
+        // 2. ATURAN NOMOR HP: BEBAS DIUBAH
         if ($request->has('phone')) {
-            $user->phone = trim($request->input('phone'));
+            $user->phone = trim((string) $request->input('phone'));
         }
+
+        // 3. ATURAN FOTO PROFIL: MULTIPART FILE ATAU BASE64
+        $uploadedFile = $request->file('avatar') 
+            ?? $request->file('photo') 
+            ?? $request->file('profile_photo') 
+            ?? $request->file('image');
+
+        $destinationPath = public_path('uploads/avatars');
+        if (!file_exists($destinationPath)) {
+            @mkdir($destinationPath, 0755, true);
+        }
+
+        if ($uploadedFile) {
+            if (!$uploadedFile->isValid()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'File foto yang diunggah tidak valid atau rusak!'
+                ], 422);
+            }
+
+            $extension = strtolower($uploadedFile->getClientOriginalExtension());
+            if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Format file foto harus berupa JPG, JPEG, PNG, atau WEBP!'
+                ], 422);
+            }
+
+            // Maksimal 5MB
+            if ($uploadedFile->getSize() > 5 * 1024 * 1024) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Ukuran file foto maksimal adalah 5MB!'
+                ], 422);
+            }
+
+            $filename = 'avatar_' . $user->id . '_' . time() . '.' . $extension;
+
+            // Hapus foto lama jika ada
+            if (!empty($user->avatar) && file_exists($destinationPath . '/' . $user->avatar)) {
+                @unlink($destinationPath . '/' . $user->avatar);
+            }
+
+            $uploadedFile->move($destinationPath, $filename);
+            $user->avatar = $filename;
+
+        } elseif ($request->filled('avatar_base64') || $request->filled('photo_base64') || (is_string($request->input('photo')) && str_starts_with($request->input('photo'), 'data:image'))) {
+            // Dukungan payload Base64 untuk Mobile
+            $rawBase64 = (string) ($request->input('avatar_base64') ?: $request->input('photo_base64') ?: $request->input('photo'));
+            $ext = 'jpg';
+            if (preg_match('/^data:image\/(\w+);base64,/', $rawBase64, $type)) {
+                $rawBase64 = substr($rawBase64, strpos($rawBase64, ',') + 1);
+                $ext = strtolower($type[1]);
+                if ($ext === 'jpeg') $ext = 'jpg';
+            }
+
+            $decoded = base64_decode($rawBase64);
+            if ($decoded !== false) {
+                $filename = 'avatar_' . $user->id . '_' . time() . '.' . $ext;
+                if (!empty($user->avatar) && file_exists($destinationPath . '/' . $user->avatar)) {
+                    @unlink($destinationPath . '/' . $user->avatar);
+                }
+                file_put_contents($destinationPath . '/' . $filename, $decoded);
+                $user->avatar = $filename;
+            }
+        }
+
+        // 4. PLAT NOMOR KENDARAAN (Jika disertakan & user punya kartu)
+        if ($request->has('license_plate') && $user->rfidCard) {
+            $user->rfidCard->update([
+                'license_plate' => strtoupper(trim((string) $request->input('license_plate')))
+            ]);
+        }
+
         $user->save();
 
-        if ($request->has('license_plate') && $user->rfidCard) {
-            $user->rfidCard->update(['license_plate' => trim($request->input('license_plate'))]);
-        }
+        $userData = [
+            'id' => (int) $user->id,
+            'name' => (string) $user->name,
+            'email' => (string) $user->email,
+            'phone' => (string) ($user->phone ?? ''),
+            'avatar' => $user->avatar,
+            'avatar_url' => $user->avatar_url,
+            'can_change_name' => $user->can_change_name,
+            'name_changes_count' => (int) ($user->name_changes_count ?? 0),
+            'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
+            'role' => (string) $user->role,
+            'license_plate' => $user->rfidCard ? ($user->rfidCard->license_plate ?? '-') : '-',
+        ];
 
         return response()->json([
             'status' => 'success',
             'message' => 'Profil berhasil diperbarui!',
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone ?? '',
-                'role' => $user->role,
-                'license_plate' => $user->rfidCard ? ($user->rfidCard->license_plate ?? '-') : '-',
-            ]
+            'user' => $userData,
+            'data' => $userData
         ]);
     }
 

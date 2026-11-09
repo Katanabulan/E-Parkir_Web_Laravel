@@ -165,9 +165,7 @@
                                 <td class="text-center font-monospace small text-muted">{{ $rowNo++ }}</td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <span class="badge {{ $u->role === 'admin' ? 'bg-primary' : 'bg-warning text-dark' }} rounded-circle p-2">
-                                            {{ strtoupper(substr($u->name, 0, 1)) }}
-                                        </span>
+                                        <img src="{{ $u->avatar_url }}" alt="{{ $u->name }}" class="rounded-circle object-fit-cover border" style="width: 36px; height: 36px;">
                                         <div>
                                             <strong class="text-dark d-block">{{ $u->name }}</strong>
                                             @if ($isCurrentUser)

@@ -10,9 +10,6 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\StatusController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Owner\ReportController as OwnerReportController;
-use App\Http\Controllers\Owner\TransactionController as OwnerTransactionController;
-use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Api\ClientApiController;
 use App\Http\Controllers\ReceiptController;
 
@@ -65,38 +62,31 @@ Route::get('/receipt/{id}/escpos', [ReceiptController::class, 'escposData'])->na
 Route::get('/receipt/{id}', [ReceiptController::class, 'show'])->name('receipt.show');
 
 // =========================================================================
-// 2. CLIENT / PENGENDARA PORTAL
+// 2. CLIENT & OWNER MOBILE API ALIASES (Bebas Tampilan Web, Murni Backend API)
 // =========================================================================
 Route::prefix('client')->group(function () {
-    Route::get('/', [ClientDashboardController::class, 'index'])->name('client.dashboard');
-    Route::get('/dashboard', [ClientDashboardController::class, 'index']);
     Route::match(['get', 'post'], '/api-status', [ClientApiController::class, 'handle'])->name('client.api-status');
     Route::match(['get', 'post'], '/api_status.php', [ClientApiController::class, 'handle']);
     Route::match(['get', 'post'], '/login', [ClientApiController::class, 'login']);
+    Route::match(['get', 'post'], '/register', [ClientApiController::class, 'register']);
+    Route::match(['get', 'post'], '/profile', [ClientApiController::class, 'profile']);
+    Route::match(['get', 'post'], '/update_profile', [ClientApiController::class, 'updateProfile']);
+    Route::match(['get', 'post'], '/status', [ClientApiController::class, 'status']);
+    Route::match(['get', 'post'], '/slots', [ClientApiController::class, 'slots']);
+    Route::match(['get', 'post'], '/history', [ClientApiController::class, 'history']);
+    Route::match(['get', 'post'], '/topup', [ClientApiController::class, 'topup']);
+    Route::match(['get', 'post'], '/owner_dashboard', [ClientApiController::class, 'ownerDashboard']);
+    Route::match(['get', 'post'], '/owner_reports', [ClientApiController::class, 'ownerReports']);
+    Route::any('/', [ClientApiController::class, 'handle']);
 });
 
 // Alias di Root Web untuk kompatibilitas script lama/mobile
 Route::match(['get', 'post'], '/api_status.php', [ClientApiController::class, 'handle']);
 Route::match(['get', 'post'], '/api-status', [ClientApiController::class, 'handle']);
+Route::get('/owner/reports/export', [\App\Http\Controllers\Owner\ReportController::class, 'exportCsv'])->name('owner.reports.export');
 
 // =========================================================================
-// 3. OWNER PORTAL (Dashboard Eksekutif & Rincian Transaksi)
-// =========================================================================
-Route::prefix('owner')->middleware(['auth', 'role:owner'])->group(function () {
-    Route::get('/', function () {
-        return redirect()->route('owner.reports.index');
-    })->name('owner.dashboard');
-
-    // Halaman 1: Dashboard Eksekutif & Laporan Finansial
-    Route::get('/reports', [OwnerReportController::class, 'index'])->name('owner.reports.index');
-    Route::get('/reports/export', [OwnerReportController::class, 'exportCsv'])->name('owner.reports.export');
-
-    // Halaman 2: Rincian Transaksi Parkir
-    Route::get('/transactions', [OwnerTransactionController::class, 'index'])->name('owner.transactions.index');
-});
-
-// =========================================================================
-// 4. ADMIN PORTAL (Full Operasional: Protected by Auth and Role: admin)
+// 3. ADMIN PORTAL (Full Operasional Web: Protected by Auth and Role: admin)
 // =========================================================================
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/', function () {

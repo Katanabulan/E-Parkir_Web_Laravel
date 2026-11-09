@@ -62,8 +62,8 @@
                         <!-- Right Form Column -->
                         <div class="col-md-7 p-4 p-lg-5 bg-white d-flex flex-column justify-content-center">
                             <div class="mb-4">
-                                <h4 class="fw-bold text-dark mb-1">Masuk Akun</h4>
-                                <p class="text-muted small">Silakan masukkan kredensial akun Anda</p>
+                                <h4 class="fw-bold text-dark mb-1">Masuk Portal Admin</h4>
+                                <p class="text-muted small">Khusus Administrator. Pengendara &amp; Owner silakan masuk melalui aplikasi Mobile.</p>
                             </div>
 
                             <!-- Alert Messages -->

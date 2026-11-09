@@ -15,10 +15,11 @@ class AuthController extends Controller
             $user = Auth::user();
             if ($user->role === 'admin') {
                 return redirect()->route('admin.dashboard');
-            } elseif ($user->role === 'owner') {
-                return redirect()->route('owner.reports.index');
             }
-            return redirect()->route('client.dashboard');
+            Auth::logout();
+            return redirect()->route('login')->withErrors([
+                'email' => 'Portal web ini khusus untuk Administrator. Akun Pengendara dan Owner silakan masuk melalui aplikasi Mobile.'
+            ]);
         }
 
         return view('auth.login');
@@ -54,6 +55,13 @@ class AuthController extends Controller
             }
 
             if ($isPasswordValid) {
+                // Khusus portal Web, hanya izinkan role admin
+                if ($user->role !== 'admin') {
+                    return back()->withInput($request->only('email'))->withErrors([
+                        'email' => 'Akses portal web hanya untuk Administrator. Akun ' . ucfirst($user->role) . ' silakan masuk melalui aplikasi Mobile.',
+                    ]);
+                }
+
                 // Pastikan password tersimpan sebagai hash Bcrypt yang aman
                 if (Hash::needsRehash($user->password) || !str_starts_with($user->password, '$2y$')) {
                     $user->password = Hash::make($credentials['password']);
@@ -63,12 +71,7 @@ class AuthController extends Controller
                 Auth::login($user, $request->boolean('remember'));
                 $request->session()->regenerate();
 
-                if ($user->role === 'admin') {
-                    return redirect()->intended(route('admin.dashboard'));
-                } elseif ($user->role === 'owner') {
-                    return redirect()->intended(route('owner.reports.index'));
-                }
-                return redirect()->intended(route('client.dashboard'));
+                return redirect()->intended(route('admin.dashboard'));
             }
         }
 
