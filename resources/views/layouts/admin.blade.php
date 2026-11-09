@@ -214,7 +214,7 @@
                     <!-- User Profile Dropdown -->
                     <div class="dropdown">
                         <button class="btn btn-light border dropdown-toggle d-flex align-items-center gap-2 py-1 px-2.5 rounded-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="{{ auth()->user()->avatar_url }}" alt="Avatar" class="rounded-circle object-fit-cover border" style="width: 28px; height: 28px;">
+                            <img src="{{ auth()->user()->avatar_url }}" alt="Avatar" class="rounded-circle object-fit-cover border" style="width: 28px; height: 28px;" onerror="this.onerror=null; this.src='{{ asset('assets/images/default-avatar.svg') }}';">
                             <span class="fw-semibold small d-none d-sm-inline">{{ explode(' ', auth()->user()->name ?? 'Admin')[0] }}</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-2">

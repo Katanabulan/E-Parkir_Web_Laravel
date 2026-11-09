@@ -165,7 +165,7 @@
                                 <td class="text-center font-monospace small text-muted">{{ $rowNo++ }}</td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <img src="{{ $u->avatar_url }}" alt="{{ $u->name }}" class="rounded-circle object-fit-cover border" style="width: 36px; height: 36px;">
+                                        <img src="{{ $u->avatar_url }}" alt="{{ $u->name }}" class="rounded-circle object-fit-cover border shadow-sm flex-shrink-0" style="width: 38px; height: 38px;" onerror="this.onerror=null; this.src='{{ asset('assets/images/default-avatar.svg') }}';">
                                         <div>
                                             <strong class="text-dark d-block">{{ $u->name }}</strong>
                                             @if ($isCurrentUser)
@@ -244,6 +244,18 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="create_avatar" class="form-label small fw-semibold text-secondary">URL Foto Profil Real (Opsional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-image"></i></span>
+                            <input type="url" id="create_avatar" name="avatar" placeholder="https://images.unsplash.com/... atau URL foto langsung" class="form-control" oninput="previewUserAvatar(this.value, 'create-avatar-preview')">
+                        </div>
+                        <div class="mt-2 d-flex align-items-center gap-2">
+                            <img id="create-avatar-preview" src="" class="rounded-circle border object-fit-cover shadow-sm" style="width: 38px; height: 38px; display: none;">
+                            <small class="text-muted" style="font-size: 0.75rem;">Masukkan URL gambar/foto untuk menampilkan foto profil real.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="create_password" class="form-label small fw-semibold text-secondary">Password Baru <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <input type="password" id="create_password" name="password" required minlength="6" placeholder="Minimal 6 karakter" class="form-control font-monospace">
@@ -302,6 +314,18 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="edit_avatar" class="form-label small fw-semibold text-secondary">URL Foto Profil Real (Avatar)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-image"></i></span>
+                            <input type="text" id="edit_avatar" name="avatar" placeholder="https://images.unsplash.com/... atau URL foto langsung" class="form-control" oninput="previewUserAvatar(this.value, 'edit-avatar-preview')">
+                        </div>
+                        <div class="mt-2 d-flex align-items-center gap-2">
+                            <img id="edit-avatar-preview" src="" class="rounded-circle border object-fit-cover shadow-sm" style="width: 42px; height: 42px;">
+                            <small class="text-muted" style="font-size: 0.75rem;">Pratinjau foto profil real. Masukkan URL langsung gambar (JPG, PNG, WebP).</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="edit_password" class="form-label small fw-semibold text-secondary">Ganti Password (Opsional)</label>
                         <div class="input-group">
                             <input type="password" id="edit_password" name="password" minlength="6" placeholder="Kosongkan jika tidak diubah" class="form-control font-monospace">
@@ -334,7 +358,26 @@
 </form>
 
 <script>
+    function previewUserAvatar(url, previewId) {
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+        if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+            preview.src = url;
+            preview.style.display = 'block';
+        } else {
+            if (previewId === 'create-avatar-preview') {
+                preview.style.display = 'none';
+            } else {
+                preview.src = '{{ asset('assets/images/default-avatar.svg') }}';
+                preview.style.display = 'block';
+            }
+        }
+    }
+
     function openCreateModal() {
+        document.getElementById('create_avatar').value = '';
+        const prev = document.getElementById('create-avatar-preview');
+        if (prev) prev.style.display = 'none';
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('createModal'));
         modal.show();
     }
@@ -344,8 +387,15 @@
         document.getElementById('edit_name').value = user.name || '';
         document.getElementById('edit_email').value = user.email || '';
         document.getElementById('edit_phone').value = user.phone || '';
+        document.getElementById('edit_avatar').value = user.avatar || '';
         document.getElementById('edit_password').value = '';
         document.getElementById('edit_role').value = user.role || 'admin';
+
+        const prev = document.getElementById('edit-avatar-preview');
+        if (prev) {
+            prev.src = user.avatar_url || '{{ asset('assets/images/default-avatar.svg') }}';
+            prev.style.display = 'block';
+        }
 
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal'));
         modal.show();

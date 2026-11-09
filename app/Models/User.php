@@ -53,9 +53,8 @@ class User extends Authenticatable
             return asset('uploads/avatars/' . $this->avatar);
         }
 
-        // Fallback default avatar
-        $nameEncoded = urlencode($this->name ?? 'User');
-        return "https://ui-avatars.com/api/?name={$nameEncoded}&background=00719C&color=ffffff&bold=true";
+        // Fallback default avatar jika dummy / tidak ada foto (cukup icon, bukan wajah orang)
+        return asset('assets/images/default-avatar.svg');
     }
 
     public function getCanChangeNameAttribute(): bool

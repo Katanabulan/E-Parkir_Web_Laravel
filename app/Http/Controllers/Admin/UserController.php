@@ -60,6 +60,7 @@ class UserController extends Controller
             'name' => 'required|string|max:100',
             'email' => 'required|email|max:100|unique:users,email',
             'phone' => 'nullable|string|max:20',
+            'avatar' => 'nullable|string|max:1000',
             'role' => ['required', Rule::in(['admin', 'owner'])],
             'password' => 'required|string|min:6',
         ], [
@@ -77,6 +78,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
+            'avatar' => !empty($validated['avatar']) ? trim($validated['avatar']) : null,
             'role' => $validated['role'],
             'password' => Hash::make($validated['password']),
         ]);
@@ -97,6 +99,7 @@ class UserController extends Controller
             'name' => 'required|string|max:100',
             'email' => ['required', 'email', 'max:100', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => 'nullable|string|max:20',
+            'avatar' => 'nullable|string|max:1000',
             'role' => ['required', Rule::in(['admin', 'owner'])],
             'password' => 'nullable|string|min:6',
         ], [
@@ -113,6 +116,9 @@ class UserController extends Controller
         $user->email = $validated['email'];
         $user->phone = $validated['phone'] ?? null;
         $user->role = $validated['role'];
+        if ($request->has('avatar')) {
+            $user->avatar = !empty($validated['avatar']) ? trim($validated['avatar']) : null;
+        }
 
         if (!empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);

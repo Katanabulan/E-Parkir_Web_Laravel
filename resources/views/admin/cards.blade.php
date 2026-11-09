@@ -155,7 +155,19 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <strong class="text-dark">{{ $c->user->name ?? 'Pengendara' }}</strong>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img src="{{ $c->user ? $c->user->avatar_url : asset('assets/images/default-avatar.svg') }}" 
+                                             alt="{{ $c->user->name ?? 'Pengendara' }}" 
+                                             class="rounded-circle object-fit-cover border shadow-sm flex-shrink-0" 
+                                             style="width: 38px; height: 38px;"
+                                             onerror="this.onerror=null; this.src='{{ asset('assets/images/default-avatar.svg') }}';">
+                                        <div>
+                                            <strong class="text-dark d-block">{{ $c->user->name ?? 'Pengendara' }}</strong>
+                                            @if (!empty($c->license_plate))
+                                                <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.7rem;">{{ $c->license_plate }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </td>
                                 <td>
                                     <span class="badge bg-success-subtle text-success border border-success-subtle fs-6 font-monospace">
@@ -217,6 +229,8 @@
                                             "user_name" => $c->user->name ?? "",
                                             "email" => $c->user->email ?? "",
                                             "phone" => $c->user->phone ?? "",
+                                            "avatar" => $c->user->avatar ?? "",
+                                            "avatar_url" => $c->user ? $c->user->avatar_url : "",
                                             "status" => $c->status,
                                             "balance" => (int) $c->balance
                                         ]) !!})' class="btn btn-outline-secondary btn-sm rounded-3" title="Edit Data">
@@ -302,6 +316,18 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">URL Foto Profil Pengendara (Opsional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-image"></i></span>
+                            <input type="url" id="new-user-avatar" name="avatar" placeholder="https://images.unsplash.com/... atau URL foto" class="form-control" oninput="previewCardAvatar(this.value, 'new-avatar-preview')">
+                        </div>
+                        <div class="mt-2 d-flex align-items-center gap-2">
+                            <img id="new-avatar-preview" src="" class="rounded-circle border object-fit-cover shadow-sm" style="width: 36px; height: 36px; display: none;">
+                            <small class="text-muted" style="font-size: 0.75rem;">Masukkan URL gambar/foto untuk profil real pengendara.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label small fw-semibold text-secondary">Password Akun Pengendara <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <input type="text" id="new-user-password" name="password" required minlength="4" class="form-control font-monospace">
@@ -364,6 +390,18 @@
                         <div class="col-6">
                             <label class="form-label small fw-semibold text-secondary">No. HP</label>
                             <input type="number" id="edit-phone" name="phone" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">URL Foto Profil Real (Avatar)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-image"></i></span>
+                            <input type="text" id="edit-avatar" name="avatar" placeholder="https://images.unsplash.com/... atau URL foto" class="form-control" oninput="previewCardAvatar(this.value, 'edit-avatar-preview')">
+                        </div>
+                        <div class="mt-2 d-flex align-items-center gap-2">
+                            <img id="edit-avatar-preview" src="" class="rounded-circle border object-fit-cover shadow-sm" style="width: 42px; height: 42px;">
+                            <small class="text-muted" style="font-size: 0.75rem;">Pratinjau foto profil. Masukkan URL langsung gambar (JPG, PNG, WebP).</small>
                         </div>
                     </div>
 
@@ -475,6 +513,10 @@
         document.getElementById('scan-polling-status').textContent = 'Menunggu tap dari sensor...';
         const pwdInput = document.getElementById('new-user-password');
         if (pwdInput) pwdInput.value = '';
+        const avInput = document.getElementById('new-user-avatar');
+        if (avInput) avInput.value = '';
+        const avPrev = document.getElementById('new-avatar-preview');
+        if (avPrev) avPrev.style.display = 'none';
     }
 
     function startTapPolling() {
@@ -558,6 +600,22 @@
         }
     }
 
+    function previewCardAvatar(url, previewId) {
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+        if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+            preview.src = url;
+            preview.style.display = 'block';
+        } else {
+            if (previewId === 'new-avatar-preview') {
+                preview.style.display = 'none';
+            } else {
+                preview.src = '{{ asset('assets/images/default-avatar.svg') }}';
+                preview.style.display = 'block';
+            }
+        }
+    }
+
     function openEditCardModal(card) {
         document.getElementById('edit-card-id').value = card.id;
         document.getElementById('edit-card-form').action = '{{ url('/admin/cards') }}/' + card.id;
@@ -565,10 +623,18 @@
         document.getElementById('edit-name').value = card.user_name || '';
         document.getElementById('edit-email').value = card.email || '';
         document.getElementById('edit-phone').value = card.phone || '';
+        document.getElementById('edit-avatar').value = card.avatar || '';
         document.getElementById('edit-status').value = card.status;
         document.getElementById('edit-balance').value = card.balance || 0;
         const editPwd = document.getElementById('edit-password');
         if (editPwd) editPwd.value = '';
+
+        const prev = document.getElementById('edit-avatar-preview');
+        if (prev) {
+            prev.src = card.avatar_url || '{{ asset('assets/images/default-avatar.svg') }}';
+            prev.style.display = 'block';
+        }
+
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editCardModal'));
         modal.show();
     }

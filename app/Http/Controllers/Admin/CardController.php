@@ -58,6 +58,7 @@ class CardController extends Controller
         $name = trim($request->input('name', ''));
         $email = trim($request->input('email', ''));
         $phone = trim($request->input('phone', ''));
+        $avatar = trim($request->input('avatar', ''));
         $password = trim($request->input('password', ''));
         $status = in_array($request->input('status'), ['active', 'blocked']) ? $request->input('status') : 'active';
         $balance = (int) $request->input('balance', 50000);
@@ -85,17 +86,22 @@ class CardController extends Controller
         // Cari atau buat user baru
         $user = User::where('email', $email)->first();
         if ($user) {
-            $user->update([
+            $userData = [
                 'name' => $name,
                 'phone' => !empty($phone) ? $phone : ($user->phone ?: '0812000000'),
                 'password' => Hash::make($password)
-            ]);
+            ];
+            if (!empty($avatar)) {
+                $userData['avatar'] = $avatar;
+            }
+            $user->update($userData);
         } else {
             $user = User::create([
                 'name' => $name,
                 'email' => $email,
                 'password' => Hash::make($password),
                 'phone' => !empty($phone) ? $phone : '0812000000',
+                'avatar' => !empty($avatar) ? $avatar : null,
                 'role' => 'client'
             ]);
         }
@@ -119,6 +125,7 @@ class CardController extends Controller
         $name = trim($request->input('name', ''));
         $email = trim($request->input('email', ''));
         $phone = trim($request->input('phone', ''));
+        $avatar = trim($request->input('avatar', ''));
         $status = in_array($request->input('status'), ['active', 'blocked']) ? $request->input('status') : 'active';
         $newBalance = $request->has('balance') ? (int) $request->input('balance') : null;
         $password = trim($request->input('password', ''));
@@ -129,6 +136,9 @@ class CardController extends Controller
                 'email' => !empty($email) ? $email : $card->user->email,
                 'phone' => $phone
             ];
+            if ($request->has('avatar')) {
+                $userData['avatar'] = !empty($avatar) ? $avatar : null;
+            }
             if (!empty($password)) {
                 $userData['password'] = Hash::make($password);
             }
