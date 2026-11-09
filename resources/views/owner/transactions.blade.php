@@ -5,16 +5,13 @@
 @section('header_subtitle', 'Audit dan monitoring lengkap data riil transaksi kendaraan masuk dan keluar')
 
 @section('content')
-<!-- =========================================================================
-     A. KOP RESMI CETAK (Hanya Muncul Saat Klik "Cetak Laporan" / window.print)
-     ========================================================================= -->
 <style>
 @media print {
     @page {
         size: landscape;
         margin: 8mm 10mm !important;
     }
-    .no-print, #sidebar, #owner-topbar, #sidebar-backdrop, footer {
+    .d-print-none, #sidebar, #owner-topbar, #sidebar-backdrop, footer {
         display: none !important;
     }
     html, body {
@@ -31,15 +28,17 @@
 }
 </style>
 
-<div class="print-only mb-3 text-black">
-    <!-- Kop Surat Resmi -->
-    <div class="border-b-2 border-black pb-2 mb-2 flex items-center justify-between">
+<!-- =========================================================================
+     A. KOP RESMI CETAK (Hanya Muncul Saat Klik "Cetak Laporan" / window.print)
+     ========================================================================= -->
+<div class="d-none d-print-block mb-3 text-dark">
+    <div class="border-bottom border-2 border-dark pb-2 mb-2 d-flex align-items-center justify-content-between">
         <div>
-            <div class="text-[9px] uppercase font-extrabold tracking-widest text-[#00719C]">E-Parkir IoT Platform &bull; Sigma Boys</div>
-            <h1 class="text-lg font-black tracking-tight text-black mt-0.5">LAPORAN RINCIAN TRANSAKSI KENDARAAN PARKIR</h1>
-            <p class="text-[10px] text-black/70 font-medium">Rekapitulasi Audit Riil Transaksi &bull; Portal Eksekutif Pemilik Usaha (Owner)</p>
+            <div class="text-uppercase fw-bold text-primary small" style="font-size: 9px; letter-spacing: 0.1em;">E-Parkir IoT Platform &bull; Sigma Boys</div>
+            <h1 class="h5 fw-bold text-dark mt-1 mb-0">LAPORAN RINCIAN TRANSAKSI KENDARAAN PARKIR</h1>
+            <p class="small text-secondary mb-0" style="font-size: 10px;">Rekapitulasi Audit Riil Transaksi &bull; Portal Eksekutif Pemilik Usaha (Owner)</p>
         </div>
-        <div class="text-right text-[9px] font-mono leading-tight">
+        <div class="text-end small font-monospace" style="font-size: 9px; line-height: 1.3;">
             <div><strong>Waktu Cetak:</strong> {{ date('d/m/Y H:i') }} WIB</div>
             <div><strong>Dicetak Oleh:</strong> {{ auth()->user()->name ?? 'Owner' }} (OWNER)</div>
             <div><strong>Filter Tanggal:</strong> {{ $date ? \Carbon\Carbon::parse($date)->format('d/m/Y') : 'SEMUA TANGGAL' }}</div>
@@ -47,172 +46,177 @@
     </div>
 </div>
 
-<div class="space-y-4">
+<div class="d-flex flex-column gap-4">
 
     <!-- =========================================================================
-         B. FILTER TOOLBAR LENGKAP DENGAN PRESET & PENCARIAN (no-print)
+         B. FILTER TOOLBAR LENGKAP DENGAN PRESET & PENCARIAN (d-print-none)
          ========================================================================= -->
-    <div class="bg-white clean-border rounded-xl p-4 shadow-sm no-print">
-        <form method="GET" action="{{ route('owner.transactions.index') }}" id="filter-form" class="space-y-3">
-            <!-- BARIS ATAS: Preset Periode Cepat & Tombol Aksi (Export Excel & Cetak Dokumen) -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-black/10">
-                <div class="flex flex-wrap items-center gap-1.5">
-                    <span class="text-[11px] font-bold text-black/50 uppercase tracking-wider mr-1">
-                        <i class="fa-solid fa-calendar-day text-[#00719C] me-1"></i>Pilih Cepat:
-                    </span>
-                    
-                    <a href="{{ route('owner.transactions.index', array_merge(request()->except(['page', 'date']), ['preset' => 'today'])) }}" 
-                       class="px-3 py-1 rounded-md text-xs font-semibold transition {{ $preset === 'today' || $date === date('Y-m-d') ? 'bg-[#00719C] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-black/80' }}">
-                        Hari Ini
-                    </a>
-
-                    <a href="{{ route('owner.transactions.index', array_merge(request()->except(['page', 'date']), ['preset' => 'yesterday'])) }}" 
-                       class="px-3 py-1 rounded-md text-xs font-semibold transition {{ $preset === 'yesterday' ? 'bg-[#00719C] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-black/80' }}">
-                        Kemarin
-                    </a>
-
-                    <a href="{{ route('owner.transactions.index', array_merge(request()->except(['page', 'date']), ['preset' => 'all', 'date' => ''])) }}" 
-                       class="px-3 py-1 rounded-md text-xs font-semibold transition {{ ($preset === 'all' || empty($preset)) && empty($date) ? 'bg-[#00719C] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-black/80' }}">
-                        Semua Hari
-                    </a>
-                </div>
-
-                <!-- Tombol Export Excel & Cetak Dokumen -->
-                <div class="flex items-center gap-2">
-                    <a href="{{ route('owner.reports.export', request()->all()) }}" 
-                       title="Download data tabel dalam format spreadsheet Excel (.xls)" 
-                       class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-file-excel text-sm"></i>
-                        <span>Export Excel</span>
-                    </a>
-
-                    <button type="button" 
-                            onclick="window.print()" 
-                            title="Cetak laporan resmi ke format kertas A4 Landscape / Simpan PDF" 
-                            class="px-3.5 py-1.5 bg-[#FFD51E] hover:bg-[#e6be12] text-black text-xs font-extrabold rounded-lg transition flex items-center gap-1.5 shadow-sm cursor-pointer border-none">
-                        <i class="fa-solid fa-print text-sm"></i>
-                        <span>Cetak Laporan</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- BARIS BAWAH: Input Pencarian, Filter Metode, Filter Lantai, Input Tanggal Tunggal, & Terapkan -->
-            <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5">
-                <!-- Pencarian Cepat -->
-                <div class="search-wrapper-box flex-1 min-w-[200px]">
-                    <span class="search-icon">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </span>
-                    <input type="text" 
-                           id="main-search-input" 
-                           name="search" 
-                           value="{{ $search }}" 
-                           placeholder="Cari kode tiket, plat nomor, nama pengendara, UID, atau ID...">
-                    @if (!empty($search))
-                        <a href="{{ route('owner.transactions.index', array_merge(request()->except(['search', 'page']))) }}" 
-                           title="Hapus pencarian" 
-                           class="search-clear-btn">
-                            <i class="fa-solid fa-circle-xmark"></i>
+    <div class="card border-0 shadow-sm rounded-4 d-print-none">
+        <div class="card-body p-4">
+            <form method="GET" action="{{ route('owner.transactions.index') }}" id="filter-form" class="d-flex flex-column gap-3">
+                <!-- BARIS ATAS: Preset Periode Cepat & Tombol Aksi (Export Excel & Cetak Dokumen) -->
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 pb-3 border-bottom">
+                    <div class="d-flex flex-wrap align-items-center gap-1">
+                        <span class="small fw-bold text-secondary text-uppercase me-2" style="font-size: 0.75rem;">
+                            <i class="bi bi-calendar-event text-primary me-1"></i>Pilih Cepat:
+                        </span>
+                        
+                        <a href="{{ route('owner.transactions.index', array_merge(request()->except(['page', 'date']), ['preset' => 'today'])) }}" 
+                           class="btn btn-sm {{ $preset === 'today' || $date === date('Y-m-d') ? 'btn-primary' : 'btn-light text-secondary border' }} rounded-2 fw-semibold">
+                            Hari Ini
                         </a>
-                    @endif
-                </div>
 
-                <!-- Filter Tipe Akses (Kartu vs Karcis) -->
-                <div class="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg clean-border shrink-0">
-                    <span class="text-[10px] uppercase font-bold text-black/50 px-1.5">Metode:</span>
-                    <select name="access_type" class="text-xs font-bold text-black px-2 py-1 bg-white rounded clean-border focus:outline-none focus:border-[#00719C]">
-                        <option value="all" {{ $accessType === 'all' ? 'selected' : '' }}>Semua Akses</option>
-                        <option value="ticket" {{ $accessType === 'ticket' ? 'selected' : '' }}>Karcis Tiket</option>
-                        <option value="card" {{ $accessType === 'card' ? 'selected' : '' }}>Kartu RFID Member</option>
-                    </select>
-                </div>
-
-                <!-- Filter Lantai Parkir (LT 1 vs LT 2) -->
-                <div class="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg clean-border shrink-0">
-                    <span class="text-[10px] uppercase font-bold text-black/50 px-1.5">Lantai:</span>
-                    <select name="floor" class="text-xs font-bold text-black px-2 py-1 bg-white rounded clean-border focus:outline-none focus:border-[#00719C]">
-                        <option value="all" {{ ($floorFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Lantai</option>
-                        <option value="1" {{ ($floorFilter ?? '') === '1' ? 'selected' : '' }}>Lantai 1 (LT 1)</option>
-                        <option value="2" {{ ($floorFilter ?? '') === '2' ? 'selected' : '' }}>Lantai 2 (LT 2)</option>
-                    </select>
-                </div>
-
-                <!-- Input Tanggal Tunggal (Single Date Picker) -->
-                <div class="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg clean-border shrink-0">
-                    <span class="text-[10px] uppercase font-bold text-black/50 px-1.5">
-                        <i class="fa-regular fa-calendar text-[#00719C] me-1"></i>Tanggal:
-                    </span>
-                    <input type="date" 
-                           name="date" 
-                           value="{{ $date }}" 
-                           title="Pilih Tanggal Transaksi" 
-                           class="text-xs font-mono font-semibold text-black px-2.5 py-1 bg-white rounded clean-border focus:outline-none focus:border-[#00719C]">
-                </div>
-
-                <!-- Tombol Filter & Reset -->
-                <div class="flex items-center gap-2 shrink-0">
-                    <button type="submit" class="px-4 py-2 bg-[#00719C] hover:bg-[#005c80] text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 shadow-sm cursor-pointer border-none">
-                        <i class="fa-solid fa-filter text-[10px]"></i>
-                        <span>Filter</span>
-                    </button>
-
-                    @if(!empty($search) || !empty($date) || ($preset !== 'all' && !empty($preset)) || $accessType !== 'all' || ($floorFilter ?? 'all') !== 'all')
-                        <a href="{{ route('owner.transactions.index') }}" 
-                           title="Kembalikan filter ke semua data" 
-                           class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-rose-600 text-xs font-semibold rounded-lg transition flex items-center gap-1">
-                            <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
-                            <span>Reset</span>
+                        <a href="{{ route('owner.transactions.index', array_merge(request()->except(['page', 'date']), ['preset' => 'yesterday'])) }}" 
+                           class="btn btn-sm {{ $preset === 'yesterday' ? 'btn-primary' : 'btn-light text-secondary border' }} rounded-2 fw-semibold">
+                            Kemarin
                         </a>
-                    @endif
+
+                        <a href="{{ route('owner.transactions.index', array_merge(request()->except(['page', 'date']), ['preset' => 'all', 'date' => ''])) }}" 
+                           class="btn btn-sm {{ ($preset === 'all' || empty($preset)) && empty($date) ? 'btn-primary' : 'btn-light text-secondary border' }} rounded-2 fw-semibold">
+                            Semua Hari
+                        </a>
+                    </div>
+
+                    <!-- Tombol Export Excel & Cetak Dokumen -->
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{{ route('owner.reports.export', request()->all()) }}" 
+                           title="Download data tabel dalam format spreadsheet Excel (.xls)" 
+                           class="btn btn-success btn-sm fw-bold d-inline-flex align-items-center gap-1.5 rounded-3 shadow-sm">
+                            <i class="bi bi-file-earmark-excel-fill"></i>
+                            <span>Export Excel</span>
+                        </a>
+
+                        <button type="button" 
+                                onclick="window.print()" 
+                                title="Cetak laporan resmi ke format kertas A4 Landscape / Simpan PDF" 
+                                class="btn btn-warning btn-sm fw-bold text-dark d-inline-flex align-items-center gap-1.5 rounded-3 shadow-sm">
+                            <i class="bi bi-printer-fill"></i>
+                            <span>Cetak Laporan</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
+
+                <!-- BARIS BAWAH: Input Pencarian, Filter Metode, Filter Lantai, Input Tanggal Tunggal, & Terapkan -->
+                <div class="row g-2 align-items-center">
+                    <!-- Pencarian Cepat -->
+                    <div class="col-12 col-lg-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light border-end-0 text-secondary">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" 
+                                   id="main-search-input" 
+                                   name="search" 
+                                   value="{{ $search }}" 
+                                   class="form-control border-start-0" 
+                                   placeholder="Cari kode tiket, plat, nama, UID...">
+                            @if (!empty($search))
+                                <a href="{{ route('owner.transactions.index', array_merge(request()->except(['search', 'page']))) }}" 
+                                   title="Hapus pencarian" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Filter Tipe Akses -->
+                    <div class="col-6 col-sm-3 col-lg-2">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light text-secondary small" style="font-size: 0.7rem;">Tipe</span>
+                            <select name="access_type" class="form-select form-select-sm fw-semibold">
+                                <option value="all" {{ $accessType === 'all' ? 'selected' : '' }}>Semua</option>
+                                <option value="ticket" {{ $accessType === 'ticket' ? 'selected' : '' }}>Karcis</option>
+                                <option value="card" {{ $accessType === 'card' ? 'selected' : '' }}>RFID</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filter Lantai -->
+                    <div class="col-6 col-sm-3 col-lg-2">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light text-secondary small" style="font-size: 0.7rem;">Lantai</span>
+                            <select name="floor" class="form-select form-select-sm fw-semibold">
+                                <option value="all" {{ ($floorFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua</option>
+                                <option value="1" {{ ($floorFilter ?? '') === '1' ? 'selected' : '' }}>LT 1</option>
+                                <option value="2" {{ ($floorFilter ?? '') === '2' ? 'selected' : '' }}>LT 2</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Input Tanggal Tunggal -->
+                    <div class="col-8 col-sm-4 col-lg-2">
+                        <input type="date" 
+                               name="date" 
+                               value="{{ $date }}" 
+                               title="Pilih Tanggal Transaksi" 
+                               class="form-control form-control-sm font-monospace fw-semibold">
+                    </div>
+
+                    <!-- Tombol Filter & Reset -->
+                    <div class="col-4 col-sm-2 col-lg-2 d-flex align-items-center gap-1">
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold d-inline-flex align-items-center gap-1 flex-grow-1">
+                            <i class="bi bi-funnel-fill"></i>
+                            <span>Filter</span>
+                        </button>
+
+                        @if(!empty($search) || !empty($date) || ($preset !== 'all' && !empty($preset)) || $accessType !== 'all' || ($floorFilter ?? 'all') !== 'all')
+                            <a href="{{ route('owner.transactions.index') }}" 
+                               title="Kembalikan filter ke semua data" 
+                               class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- =========================================================================
          C. TABEL DATA RINCIAN TRANSAKSI PARKIR
          ========================================================================= -->
-    <div class="bg-white clean-border rounded-xl shadow-sm overflow-hidden print:border-none print:shadow-none">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         
-        <!-- Table Header Toolbar (no-print) -->
-        <div class="p-4 clean-border-b flex items-center justify-between gap-3 bg-white no-print">
-            <div class="flex items-center gap-2.5">
-                <div class="icon-box" style="width: 2rem; height: 2rem; border: 1.5px solid #005677;">
-                    <i class="fa-solid fa-table-list text-xs"></i>
+        <!-- Table Header Toolbar (d-print-none) -->
+        <div class="card-header bg-white border-bottom p-4 d-flex align-items-center justify-content-between gap-3 d-print-none">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center rounded-3 text-white" style="width: 2.25rem; height: 2.25rem; background-color: #00719C;">
+                    <i class="bi bi-card-list"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-black uppercase tracking-wide">Rincian Transaksi Parkir</h3>
-                    <p class="text-xs text-black/50">
-                        Total ditemukan <strong class="text-black font-mono font-bold">{{ $totalTransactionsCount }}</strong> rekaman transaksi riil.
+                    <h3 class="fs-6 fw-bold text-dark text-uppercase tracking-wide mb-0">Rincian Transaksi Parkir</h3>
+                    <p class="small text-secondary mb-0">
+                        Total ditemukan <strong class="text-dark font-monospace">{{ $totalTransactionsCount }}</strong> rekaman transaksi riil.
                     </p>
                 </div>
             </div>
         </div>
 
         <!-- Table Canvas -->
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border-collapse">
-                <thead>
-                    <tr class="clean-border-b bg-slate-50 text-black/60 text-[10px] font-bold uppercase tracking-wider print:bg-slate-200 print:text-black">
-                        <th class="py-2.5 px-2 text-center w-10">No</th>
-                        <th class="py-2.5 px-2 w-16">ID</th>
-                        <th class="py-2.5 px-3">Tipe Akses</th>
-                        <th class="py-2.5 px-3">Lantai</th>
-                        <th class="py-2.5 px-3">Identitas / Kode</th>
-                        <th class="py-2.5 px-3">Pengendara</th>
-                        <th class="py-2.5 px-3">Waktu</th>
-                        <th class="py-2.5 px-2 text-center">Durasi</th>
-                        <th class="py-2.5 px-3 text-right">Tarif</th>
-                        <th class="py-2.5 px-2 text-center">Status</th>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-nowrap">
+                <thead class="table-light">
+                    <tr class="small text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">
+                        <th class="py-3 px-3 text-center" style="width: 40px;">No</th>
+                        <th class="py-3 px-3" style="width: 60px;">ID</th>
+                        <th class="py-3 px-3">Tipe Akses</th>
+                        <th class="py-3 px-3">Lantai</th>
+                        <th class="py-3 px-3">Identitas / Kode</th>
+                        <th class="py-3 px-3">Pengendara</th>
+                        <th class="py-3 px-3">Waktu</th>
+                        <th class="py-3 px-3 text-center">Durasi</th>
+                        <th class="py-3 px-3 text-end">Tarif</th>
+                        <th class="py-3 px-3 text-center">Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-black/10 text-black">
+                <tbody>
                     @if ($transactions->isEmpty())
                         <tr>
-                            <td colspan="10" class="py-12 text-center text-black/40">
-                                <i class="fa-solid fa-inbox text-3xl mb-2 text-black/20 block"></i>
-                                <div class="font-bold text-xs text-black/60">Tidak ada data transaksi yang sesuai filter</div>
-                                <div class="text-[11px] mt-0.5">Silakan sesuaikan kata kunci pencarian atau rentang periode filter.</div>
+                            <td colspan="10" class="py-5 text-center text-secondary">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 text-opacity-50"></i>
+                                <div class="fw-bold small">Tidak ada data transaksi yang sesuai filter</div>
+                                <div class="small text-muted mt-1">Silakan sesuaikan kata kunci pencarian atau rentang periode filter.</div>
                             </td>
                         </tr>
                     @else
@@ -229,83 +233,77 @@
                                 $isTicket = !empty($t->ticket_code);
                                 $floorNum = $t->parking_floor ?? 1;
                             @endphp
-                            <tr class="hover:bg-slate-50/80 transition print:hover:bg-transparent">
-                                <td class="py-2 px-2 text-center text-black/40 font-mono text-[10px] print:text-black">{{ $rowNo++ }}</td>
-                                <td class="py-2 px-2 font-mono font-bold text-black text-[11px]">#{{ $t->id }}</td>
-                                <td class="py-2 px-3">
+                            <tr>
+                                <td class="py-2.5 px-3 text-center text-secondary font-monospace small">{{ $rowNo++ }}</td>
+                                <td class="py-2.5 px-3 font-monospace fw-bold text-dark small">#{{ $t->id }}</td>
+                                <td class="py-2.5 px-3">
                                     @if($isTicket)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold text-[10px] bg-amber-50 text-amber-800 border border-amber-300 print:border-black print:text-black">
-                                            <i class="fa-solid fa-ticket text-amber-600 print:hidden"></i>
-                                            <span>KARCIS</span>
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-bold">
+                                            <i class="bi bi-ticket-perforated-fill me-1 d-print-none"></i>KARCIS
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold text-[10px] bg-sky-50 text-[#00719C] border border-[#00719C]/30 print:border-black print:text-black">
-                                            <i class="fa-solid fa-id-card text-[#00719C] print:hidden"></i>
-                                            <span>RFID</span>
+                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle fw-bold">
+                                            <i class="bi bi-credit-card-2-front-fill me-1 d-print-none"></i>RFID
                                         </span>
                                     @endif
                                 </td>
                                 <!-- Kolom Lantai Parkir -->
-                                <td class="py-2 px-3">
+                                <td class="py-2.5 px-3">
                                     @if($floorNum == 2)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 print:border-black print:text-black">
-                                            LT 2
-                                        </span>
+                                        <span class="badge bg-warning text-dark fw-bold">LT 2</span>
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black bg-sky-100 text-[#00719C] border border-sky-300 print:border-black print:text-black">
-                                            LT 1
-                                        </span>
+                                        <span class="badge bg-primary text-white fw-bold">LT 1</span>
                                     @endif
                                 </td>
-                                <td class="py-2 px-3 font-mono">
+                                <td class="py-2.5 px-3 font-monospace">
                                     @if($isTicket)
-                                        <span class="font-bold text-amber-900 block text-xs leading-tight print:text-black">{{ $t->ticket_code }}</span>
-                                        <span class="text-[9px] text-amber-700/70 block font-normal print:hidden">Karcis Masuk</span>
+                                        <span class="fw-bold text-warning-emphasis d-block small">{{ $t->ticket_code }}</span>
+                                        <span class="small text-muted d-block d-print-none" style="font-size: 0.7rem;">Karcis Masuk</span>
                                     @else
-                                        <span class="font-bold text-black block text-xs leading-tight">{{ $t->card->license_plate ?? 'NON-PLAT' }}</span>
-                                        <span class="text-[9px] text-black/50 block font-normal">UID: {{ $t->card->uid ?? '-' }}</span>
+                                        <span class="fw-bold text-dark d-block small">{{ $t->card->license_plate ?? 'NON-PLAT' }}</span>
+                                        <span class="small text-muted d-block" style="font-size: 0.7rem;">UID: {{ $t->card->uid ?? '-' }}</span>
                                     @endif
                                 </td>
-                                <td class="py-2 px-3">
-                                    <div class="font-bold text-black text-[11px] leading-tight truncate">
+                                <td class="py-2.5 px-3">
+                                    <div class="fw-bold text-dark small">
                                         {{ $isTicket ? 'Pengendara Umum' : ($t->user->name ?? 'Member Parkir') }}
                                     </div>
                                     @if (!$isTicket && !empty($t->user->phone))
-                                        <div class="text-[9px] text-black/40 truncate print:hidden">{{ $t->user->phone }}</div>
+                                        <div class="small text-muted d-print-none" style="font-size: 0.7rem;">{{ $t->user->phone }}</div>
                                     @endif
                                 </td>
-                                <td class="py-2 px-3 font-mono text-[10px] leading-tight text-black">
-                                    <div class="font-bold">{{ $tapInTimeStr }}</div>
+                                <td class="py-2.5 px-3 font-monospace small">
+                                    <div class="fw-bold">{{ $tapInTimeStr }}</div>
                                     @if ($tapOutTimeStr)
-                                        <span class="text-[9px] text-black/60 block font-sans">s/d {{ \Carbon\Carbon::parse($t->tap_out_time)->format('H:i') }}</span>
+                                        <span class="small text-muted d-block font-sans" style="font-size: 0.7rem;">s/d {{ \Carbon\Carbon::parse($t->tap_out_time)->format('H:i') }}</span>
                                     @else
-                                        <span class="text-[9px] text-amber-700 block font-bold font-sans">Belum Keluar</span>
+                                        <span class="badge bg-warning text-dark font-sans" style="font-size: 0.65rem;">Belum Keluar</span>
                                     @endif
                                 </td>
-                                <td class="py-2 px-2 text-black text-center">
+                                <td class="py-2.5 px-3 text-center">
                                     @if ($t->status === 'COMPLETED')
-                                        <div class="font-bold text-[10px] leading-tight">{{ $durMin }} mnt</div>
-                                        <span class="text-[9px] text-black/50 block font-normal">(&plusmn; {{ $billedHours }} Jam)</span>
+                                        <div class="fw-bold small">{{ $durMin }} mnt</div>
+                                        <span class="small text-muted d-block" style="font-size: 0.7rem;">(&plusmn; {{ $billedHours }} Jam)</span>
                                     @else
-                                        <span class="text-black/40 font-mono">-</span>
+                                        <span class="text-secondary font-monospace">-</span>
                                     @endif
                                 </td>
-                                <td class="py-2 px-3 text-right font-extrabold text-black font-mono text-[11px]">
+                                <td class="py-2.5 px-3 text-end font-monospace fw-bold text-dark small">
                                     Rp {{ number_format($fee, 0, ',', '.') }}
                                     @if ($t->balance_after !== null)
-                                        <span class="text-[9px] text-black/40 block font-normal font-sans print:hidden">Sisa: Rp {{ number_format((int)$t->balance_after, 0, ',', '.') }}</span>
+                                        <span class="small text-muted d-block fw-normal font-sans d-print-none" style="font-size: 0.7rem;">Sisa: Rp {{ number_format((int)$t->balance_after, 0, ',', '.') }}</span>
                                     @endif
                                 </td>
-                                <td class="py-2 px-2 text-center">
+                                <td class="py-2.5 px-3 text-center">
                                     @if ($t->status === 'COMPLETED')
-                                        <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#00719C]/10 text-[#00719C] border border-[#00719C]/30 print:border-black print:text-black print:bg-transparent">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold">
                                             SELESAI
                                         </span>
-                                        <a href="{{ route('receipt.show', $t->id) }}" target="_blank" title="Cetak Struk Thermal 58mm" class="no-print block text-[9px] text-[#00719C] hover:underline font-bold mt-1">
-                                            <i class="fa-solid fa-receipt"></i> Struk 58mm
+                                        <a href="{{ route('receipt.show', $t->id) }}" target="_blank" title="Cetak Struk Thermal 58mm" class="d-print-none d-block small text-primary fw-bold mt-1 text-decoration-none" style="font-size: 0.75rem;">
+                                            <i class="bi bi-receipt"></i> Struk 58mm
                                         </a>
                                     @else
-                                        <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#FFD51E]/20 text-amber-900 border border-[#FFD51E] print:border-black print:text-black print:bg-transparent">
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-bold">
                                             PARKIR
                                         </span>
                                     @endif
@@ -313,12 +311,12 @@
                             </tr>
                         @endforeach
 
-                        <!-- Baris Ringkasan Total Pendapatan Sesuai Filter (Tanpa Status, Font Besar) -->
-                        <tr class="border-t-2 border-black/40 bg-slate-100 print:bg-slate-200" style="page-break-inside: avoid !important;">
-                            <td colspan="7" class="py-3.5 px-4 text-right uppercase text-xs sm:text-sm text-black font-black tracking-wider">
+                        <!-- Baris Ringkasan Total Pendapatan Sesuai Filter -->
+                        <tr class="table-light border-top border-2 border-dark-subtle">
+                            <td colspan="7" class="py-3 px-3 text-end text-uppercase small fw-bold text-dark">
                                 TOTAL PENDAPATAN :
                             </td>
-                            <td colspan="3" class="py-3.5 px-4 text-right font-mono text-base sm:text-2xl font-black text-[#00719C] print:text-black">
+                            <td colspan="3" class="py-3 px-3 text-end font-monospace fs-5 fw-bold text-primary">
                                 Rp {{ number_format($totalRevenueFiltered ?? 0, 0, ',', '.') }}
                             </td>
                         </tr>
@@ -328,21 +326,21 @@
         </div>
 
         <!-- Lembar Tanda Tangan Resmi di Bawah Cetak Dokumen (Hanya Muncul Saat Print A4) -->
-        <div class="print-only mt-4 pt-3 border-t border-black/30 text-xs flex justify-end" style="page-break-inside: avoid !important;">
-            <div class="text-right">
-                <p class="text-[10px] text-black">Jakarta, {{ date('d F Y') }}</p>
-                <p class="font-bold text-black mt-1">Pemilik Usaha (Owner),</p>
-                <div class="h-14"></div>
-                <p class="font-bold text-black underline">( {{ auth()->user()->name ?? 'Owner Eksekutif' }} )</p>
-                <p class="text-[9px] text-black/60">ID Akun: {{ auth()->user()->email ?? 'owner@eparkir.local' }}</p>
+        <div class="d-none d-print-flex justify-content-end mt-4 pt-3 border-top text-dark" style="page-break-inside: avoid !important;">
+            <div class="text-end" style="width: 220px;">
+                <p class="small mb-1">Jakarta, {{ date('d F Y') }}</p>
+                <p class="fw-bold mb-4">Pemilik Usaha (Owner),</p>
+                <div style="height: 50px;"></div>
+                <p class="fw-bold text-decoration-underline mb-0">( {{ auth()->user()->name ?? 'Owner Eksekutif' }} )</p>
+                <p class="small text-secondary mb-0" style="font-size: 8px;">ID Akun: {{ auth()->user()->email ?? 'owner@eparkir.local' }}</p>
             </div>
         </div>
 
-        <!-- Pagination Controls (no-print) -->
+        <!-- Pagination Controls (d-print-none) -->
         @if($transactions->hasPages())
-            <div class="p-4 clean-border-t bg-slate-50 flex items-center justify-between no-print">
-                <div class="text-xs text-slate-500 font-medium">
-                    Menampilkan <strong class="text-slate-800">{{ $transactions->firstItem() }}</strong> - <strong class="text-slate-800">{{ $transactions->lastItem() }}</strong> dari <strong class="text-slate-800">{{ $transactions->total() }}</strong> total data
+            <div class="card-footer bg-light border-top p-3 d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2 d-print-none">
+                <div class="small text-secondary">
+                    Menampilkan <strong>{{ $transactions->firstItem() }}</strong> - <strong>{{ $transactions->lastItem() }}</strong> dari <strong>{{ $transactions->total() }}</strong> total data
                 </div>
                 <div>
                     {{ $transactions->links() }}

@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $receiptData['is_entry_ticket'] ? 'Karcis Masuk' : 'Bukti Pembayaran' }} #{{ $receiptData['ticket_code'] ?? $receiptData['trx_code'] }} - E-Parkir</title>
-    <!-- Offline CSS & FontAwesome -->
-    <link rel="stylesheet" href="{{ asset('assets/css/all.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+    <!-- Bootstrap 5.3 & Bootstrap Icons CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         /* Standar Roll Kertas Thermal 58mm */
         @page {
@@ -22,7 +22,7 @@
                 padding: 0 !important;
                 width: 58mm !important;
             }
-            .no-print {
+            .d-print-none {
                 display: none !important;
             }
             .receipt-ticket {
@@ -80,18 +80,6 @@
             width: 100%;
         }
 
-        .text-center {
-            text-align: center;
-        }
-
-        .font-bold {
-            font-weight: 700;
-        }
-
-        .font-black {
-            font-weight: 900;
-        }
-
         /* Kode Tiket GEDE */
         .big-ticket-code {
             font-size: 20px;
@@ -133,16 +121,6 @@
             color: #000000;
         }
 
-        /* Kotak Info Member Bayar Saldo */
-        .member-info-box {
-            background-color: #F8FAFC;
-            border: 1px dashed #000000;
-            border-radius: 4px;
-            padding: 7px 8px;
-            text-align: center;
-            margin: 8px 0;
-        }
-
         /* Container QR Code */
         #qrcode-container {
             display: flex;
@@ -161,54 +139,57 @@
 </head>
 <body>
 
-    <!-- ACTION BUTTONS TOOLBAR (NO-PRINT) -->
-    <div class="no-print w-full max-w-[310px] mb-3 space-y-2">
+    <!-- ACTION BUTTONS TOOLBAR (D-PRINT-NONE) -->
+    <div class="d-print-none w-100 mb-3 d-flex flex-column gap-2" style="max-width: 310px; font-family: system-ui, -apple-system, sans-serif;">
         <!-- Header status bar -->
-        <div class="flex items-center justify-between bg-slate-800/95 backdrop-blur px-3 py-2 rounded-xl border border-white/10 text-white shadow">
-            <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded bg-[#00719C] text-white flex items-center justify-center text-xs font-bold">
-                    <i class="fa-solid fa-receipt"></i>
+        <div class="d-flex align-items-center justify-content-between bg-dark bg-opacity-75 backdrop-blur px-3 py-2 rounded-3 border border-secondary text-white shadow">
+            <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center justify-content-center rounded text-white" style="width: 1.5rem; height: 1.5rem; background-color: #00719C; font-size: 0.75rem;">
+                    <i class="bi bi-receipt"></i>
                 </div>
                 <div>
-                    <div class="text-xs font-bold leading-tight">Printer Thermal 58mm</div>
-                    <div class="text-[9px] text-slate-400">Eppos EP589 / POS-58</div>
+                    <div class="small fw-bold lh-1 text-white">Printer Thermal 58mm</div>
+                    <div class="text-white-50" style="font-size: 9px;">Eppos EP589 / POS-58</div>
                 </div>
             </div>
 
             <!-- Mode Struk Aktif -->
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $receiptData['is_entry_ticket'] ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' }}">
-                {{ $receiptData['is_entry_ticket'] ? 'Karcis Masuk' : 'Bukti Bayar (Lunas)' }}
+            <span class="badge {{ $receiptData['is_entry_ticket'] ? 'bg-warning text-dark' : 'bg-success text-white' }} fw-bold" style="font-size: 10px;">
+                {{ $receiptData['is_entry_ticket'] ? 'Karcis Masuk' : 'Bukti Bayar' }}
             </span>
         </div>
 
         <!-- Tombol Switch Mode Struk -->
-        <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-900 rounded-xl border border-white/5 text-[11px]">
-            <a href="{{ request()->fullUrlWithQuery(['type' => 'ticket']) }}" class="py-1 text-center font-bold rounded-lg transition {{ $receiptData['is_entry_ticket'] ? 'bg-[#00719C] text-white shadow' : 'text-slate-400 hover:text-white' }}">
-                <i class="fa-solid fa-ticket text-[10px]"></i> Karcis Masuk
+        <div class="btn-group btn-group-sm w-100 bg-dark p-1 rounded-3 border border-secondary" role="group">
+            <a href="{{ request()->fullUrlWithQuery(['type' => 'ticket']) }}" class="btn {{ $receiptData['is_entry_ticket'] ? 'btn-primary' : 'btn-dark text-white-50' }} fw-bold rounded-2">
+                <i class="bi bi-ticket-perforated-fill me-1"></i> Karcis Masuk
             </a>
-            <a href="{{ request()->fullUrlWithQuery(['type' => 'receipt']) }}" class="py-1 text-center font-bold rounded-lg transition {{ !$receiptData['is_entry_ticket'] ? 'bg-[#00719C] text-white shadow' : 'text-slate-400 hover:text-white' }}">
-                <i class="fa-solid fa-file-invoice-dollar text-[10px]"></i> Bukti Bayar
+            <a href="{{ request()->fullUrlWithQuery(['type' => 'receipt']) }}" class="btn {{ !$receiptData['is_entry_ticket'] ? 'btn-primary' : 'btn-dark text-white-50' }} fw-bold rounded-2">
+                <i class="bi bi-cash-stack me-1"></i> Bukti Bayar
             </a>
         </div>
 
         <!-- Tombol Cetak -->
-        <div class="grid grid-cols-2 gap-2">
-            <button onclick="printViaBluetooth()" id="btn-bt" class="px-3 py-2 rounded-xl bg-[#00719C] hover:bg-sky-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow transition cursor-pointer border-none">
-                <i class="fa-brands fa-bluetooth-b"></i>
-                <span id="bt-btn-text">Cetak Bluetooth</span>
-            </button>
-
-            <button onclick="window.print()" class="px-3 py-2 rounded-xl bg-[#FFD51E] hover:bg-yellow-400 text-slate-950 text-xs font-bold flex items-center justify-center gap-1.5 shadow transition cursor-pointer border-none">
-                <i class="fa-solid fa-print"></i>
-                <span>Cetak USB / Driver</span>
-            </button>
+        <div class="row g-2">
+            <div class="col-6">
+                <button onclick="printViaBluetooth()" id="btn-bt" class="btn btn-sm btn-primary w-100 fw-bold d-inline-flex align-items-center justify-content-center gap-1 shadow rounded-3 py-2">
+                    <i class="bi bi-bluetooth"></i>
+                    <span id="bt-btn-text">Bluetooth</span>
+                </button>
+            </div>
+            <div class="col-6">
+                <button onclick="window.print()" class="btn btn-sm btn-warning text-dark w-100 fw-bold d-inline-flex align-items-center justify-content-center gap-1 shadow rounded-3 py-2">
+                    <i class="bi bi-printer-fill"></i>
+                    <span>Cetak USB</span>
+                </button>
+            </div>
         </div>
 
-        <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 pt-0.5">
-            <a href="javascript:window.history.back()" class="hover:text-white flex items-center gap-1">
-                <i class="fa-solid fa-arrow-left"></i> Kembali
+        <div class="d-flex align-items-center justify-content-between text-white-50 px-1 pt-1" style="font-size: 11px;">
+            <a href="javascript:window.history.back()" class="text-white-50 text-decoration-none d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Kembali
             </a>
-            <span class="text-slate-500 font-mono text-[10px]">#{{ $receiptData['ticket_code'] ?? $receiptData['trx_code'] }}</span>
+            <span class="font-monospace text-secondary" style="font-size: 10px;">#{{ $receiptData['ticket_code'] ?? $receiptData['trx_code'] }}</span>
         </div>
     </div>
 
@@ -218,11 +199,11 @@
     <div class="receipt-ticket" id="thermal-receipt">
 
         <!-- HEADER APLIKASI (E-Parkir) -->
-        <div class="text-center space-y-0.5">
-            <div class="font-black text-[17px] tracking-wider leading-tight text-black">{{ $receiptData['area_name'] ?? 'E-Parkir' }}</div>
-            <div class="text-[11px] font-bold text-black">{{ $receiptData['area_tagline'] ?? 'Sistem Parkir Otomatis IoT' }}</div>
+        <div class="text-center">
+            <div class="fw-bold" style="font-size: 17px; letter-spacing: 0.05em; line-height: 1.2;">{{ $receiptData['area_name'] ?? 'E-Parkir' }}</div>
+            <div class="fw-bold" style="font-size: 11px;">{{ $receiptData['area_tagline'] ?? 'Sistem Parkir Otomatis IoT' }}</div>
             @if(!$receiptData['is_entry_ticket'])
-                <div class="text-[11px] text-black">{{ $receiptData['area_address'] ?? 'Jl. Jenggolo Raya' }}</div>
+                <div style="font-size: 11px;">{{ $receiptData['area_address'] ?? 'Jl. Jenggolo Raya' }}</div>
             @endif
         </div>
 
@@ -232,35 +213,35 @@
             <!-- ================================================================= -->
             <div class="receipt-dashed"></div>
 
-            <div class="text-center font-black text-[14px] uppercase tracking-wider my-1">
+            <div class="text-center fw-bold text-uppercase my-1" style="font-size: 14px; letter-spacing: 0.05em;">
                 KARCIS MASUK PARKIR
             </div>
 
             <div class="receipt-dashed"></div>
 
             <!-- KODE TIKET GEDE & JELAS -->
-            <div class="text-center text-[10px] font-bold uppercase tracking-wider text-black">
+            <div class="text-center fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.05em;">
                 Kode Tiket Masuk:
             </div>
-            <div class="big-ticket-code font-mono">
+            <div class="big-ticket-code font-monospace">
                 {{ $receiptData['ticket_code'] }}
             </div>
 
             <div class="receipt-dashed"></div>
 
             <!-- Rincian Masuk -->
-            <div class="ticket-details space-y-1">
+            <div class="ticket-details">
                 <div class="ticket-row">
                     <span class="ticket-label">Pos Gerbang</span>
                     <span class="ticket-value">{{ $receiptData['gate_in'] }}</span>
                 </div>
                 <div class="ticket-row">
                     <span class="ticket-label">Waktu Masuk</span>
-                    <span class="ticket-value font-mono">{{ $receiptData['tap_in_time'] }} WIB</span>
+                    <span class="ticket-value font-monospace">{{ $receiptData['tap_in_time'] }} WIB</span>
                 </div>
                 <div class="ticket-row">
                     <span class="ticket-label">Lantai Parkir</span>
-                    <span class="ticket-value font-black">LANTAI {{ $receiptData['parking_floor'] ?? 1 }} (LT {{ $receiptData['parking_floor'] ?? 1 }})</span>
+                    <span class="ticket-value fw-bold">LANTAI {{ $receiptData['parking_floor'] ?? 1 }} (LT {{ $receiptData['parking_floor'] ?? 1 }})</span>
                 </div>
                 <div class="ticket-row">
                     <span class="ticket-label">Tarif Parkir</span>
@@ -271,10 +252,10 @@
             <div class="receipt-dashed"></div>
 
             <!-- QR CODE TIKET -->
-            <div class="text-center text-[10px] font-bold uppercase tracking-wider text-black">
+            <div class="text-center fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.05em;">
                 Scan QR Code Pembayaran:
             </div>
-            <div id="qrcode-container" class="min-h-[140px] flex items-center justify-center my-1.5"></div>
+            <div id="qrcode-container" class="my-2" style="min-height: 140px;"></div>
             <div class="receipt-dashed"></div>
 
         @else
@@ -283,12 +264,12 @@
             <!-- ================================================================= -->
             <div class="receipt-double"></div>
 
-            <div class="text-center space-y-1 my-1">
-                <div class="font-black text-[13px] uppercase tracking-wider">
+            <div class="text-center my-1">
+                <div class="fw-bold text-uppercase" style="font-size: 13px; letter-spacing: 0.05em;">
                     BUKTI PEMBAYARAN PARKIR
                 </div>
-                <div>
-                    <span class="border border-black px-2.5 py-0.5 text-[11px] font-black tracking-widest inline-block">
+                <div class="mt-1">
+                    <span class="border border-dark px-2 py-0.5 fw-bold" style="font-size: 11px; letter-spacing: 0.1em; display: inline-block;">
                         *** STATUS: LUNAS ***
                     </span>
                 </div>
@@ -297,10 +278,10 @@
             <div class="receipt-dashed"></div>
 
             <!-- Metadata Transaksi -->
-            <div class="ticket-details space-y-1">
+            <div class="ticket-details">
                 <div class="ticket-row">
                     <span class="ticket-label">No. Transaksi</span>
-                    <span class="ticket-value font-mono">{{ $receiptData['trx_code'] }}</span>
+                    <span class="ticket-value font-monospace">{{ $receiptData['trx_code'] }}</span>
                 </div>
                 <div class="ticket-row">
                     <span class="ticket-label">Pengendara</span>
@@ -308,7 +289,7 @@
                 </div>
                 <div class="ticket-row">
                     <span class="ticket-label">Plat / UID</span>
-                    <span class="ticket-value font-mono">{{ $receiptData['license_plate'] !== '-' ? $receiptData['license_plate'] : $receiptData['uid'] }}</span>
+                    <span class="ticket-value font-monospace">{{ $receiptData['license_plate'] !== '-' ? $receiptData['license_plate'] : $receiptData['uid'] }}</span>
                 </div>
                 <div class="ticket-row">
                     <span class="ticket-label">Lantai Parkir</span>
@@ -323,14 +304,14 @@
             <div class="receipt-dashed"></div>
 
             <!-- Durasi & Waktu Parkir -->
-            <div class="ticket-details space-y-1">
+            <div class="ticket-details">
                 <div class="ticket-row">
                     <span class="ticket-label">Waktu Masuk</span>
-                    <span class="ticket-value font-mono">{{ $receiptData['tap_in_time'] }}</span>
+                    <span class="ticket-value font-monospace">{{ $receiptData['tap_in_time'] }}</span>
                 </div>
                 <div class="ticket-row">
                     <span class="ticket-label">Waktu Keluar</span>
-                    <span class="ticket-value font-mono">{{ $receiptData['tap_out_time'] }}</span>
+                    <span class="ticket-value font-monospace">{{ $receiptData['tap_out_time'] }}</span>
                 </div>
                 <div class="ticket-row">
                     <span class="ticket-label">Durasi Parkir</span>
@@ -345,10 +326,10 @@
             <div class="receipt-dashed"></div>
 
             <!-- Total Biaya & Saldo Member -->
-            <div class="ticket-details space-y-1.5">
-                <div class="ticket-row text-[13px] font-black">
-                    <span class="ticket-label font-black">TOTAL BIAYA</span>
-                    <span class="ticket-value text-[14px] font-black">{{ $receiptData['total_fee_formatted'] }}</span>
+            <div class="ticket-details">
+                <div class="ticket-row fw-bold" style="font-size: 13px;">
+                    <span class="ticket-label fw-bold">TOTAL BIAYA</span>
+                    <span class="ticket-value fw-bold" style="font-size: 14px;">{{ $receiptData['total_fee_formatted'] }}</span>
                 </div>
                 <div class="ticket-row">
                     <span class="ticket-label">Metode Bayar</span>
@@ -356,13 +337,13 @@
                 </div>
 
                 @if(!empty($receiptData['is_member']))
-                <div class="ticket-row text-[11.5px]">
+                <div class="ticket-row" style="font-size: 11.5px;">
                     <span class="ticket-label">Saldo Awal</span>
-                    <span class="ticket-value font-mono">{{ $receiptData['balance_before_formatted'] }}</span>
+                    <span class="ticket-value font-monospace">{{ $receiptData['balance_before_formatted'] }}</span>
                 </div>
-                <div class="ticket-row text-[11.5px] font-bold">
-                    <span class="ticket-label font-bold">Sisa Saldo</span>
-                    <span class="ticket-value font-mono">{{ $receiptData['balance_after_formatted'] }}</span>
+                <div class="ticket-row fw-bold" style="font-size: 11.5px;">
+                    <span class="ticket-label fw-bold">Sisa Saldo</span>
+                    <span class="ticket-value font-monospace">{{ $receiptData['balance_after_formatted'] }}</span>
                 </div>
                 @endif
             </div>
@@ -370,17 +351,17 @@
             <div class="receipt-dashed"></div>
 
             <!-- Footer Bukti Pembayaran -->
-            <div class="text-center space-y-0.5 text-[11px]">
+            <div class="text-center" style="font-size: 11px;">
                 <div>Hati-Hati Di Jalan Raya</div>
-                <div class="text-[9px] text-slate-600 mt-0.5">{{ $receiptData['print_time'] }}</div>
+                <div class="text-secondary mt-1" style="font-size: 9px;">{{ $receiptData['print_time'] }}</div>
             </div>
         @endif
     </div>
 
     <!-- Hidden Raw Text untuk ESC/POS Bluetooth -->
-    <textarea id="raw-escpos-text" class="hidden">{{ $thermalText }}</textarea>
+    <textarea id="raw-escpos-text" class="d-none">{{ $thermalText }}</textarea>
 
-    <!-- Offline Inline QRCode Library (100% Bebas 404 & Bebas Error Path) -->
+    <!-- Offline Inline QRCode Library -->
     @php
         $qrJsFile = public_path('assets/js/qrcode.min.js');
         $inlineQrJs = file_exists($qrJsFile) ? file_get_contents($qrJsFile) : '';
@@ -439,7 +420,7 @@
             renderQrCode();
         }
 
-        // 2. Auto print jika dipanggil dengan parameter ?autoprint=1 (Hanya jika dibuka di tab/window utama, bukan iframe)
+        // 2. Auto print jika dipanggil dengan parameter ?autoprint=1
         @if($autoprint)
             window.addEventListener('DOMContentLoaded', () => {
                 if (window.self === window.top) {
@@ -514,13 +495,13 @@
 
                 btnText.innerText = 'Selesai!';
                 setTimeout(() => {
-                    btnText.innerText = 'Cetak BT';
+                    btnText.innerText = 'Bluetooth';
                 }, 2500);
 
             } catch (err) {
                 console.error(err);
                 alert('Pencetakan Bluetooth gagal: ' + err.message + '\n\nTips: Pastikan printer thermal Eppos EP589 dalam posisi ON dan Bluetooth aktif.');
-                btnText.innerText = 'Cetak BT';
+                btnText.innerText = 'Bluetooth';
             } finally {
                 btnBt.disabled = false;
             }

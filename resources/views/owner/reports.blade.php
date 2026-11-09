@@ -5,59 +5,71 @@
 @section('header_subtitle', 'Ringkasan performa finansial, tren pendapatan, dan utilisasi parkir')
 
 @section('content')
-<div class="space-y-5">
+<div class="d-flex flex-column gap-4">
 
     <!-- =========================================================================
          1. 3 SUMMARY METRIC CARDS (Ringkasan Keuangan Utama)
          ========================================================================= -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="row g-3">
         <!-- 1. Total Pendapatan -->
-        <div class="p-5 rounded-xl bg-white clean-border shadow-sm flex items-center justify-between">
-            <div>
-                <div class="text-[11px] font-bold text-black/50 uppercase tracking-wider">Total Pendapatan</div>
-                <div class="text-2xl font-black text-black font-mono mt-1">
-                    Rp {{ number_format($totalRevenue, 0, ',', '.') }}
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-uppercase fw-bold text-secondary small" style="font-size: 0.75rem; letter-spacing: 0.05em;">Total Pendapatan</div>
+                        <div class="fs-4 fw-bold text-dark font-monospace mt-1">
+                            Rp {{ number_format($totalRevenue, 0, ',', '.') }}
+                        </div>
+                        <div class="small fw-semibold text-primary mt-1 d-flex align-items-center gap-1">
+                            <i class="bi bi-check-circle-fill text-primary" style="font-size: 0.8rem;"></i>
+                            <span>Arus kas riil terverifikasi</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center justify-center rounded-3 text-white" style="width: 2.75rem; height: 2.75rem; background-color: #00719C; font-size: 1.25rem;">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
                 </div>
-                <div class="text-[11px] font-semibold text-[#00719C] mt-1 flex items-center gap-1">
-                    <i class="fa-solid fa-circle-check text-[10px]"></i>
-                    <span>Arus kas riil terverifikasi</span>
-                </div>
-            </div>
-            <div class="icon-box" style="width: 2.75rem; height: 2.75rem; font-size: 1.25rem; border: 1.5px solid #005677;">
-                <i class="fa-solid fa-rupiah-sign"></i>
             </div>
         </div>
 
         <!-- 2. Transaksi Selesai -->
-        <div class="p-5 rounded-xl bg-white clean-border shadow-sm flex items-center justify-between">
-            <div>
-                <div class="text-[11px] font-bold text-black/50 uppercase tracking-wider">Transaksi Selesai</div>
-                <div class="text-2xl font-black text-black font-mono mt-1">
-                    {{ number_format($completedCount, 0, ',', '.') }} <span class="text-xs font-bold text-black/40">Unit</span>
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-uppercase fw-bold text-secondary small" style="font-size: 0.75rem; letter-spacing: 0.05em;">Transaksi Selesai</div>
+                        <div class="fs-4 fw-bold text-dark font-monospace mt-1">
+                            {{ number_format($completedCount, 0, ',', '.') }} <span class="small fw-semibold text-secondary">Unit</span>
+                        </div>
+                        <div class="small fw-semibold text-success mt-1 d-flex align-items-center gap-1">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 0.8rem;"></i>
+                            <span>Kendaraan selesai &amp; keluar</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center justify-center rounded-3 text-white" style="width: 2.75rem; height: 2.75rem; background-color: #00719C; font-size: 1.25rem;">
+                        <i class="bi bi-car-front-fill"></i>
+                    </div>
                 </div>
-                <div class="text-[11px] font-semibold text-emerald-700 mt-1 flex items-center gap-1">
-                    <i class="fa-solid fa-check text-[10px]"></i>
-                    <span>Kendaraan selesai &amp; keluar</span>
-                </div>
-            </div>
-            <div class="icon-box" style="width: 2.75rem; height: 2.75rem; font-size: 1.25rem; border: 1.5px solid #005677;">
-                <i class="fa-solid fa-car-side"></i>
             </div>
         </div>
 
         <!-- 3. Rata-rata Durasi & Biaya -->
-        <div class="p-5 rounded-xl bg-white clean-border shadow-sm flex items-center justify-between">
-            <div>
-                <div class="text-[11px] font-bold text-black/50 uppercase tracking-wider">Rata-Rata Transaksi</div>
-                <div class="text-2xl font-black text-black font-mono mt-1">
-                    Rp {{ number_format($avgFee, 0, ',', '.') }}
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-uppercase fw-bold text-secondary small" style="font-size: 0.75rem; letter-spacing: 0.05em;">Rata-Rata Transaksi</div>
+                        <div class="fs-4 fw-bold text-dark font-monospace mt-1">
+                            Rp {{ number_format($avgFee, 0, ',', '.') }}
+                        </div>
+                        <div class="small fw-semibold text-secondary mt-1">
+                            Durasi Rata-rata: <span class="fw-bold text-dark">{{ $avgMinutes }} Menit</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center justify-center rounded-3 text-white" style="width: 2.75rem; height: 2.75rem; background-color: #00719C; font-size: 1.25rem;">
+                        <i class="bi bi-calculator-fill"></i>
+                    </div>
                 </div>
-                <div class="text-[11px] font-semibold text-black/60 mt-1">
-                    Durasi Rata-rata: <span class="font-bold text-black">{{ $avgMinutes }} Menit</span>
-                </div>
-            </div>
-            <div class="icon-box" style="width: 2.75rem; height: 2.75rem; font-size: 1.25rem; border: 1.5px solid #005677;">
-                <i class="fa-solid fa-calculator"></i>
             </div>
         </div>
     </div>
@@ -65,102 +77,112 @@
     <!-- =========================================================================
          2. TREN GRAFIK PENDAPATAN EKSEKUTIF (Chart.js)
          ========================================================================= -->
-    <div class="p-5 rounded-xl bg-white clean-border shadow-sm">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 clean-border-b mb-4 gap-3">
-            <div>
-                <h3 class="text-sm font-bold text-black uppercase tracking-wide flex items-center gap-2">
-                    <i class="fa-solid fa-chart-column text-[#00719C]"></i>
-                    <span>
-                        Tren Pendapatan 
-                        @if($chartMode === 'hourly')
-                            (Per Jam)
-                        @elseif($chartMode === 'monthly')
-                            (Bulanan)
-                        @else
-                            (Harian)
-                        @endif
-                    </span>
-                </h3>
-                <p class="text-xs text-black/50">Grafik ritme kas pendapatan riil yang masuk ke dalam sistem.</p>
-            </div>
-
-            <!-- Filter Mode Grafik: Harian / Per Jam / Bulanan -->
-            <div class="flex items-center gap-2">
-                <div class="inline-flex rounded-lg p-0.5 bg-slate-100 clean-border">
-                    <a href="{{ route('owner.reports.index', ['chart_mode' => 'daily']) }}" 
-                       class="px-2.5 py-1 text-xs font-bold rounded-md transition {{ $chartMode === 'daily' ? 'bg-[#00719C] text-white shadow-sm' : 'text-black/60 hover:text-black' }}">
-                        Harian
-                    </a>
-                    <a href="{{ route('owner.reports.index', ['chart_mode' => 'hourly']) }}" 
-                       class="px-2.5 py-1 text-xs font-bold rounded-md transition {{ $chartMode === 'hourly' ? 'bg-[#00719C] text-white shadow-sm' : 'text-black/60 hover:text-black' }}">
-                        Per Jam
-                    </a>
-                    <a href="{{ route('owner.reports.index', ['chart_mode' => 'monthly']) }}" 
-                       class="px-2.5 py-1 text-xs font-bold rounded-md transition {{ $chartMode === 'monthly' ? 'bg-[#00719C] text-white shadow-sm' : 'text-black/60 hover:text-black' }}">
-                        Bulanan
-                    </a>
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between pb-3 border-bottom mb-4 gap-3">
+                <div>
+                    <h3 class="fs-6 fw-bold text-dark text-uppercase tracking-wide mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-bar-chart-fill text-primary"></i>
+                        <span>
+                            Tren Pendapatan 
+                            @if($chartMode === 'hourly')
+                                (Per Jam)
+                            @elseif($chartMode === 'monthly')
+                                (Bulanan)
+                            @else
+                                (Harian)
+                            @endif
+                        </span>
+                    </h3>
+                    <p class="small text-secondary mb-0">Grafik ritme kas pendapatan riil yang masuk ke dalam sistem.</p>
                 </div>
 
-                <span class="px-2.5 py-1 text-xs font-mono font-bold bg-[#FFD51E] text-black border border-white rounded shadow-sm">
-                    Puncak: Rp {{ number_format($maxTrendValue, 0, ',', '.') }}
-                </span>
-            </div>
-        </div>
+                <!-- Filter Mode Grafik: Harian / Per Jam / Bulanan -->
+                <div class="d-flex align-items-center gap-2">
+                    <div class="btn-group btn-group-sm bg-light p-1 rounded-3 border">
+                        <a href="{{ route('owner.reports.index', ['chart_mode' => 'daily']) }}" 
+                           class="btn {{ $chartMode === 'daily' ? 'btn-primary' : 'btn-light border-0 text-secondary' }} rounded-2 fw-bold">
+                            Harian
+                        </a>
+                        <a href="{{ route('owner.reports.index', ['chart_mode' => 'hourly']) }}" 
+                           class="btn {{ $chartMode === 'hourly' ? 'btn-primary' : 'btn-light border-0 text-secondary' }} rounded-2 fw-bold">
+                            Per Jam
+                        </a>
+                        <a href="{{ route('owner.reports.index', ['chart_mode' => 'monthly']) }}" 
+                           class="btn {{ $chartMode === 'monthly' ? 'btn-primary' : 'btn-light border-0 text-secondary' }} rounded-2 fw-bold">
+                            Bulanan
+                        </a>
+                    </div>
 
-        <div class="h-72 relative">
-            <canvas id="revenueTrendChart"></canvas>
+                    <span class="badge bg-warning text-dark border px-2.5 py-1.5 font-monospace fw-bold shadow-sm">
+                        Puncak: Rp {{ number_format($maxTrendValue, 0, ',', '.') }}
+                    </span>
+                </div>
+            </div>
+
+            <div style="height: 300px; position: relative;">
+                <canvas id="revenueTrendChart"></canvas>
+            </div>
         </div>
     </div>
 
     <!-- =========================================================================
          3. WIDGET ANALITIK BISNIS & DISTRIBUSI OPERASIONAL
          ========================================================================= -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="row g-4">
         <!-- Distribusi Durasi Parkir Pengunjung -->
-        <div class="p-5 rounded-xl bg-white clean-border shadow-sm">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-black flex items-center gap-2 mb-3 pb-2 clean-border-b">
-                <i class="fa-solid fa-hourglass-half text-[#00719C]"></i>
-                <span>Distribusi Durasi Parkir</span>
-            </h3>
-            <div class="space-y-3">
-                @php
-                    $maxBucket = max(array_values($durationBuckets)) ?: 1;
-                @endphp
-                @foreach ($durationBuckets as $label => $val)
-                    @php
-                        $percentage = round(($val / max(1, $completedCount)) * 100);
-                        $barWidth = round(($val / $maxBucket) * 100);
-                    @endphp
-                    <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="font-bold text-slate-700">{{ $label }}</span>
-                            <span class="font-mono text-slate-500 font-bold">{{ $val }} unit ({{ $percentage }}%)</span>
-                        </div>
-                        <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-[#00719C] rounded-full transition-all duration-500" style="width: {{ $barWidth }}%"></div>
-                        </div>
+        <div class="col-12 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h3 class="fs-6 fw-bold text-uppercase tracking-wider text-dark d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                        <i class="bi bi-hourglass-split text-primary"></i>
+                        <span>Distribusi Durasi Parkir</span>
+                    </h3>
+                    <div class="d-flex flex-column gap-3">
+                        @php
+                            $maxBucket = max(array_values($durationBuckets)) ?: 1;
+                        @endphp
+                        @foreach ($durationBuckets as $label => $val)
+                            @php
+                                $percentage = round(($val / max(1, $completedCount)) * 100);
+                                $barWidth = round(($val / $maxBucket) * 100);
+                            @endphp
+                            <div>
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span class="fw-bold text-dark">{{ $label }}</span>
+                                    <span class="font-monospace text-secondary fw-bold">{{ $val }} unit ({{ $percentage }}%)</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $barWidth }}%; transition: width 0.5s ease;" aria-valuenow="{{ $barWidth }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
+                </div>
             </div>
         </div>
 
         <!-- Banner Akses Cepat ke Halaman Rincian Transaksi -->
-        <div class="p-5 rounded-xl bg-gradient-to-br from-[#00719C] to-[#005170] text-white shadow-sm flex flex-col justify-between">
-            <div>
-                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-lg mb-3 border border-white/20">
-                    <i class="fa-solid fa-table-list"></i>
+        <div class="col-12 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #00719C 0%, #004b68 100%);">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-3 bg-white bg-opacity-25 border border-white border-opacity-25 fs-5 mb-3" style="width: 2.75rem; height: 2.75rem;">
+                            <i class="bi bi-table"></i>
+                        </div>
+                        <h3 class="fs-5 fw-bold mb-2">Audit &amp; Rincian Lengkap Transaksi</h3>
+                        <p class="small text-white-50 leading-relaxed mb-0">
+                            Filter dan telusuri riwayat transaksi parkir lengkap per karcis, plat nomor kendaraan, dan lantai parkir (LT 1 &amp; LT 2) secara rinci di halaman khusus transaksi.
+                        </p>
+                    </div>
+                    <div class="pt-4">
+                        <a href="{{ route('owner.transactions.index') }}" 
+                           class="btn btn-warning text-dark fw-bold px-4 py-2 rounded-3 shadow-sm d-inline-flex align-items-center gap-2">
+                            <span>Buka Rincian Transaksi</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
-                <h3 class="text-base font-black tracking-tight">Audit &amp; Rincian Lengkap Transaksi</h3>
-                <p class="text-xs text-white/80 mt-1 leading-relaxed">
-                    Filter dan telusuri riwayat transaksi parkir lengkap per karcis, plat nomor kendaraan, dan lantai parkir (LT 1 &amp; LT 2) secara rinci di halaman khusus transaksi.
-                </p>
-            </div>
-            <div class="pt-4">
-                <a href="{{ route('owner.transactions.index') }}" 
-                   class="inline-flex items-center gap-2 px-4 py-2 bg-[#FFD51E] hover:bg-[#e6be12] text-black text-xs font-black rounded-lg transition shadow-sm">
-                    <span>Buka Rincian Transaksi</span>
-                    <i class="fa-solid fa-arrow-right text-[11px]"></i>
-                </a>
             </div>
         </div>
     </div>

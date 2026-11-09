@@ -5,498 +5,311 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel') - E-Parkir IoT (Sigma Boys)</title>
-    <!-- Offline Vanilla CSS Engine -->
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/all.min.css') }}">
-    <!-- Chart.js for reports -->
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Chart.js for analytics & reports -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body {
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-            background-color: var(--c-white, #FFFFFF);
-            color: var(--c-black, #000000);
-            margin: 0;
-            padding: 0;
         }
-        .font-mono {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
         }
-        .clean-border {
-            border: 1px solid rgba(0, 0, 0, 0.10);
-        }
-        .clean-border-b {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.10);
-        }
-        .clean-border-r {
-            border-right: 1px solid rgba(0, 0, 0, 0.10);
-        }
-        .clean-border-t {
-            border-top: 1px solid rgba(0, 0, 0, 0.10);
-        }
-        /* Sidebar nav item with clean border hover & active (Border Saja, Tanpa BG Putih) */
-        .sidebar-nav-item {
-            border: 1px solid transparent;
-            background-color: transparent !important;
-            color: #FFFFFF !important;
-            transition: border-color 0.15s ease, opacity 0.15s ease;
-            opacity: 0.85;
-        }
-        .sidebar-nav-item:hover {
-            border-color: #FFFFFF !important;
-            background-color: transparent !important;
-            color: #FFFFFF !important;
-            opacity: 1;
-        }
-        .sidebar-nav-active {
-            border-color: #FFFFFF !important;
-            background-color: transparent !important;
-            color: #FFFFFF !important;
-            font-weight: 700 !important;
-            opacity: 1;
-        }
-        /* Sidebar Desktop & Mobile Visibility */
-        #sidebar {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        @media (min-width: 1024px) {
-            #sidebar {
-                transform: translateX(0) !important;
-                position: sticky !important;
-                top: 0 !important;
-                display: flex !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                left: 0 !important;
-            }
-        }
-        @media (max-width: 1023px) {
-            #sidebar.-translate-x-full {
-                transform: translateX(-100%) !important;
-            }
-            #sidebar:not(.-translate-x-full) {
-                transform: translateX(0) !important;
-            }
-        }
-        /* Sticky Topbar Header Solid Opaque Background */
-        #admin-topbar {
-            background-color: #FFFFFF !important;
-            background: #FFFFFF !important;
-            opacity: 1 !important;
-        }
-        /* Solid User Dropdown Button with Gray Border */
-        .user-pill-btn {
-            background-color: #FFFFFF !important;
-            border: 1px solid #E2E8F0 !important;
-            color: #000000 !important;
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+            border-radius: 0.5rem;
+            padding: 0.65rem 1rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             transition: all 0.15s ease;
         }
-        .user-pill-btn:hover {
-            border-color: #CBD5E1 !important;
-            background-color: #F8FAFC !important;
+        .sidebar .nav-link:hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.12);
         }
-        /* Solid User Dropdown Menu Popover with Gray Border */
-        #user-dropdown-menu {
-            background-color: #FFFFFF !important;
-            background: #FFFFFF !important;
-            border: 1px solid #E2E8F0 !important;
-            opacity: 1 !important;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #FFFFFF;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.20);
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.35);
-        }
-        .print-only {
-            display: none !important;
+        .sidebar .nav-link.active {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.22);
+            font-weight: 700;
         }
         @media print {
-            @page {
-                size: landscape;
-                margin: 8mm 10mm !important;
-            }
-            .no-print, #sidebar, #admin-topbar, #sidebar-backdrop, #emergency-modal, footer {
+            .no-print, .sidebar, #sidebarOffcanvas, header, footer, .modal {
                 display: none !important;
             }
-            html, body {
-                display: block !important;
-                background: #FFFFFF !important;
-                color: #000000 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                min-width: 100% !important;
-                overflow: visible !important;
-                font-size: 8.5pt !important;
-            }
-            body {
-                flex: none !important;
-            }
-            .flex, .flex-1, .flex-col, .min-h-screen {
-                display: block !important;
-                flex: none !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                min-height: auto !important;
-                height: auto !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            main {
-                display: block !important;
+            body, main {
+                background: #ffffff !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                box-sizing: border-box !important;
-            }
-            .overflow-x-auto, .overflow-y-auto {
-                overflow: visible !important;
-                display: block !important;
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-            .clean-border, .clean-border-b, .clean-border-t, .clean-border-r, .shadow-sm {
-                box-shadow: none !important;
-                border: none !important;
-            }
-            .print-only {
-                display: block !important;
-            }
-            .print\:block {
-                display: block !important;
-            }
-            .print\:hidden {
-                display: none !important;
-            }
-            table {
-                width: 100% !important;
-                max-width: 100% !important;
-                table-layout: fixed !important;
-                border-collapse: collapse !important;
-                page-break-inside: auto !important;
-                box-sizing: border-box !important;
-            }
-            th, td {
-                word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
-                box-sizing: border-box !important;
-                padding: 4px 6px !important;
-            }
-            tr {
-                page-break-inside: avoid !important;
-                page-break-after: auto !important;
-            }
-            thead {
-                display: table-row-group !important; /* Mencegah header tabel berulang di halaman 2 dan seterusnya */
-            }
-            tfoot {
-                display: table-row-group !important;
             }
         }
     </style>
     @stack('styles')
 </head>
-<body class="min-h-screen flex antialiased bg-[#FFFFFF] text-black">
+<body class="bg-light">
 
-    <!-- Mobile Sidebar Backdrop -->
-    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/10 z-40 hidden lg:hidden"></div>
-
-    <!-- SIDEBAR: Royal Blue Canvas (#00719C) with Yellow Icon Badges (#FFD51E) -->
-    <aside id="sidebar" class="no-print fixed lg:sticky top-0 left-0 h-screen w-72 flex-shrink-0 overflow-y-auto bg-[#00719C] text-white z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col justify-between select-none border-r border-[#155ce0]">
-        <div>
-            <!-- Sidebar Header / Logo -->
-            <div class="h-20 flex items-center justify-between px-6 border-b border-white/15">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                    <!-- Icon with Blue Background, White Icon & White Border -->
-                    <div class="icon-box" style="width: 2rem; height: 2rem; border: 1.5px solid #FFFFFF;">
-                        <i class="fa-solid fa-square-parking text-sm"></i>
-                    </div>
-                    <div>
-                        <div class="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
-                            <span>E-Parkir</span>
-                            <span class="text-[9px] uppercase font-black px-1.5 py-0.5 rounded bg-[#FFD51E] text-black border border-white">IoT</span>
-                        </div>
-                        <div class="text-[11px] text-white/70 font-medium">Sistem Gerbang &amp; Slot</div>
-                    </div>
-                </a>
-                <button onclick="toggleSidebar()" class="lg:hidden text-white/70 hover:text-white">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                </button>
-            </div>
+    <div class="d-flex min-vh-100">
+        
+        <!-- DESKTOP SIDEBAR -->
+        <aside class="sidebar bg-primary text-white d-none d-lg-flex flex-column flex-shrink-0 p-3 sticky-top h-100 no-print" style="max-height: 100vh; overflow-y: auto;">
+            <!-- Brand -->
+            <a href="{{ route('admin.dashboard') }}" class="d-flex align-items-center gap-2 text-white text-decoration-none pb-3 mb-3 border-bottom border-white-50">
+                <span class="badge bg-white text-primary fs-5 p-2 rounded-3">
+                    <i class="bi bi-p-square-fill"></i>
+                </span>
+                <div>
+                    <div class="fw-bold fs-5 lh-1 text-white">E-Parkir</div>
+                    <small class="text-white-50">Industrial IoT Gate</small>
+                </div>
+            </a>
 
             <!-- Navigation Links -->
-            <nav class="p-4 space-y-1.5">
-                <div class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-white/60">
-                    Menu Utama
-                </div>
-
-                <!-- Dashboard & Monitoring -->
-                <a href="{{ route('admin.dashboard') }}" 
-                   class="sidebar-nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold transition-all {{ request()->routeIs('admin.dashboard') ? 'sidebar-nav-active' : 'text-white/90' }}">
-                    <div class="icon-box" style="width: 1.75rem; height: 1.75rem; border: 1px solid rgba(255, 255, 255, 0.4);">
-                        <i class="fa-solid fa-table-columns text-xs text-white"></i>
-                    </div>
-                    <span>Dashboard &amp; Gate</span>
-                </a>
-
-                <!-- Status Slot Parkir -->
-                <a href="{{ route('admin.status.index') }}" 
-                   class="sidebar-nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold transition-all {{ request()->routeIs('admin.status.*') ? 'sidebar-nav-active' : 'text-white/90' }}">
-                    <div class="icon-box" style="width: 1.75rem; height: 1.75rem; border: 1px solid rgba(255, 255, 255, 0.4);">
-                        <i class="fa-solid fa-square-parking text-xs text-white"></i>
-                    </div>
-                    <span>Status Slot Parkir</span>
-                </a>
-
-                <!-- Kelola Kartu RFID -->
-                <a href="{{ route('admin.cards.index') }}" 
-                   class="sidebar-nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold transition-all {{ request()->routeIs('admin.cards.*') ? 'sidebar-nav-active' : 'text-white/90' }}">
-                    <div class="icon-box" style="width: 1.75rem; height: 1.75rem; border: 1px solid rgba(255, 255, 255, 0.4);">
-                        <i class="fa-solid fa-id-card text-xs text-white"></i>
-                    </div>
-                    <span>Kelola Kartu RFID</span>
-                </a>
-
-                <!-- Live Gate Simulator -->
-                <a href="{{ route('admin.monitoring') }}" 
-                   class="sidebar-nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold transition-all {{ request()->routeIs('admin.monitoring') ? 'sidebar-nav-active' : 'text-white/90' }}">
-                    <div class="icon-box" style="width: 1.75rem; height: 1.75rem; border: 1px solid rgba(255, 255, 255, 0.4);">
-                        <i class="fa-solid fa-microchip text-xs text-white"></i>
-                    </div>
-                    <span>Gate Simulator IoT</span>
-                    <span style="background-color: #EF4444 !important;" class="ml-auto text-[9px] font-black px-1.5 py-0.5 rounded bg-[#EF4444] text-white border border-white">Live</span>
-                </a>
-
-                <div class="px-3 pt-5 pb-1 text-[10px] font-bold uppercase tracking-widest text-white/60">
-                    Laporan & Audit
-                </div>
-
-                <!-- Laporan Pendapatan -->
-                <a href="{{ route('admin.reports.index') }}" 
-                   class="sidebar-nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold transition-all {{ request()->routeIs('admin.reports.*') ? 'sidebar-nav-active' : 'text-white/90' }}">
-                    <div class="icon-box" style="width: 1.75rem; height: 1.75rem; border: 1px solid rgba(255, 255, 255, 0.4);">
-                        <i class="fa-solid fa-chart-line text-xs text-white"></i>
-                    </div>
-                    <span>Laporan Pendapatan</span>
-                </a>
-
-                <!-- Log Akses Gerbang -->
-                <a href="{{ route('admin.logs.index') }}" 
-                   class="sidebar-nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold transition-all {{ request()->routeIs('admin.logs.*') ? 'sidebar-nav-active' : 'text-white/90' }}">
-                    <div class="icon-box" style="width: 1.75rem; height: 1.75rem; border: 1px solid rgba(255, 255, 255, 0.4);">
-                        <i class="fa-solid fa-clock-rotate-left text-xs text-white"></i>
-                    </div>
-                    <span>Audit Log Akses</span>
-                </a>
-
-                <div class="px-3 pt-5 pb-1 text-[10px] font-bold uppercase tracking-widest text-white/60">
-                    Data Master
-                </div>
-
-                <!-- Kelola Admin & Owner -->
-                <a href="{{ route('admin.users.index') }}" 
-                   class="sidebar-nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-semibold transition-all {{ request()->routeIs('admin.users.*') ? 'sidebar-nav-active' : 'text-white/90' }}">
-                    <div class="icon-box" style="width: 1.75rem; height: 1.75rem; border: 1px solid rgba(255, 255, 255, 0.4);">
-                        <i class="fa-solid fa-user-shield text-xs text-white"></i>
-                    </div>
-                    <span>Kelola Admin &amp; Owner</span>
-                </a>
-            </nav>
-        </div>
-
-        <!-- Sidebar Footer Info -->
-        <div class="p-4 border-t border-white/15 text-[11px] text-white/80 flex items-center justify-between">
-            <span class="font-semibold">E-Parkir IoT &bull; v2.0</span>
-        </div>
-    </aside>
-
-    <!-- MAIN WRAPPER -->
-    <div class="flex-1 flex flex-col min-w-0 min-h-screen bg-[#FFFFFF]">
-
-        <!-- TOPBAR: Crisp White #FFFFFF Canvas Solid Opaque -->
-        <header id="admin-topbar" style="background-color: #FFFFFF !important;" class="h-20 bg-white clean-border-b sticky top-0 z-30 px-6 lg:px-8 flex items-center justify-between no-print">
-            <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 text-black clean-border rounded-md hover:bg-black/5">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-                </button>
-                <div>
-                    <h2 class="text-lg font-bold text-black tracking-tight flex items-center gap-2">
-                        @yield('header_title', 'Dashboard')
-                    </h2>
-                    <p class="text-xs text-black/60 hidden sm:block">
-                        @yield('header_subtitle', 'Monitoring sistem palang pintu & transaksi parkir otomatis')
-                    </p>
-                </div>
-            </div>
-
-            <!-- Topbar Right Controls -->
-            <div class="flex items-center gap-3 sm:gap-4">
-                <!-- Clock Widget with Blue Icon -->
-                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-mono font-medium" style="background-color: #00719C; border: 1.5px solid #005677;">
-                    <div class="w-5 h-5 rounded flex items-center justify-center text-[10px] text-white" style="border: 1px solid rgba(255, 255, 255, 0.4);">
-                        <i class="fa-regular fa-clock"></i>
-                    </div>
-                    <span id="live-clock" class="text-white">--:--:-- WIB</span>
-                </div>
-
-                <!-- User Profile Dropdown Pill -->
-                <div class="relative pl-2 sm:pl-4 sm:border-l sm:border-black/10">
-                    <div class="user-pill-btn flex items-center justify-between md:justify-start gap-2.5 px-3 py-1.5 rounded-lg cursor-pointer select-none" id="user-dropdown-toggle" onclick="toggleUserDropdown(event)">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-[#00719C] text-white flex items-center justify-center font-bold text-sm overflow-hidden shrink-0">
-                                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
-                            </div>
-                            <span class="text-sm font-semibold text-black leading-tight">{{ explode(' ', auth()->user()->name ?? 'Admin')[0] }}</span>
+            <div class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mb-2" style="font-size: 0.75rem;">Menu Utama</div>
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <i class="bi bi-speedometer2 fs-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.status.index') }}" class="nav-link {{ request()->routeIs('admin.status.*') ? 'active' : '' }}">
+                        <i class="bi bi-grid-3x3-gap-fill fs-5"></i>
+                        <span>Status Slot Parkir</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.cards.index') }}" class="nav-link {{ request()->routeIs('admin.cards.*') ? 'active' : '' }}">
+                        <i class="bi bi-credit-card-2-front-fill fs-5"></i>
+                        <span>Kelola Kartu RFID</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.monitoring') }}" class="nav-link d-flex align-items-center justify-content-between {{ request()->routeIs('admin.monitoring') ? 'active' : '' }}">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-cpu-fill fs-5"></i>
+                            <span>Gate Simulator</span>
                         </div>
-                        <i class="fa-solid fa-chevron-down text-[11px] text-slate-500 transition-transform duration-200 shrink-0" id="user-dropdown-caret"></i>
+                        <span class="badge bg-danger">LIVE</span>
+                    </a>
+                </li>
+
+                <li class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mt-3 mb-2" style="font-size: 0.75rem;">Laporan & Audit</li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.reports.index') }}" class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                        <i class="bi bi-graph-up-arrow fs-5"></i>
+                        <span>Laporan Finansial</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.logs.index') }}" class="nav-link {{ request()->routeIs('admin.logs.*') ? 'active' : '' }}">
+                        <i class="bi bi-clock-history fs-5"></i>
+                        <span>Audit Log Akses</span>
+                    </a>
+                </li>
+
+                <li class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mt-3 mb-2" style="font-size: 0.75rem;">Master Data</li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                        <i class="bi bi-people-fill fs-5"></i>
+                        <span>Kelola Pengguna</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Sidebar Bottom Info -->
+            <div class="pt-3 border-top border-white-50 small text-white-50 d-flex align-items-center justify-content-between">
+                <span>E-Parkir v2.0</span>
+                <span class="badge bg-warning text-dark fw-bold">ONLINE</span>
+            </div>
+        </aside>
+
+        <!-- MOBILE OFFCANVAS SIDEBAR -->
+        <div class="offcanvas offcanvas-start bg-primary text-white no-print" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+            <div class="offcanvas-header border-bottom border-white-50">
+                <div class="d-flex align-items-center gap-2" id="sidebarOffcanvasLabel">
+                    <span class="badge bg-white text-primary fs-5 p-2 rounded-3">
+                        <i class="bi bi-p-square-fill"></i>
+                    </span>
+                    <h5 class="offcanvas-title fw-bold text-white mb-0">E-Parkir IoT</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column p-3">
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="{{ route('admin.dashboard') }}" class="nav-link text-white {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.status.index') }}" class="nav-link text-white {{ request()->routeIs('admin.status.*') ? 'active' : '' }}">
+                            <i class="bi bi-grid-3x3-gap-fill me-2"></i> Status Slot Parkir
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.cards.index') }}" class="nav-link text-white {{ request()->routeIs('admin.cards.*') ? 'active' : '' }}">
+                            <i class="bi bi-credit-card-2-front-fill me-2"></i> Kelola Kartu RFID
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.monitoring') }}" class="nav-link text-white {{ request()->routeIs('admin.monitoring') ? 'active' : '' }}">
+                            <i class="bi bi-cpu-fill me-2"></i> Gate Simulator
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.reports.index') }}" class="nav-link text-white {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                            <i class="bi bi-graph-up-arrow me-2"></i> Laporan Finansial
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.logs.index') }}" class="nav-link text-white {{ request()->routeIs('admin.logs.*') ? 'active' : '' }}">
+                            <i class="bi bi-clock-history me-2"></i> Audit Log Akses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.users.index') }}" class="nav-link text-white {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                            <i class="bi bi-people-fill me-2"></i> Kelola Pengguna
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="d-flex flex-column flex-grow-1 min-vw-0">
+            
+            <!-- TOP NAVBAR -->
+            <header class="navbar navbar-expand bg-white border-bottom shadow-sm sticky-top px-3 px-lg-4 py-2 no-print">
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-secondary d-lg-none py-1 px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">@yield('header_title', 'Dashboard')</h5>
+                        <small class="text-muted d-none d-sm-inline">@yield('header_subtitle', 'Sistem Manajemen Parkir & Palang Pintu IoT')</small>
+                    </div>
+                </div>
+
+                <div class="ms-auto d-flex align-items-center gap-2 gap-sm-3">
+                    <!-- Live Clock -->
+                    <div class="d-none d-md-flex align-items-center gap-2 bg-light border rounded-3 px-3 py-1 text-secondary small fw-semibold">
+                        <i class="bi bi-clock-fill text-primary"></i>
+                        <span id="live-clock">--:--:-- WIB</span>
                     </div>
 
-                    <!-- User Dropdown Menu (Solid Opaque White) -->
-                    <div id="user-dropdown-menu" style="background-color: #FFFFFF !important; opacity: 1 !important;" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-md clean-border shadow-lg py-1 z-50">
-                        <div class="px-4 py-2.5 border-b border-black/10 bg-white">
-                            <p class="text-xs font-bold text-black truncate">{{ auth()->user()->name ?? 'Admin' }}</p>
-                            <p class="text-[11px] text-black/60 truncate mb-1">{{ auth()->user()->email ?? '' }}</p>
-                            <span class="inline-block text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
-                                Role: Administrator
+                    <!-- User Profile Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-light border dropdown-toggle d-flex align-items-center gap-2 py-1 px-2.5 rounded-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="badge bg-primary rounded-circle p-2">
+                                {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
                             </span>
-                        </div>
-                        <form method="POST" action="{{ route('logout') }}" id="logout-form">
-                            @csrf
-                            <button type="submit" class="w-full text-left flex items-center gap-2 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-black/5 transition bg-white cursor-pointer border-none">
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-                                <span>Keluar (Logout)</span>
-                            </button>
-                        </form>
+                            <span class="fw-semibold small d-none d-sm-inline">{{ explode(' ', auth()->user()->name ?? 'Admin')[0] }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-2">
+                            <li class="px-3 py-2 border-bottom">
+                                <p class="mb-0 fw-bold small text-dark">{{ auth()->user()->name ?? 'Admin' }}</p>
+                                <small class="text-muted d-block text-truncate" style="max-width: 180px;">{{ auth()->user()->email ?? '' }}</small>
+                                <span class="badge bg-primary-subtle text-primary mt-1">Administrator</span>
+                            </li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2 py-2">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        <span>Keluar (Logout)</span>
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
                     </div>
                 </div>
-            </div>
-        </header>
+            </header>
 
-        <!-- MAIN CONTENT CONTAINER -->
-        <main class="flex-1 p-6 lg:p-10 space-y-8 bg-[#FFFFFF]">
-            @yield('content')
-        </main>
+            <!-- MAIN CONTENT -->
+            <main class="flex-grow-1 p-3 p-md-4 bg-light">
+                @yield('content')
+            </main>
 
-        <!-- FOOTER: Crisp White #FFFFFF Canvas -->
-        <footer class="mt-auto px-6 lg:px-10 py-5 clean-border-t bg-[#FFFFFF] text-center text-xs text-black/60 no-print">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-7xl mx-auto">
-                <p>&copy; 2026 <b class="text-black">E-Parkir IoT Platform</b> &bull; Industrial Gate &amp; Slot Management</p>
-                <div class="flex items-center gap-2 text-[11px] font-medium text-black">
-                    <span class="px-2 py-0.5 rounded clean-border">ESP8266 Gate</span>
-                    <span class="px-2 py-0.5 rounded" style="background-color: var(--yellow-wash); border: 1px solid var(--yellow-border);">RC522 RFID</span>
-                    <span class="px-2 py-0.5 rounded clean-border">MySQL Database</span>
+            <!-- FOOTER -->
+            <footer class="bg-white border-top py-3 px-3 px-lg-4 text-center text-sm text-muted no-print">
+                <div class="container-fluid d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2">
+                    <small>&copy; {{ date('Y') }} <strong>E-Parkir IoT Platform</strong> &bull; Tim Sigma Boys</small>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="badge bg-light text-secondary border">ESP8266 Gate</span>
+                        <span class="badge bg-light text-secondary border">RFID RC522</span>
+                        <span class="badge bg-light text-secondary border">MySQL</span>
+                    </div>
                 </div>
-            </div>
-        </footer>
+            </footer>
+
+        </div>
+
     </div>
 
     @if (auth()->user()->role === 'admin')
-    <!-- UNIVERSAL EMERGENCY OVERRIDE MODAL (Minimalist Clean-Cut Panel) -->
-    <div id="emergency-modal" class="no-print fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4 hidden">
-        <div class="modal-card max-w-md w-full p-6">
-            <div class="flex items-center justify-between pb-3.5 clean-border-b mb-4">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-7 h-7 rounded bg-[#00719C] text-white flex items-center justify-center text-xs flex-shrink-0">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
+    <!-- EMERGENCY OVERRIDE MODAL -->
+    <div class="modal fade no-print" id="emergencyModal" tabindex="-1" aria-labelledby="emergencyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-danger p-2 fs-6 rounded-3">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </span>
+                        <h5 class="modal-title fw-bold text-dark" id="emergencyModalLabel">Emergency Override Gerbang</h5>
                     </div>
-                    <h3 class="text-sm font-bold text-black uppercase tracking-wide">Emergency Override Gerbang</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <button type="button" onclick="closeEmergencyModal()" class="w-7 h-7 flex items-center justify-center rounded text-black/50 hover:text-black hover:bg-black/5 transition text-sm">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            
-            <p class="text-xs text-black/60 mb-5 leading-relaxed">
-                Membuka paksa palang pintu gerbang dari jarak jauh untuk evakuasi darurat atau kendaraan prioritas.
-            </p>
-
-            <form id="emergency-form" onsubmit="submitEmergencyOverride(event)" class="space-y-4">
-                <div>
-                    <label class="block text-[11px] font-semibold text-black uppercase tracking-wider mb-2">
-                        Pilih Gerbang Tujuan
-                    </label>
-                    <select id="emergency-device-code" required class="input-clean w-full text-xs font-semibold text-black">
-                        <option value="Gate-01">Gate-01 (Palang Gerbang Utama)</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-[11px] font-semibold text-black uppercase tracking-wider mb-2">
-                        Alasan Pembukaan Darurat
-                    </label>
-                    <textarea id="emergency-reason" rows="2" required placeholder="Contoh: Ambulans darurat / Palang macet"
-                        class="input-clean w-full text-xs placeholder:text-black/40 text-black">Instruksi darurat manual administrator</textarea>
-                </div>
-
-                <div class="flex items-center gap-3 pt-2">
-                    <button type="button" onclick="closeEmergencyModal()"
-                        class="flex-1 py-2.5 px-4 bg-[#FFFFFF] hover:bg-black/5 text-black text-xs font-semibold rounded-md clean-border transition cursor-pointer">
-                        Batal
-                    </button>
-                    <button type="submit" id="btn-submit-override"
-                        class="flex-1 py-2.5 px-4 btn-primary text-xs flex items-center justify-center gap-2 cursor-pointer">
-                        <div class="w-4 h-4 rounded bg-[#00719C] text-white flex items-center justify-center text-[10px]">
-                            <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <form id="emergency-form" onsubmit="submitEmergencyOverride(event)">
+                    <div class="modal-body p-4">
+                        <p class="small text-muted mb-3">
+                            Membuka paksa palang pintu gerbang dari jarak jauh untuk evakuasi darurat atau kendaraan prioritas.
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Pilih Gerbang Tujuan</label>
+                            <select id="emergency-device-code" required class="form-select">
+                                <option value="Gate-01">Gate-01 (Palang Gerbang Utama)</option>
+                            </select>
                         </div>
-                        <span>Buka Palang Sekarang</span>
-                    </button>
-                </div>
-            </form>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Alasan Pembukaan Darurat</label>
+                            <textarea id="emergency-reason" rows="2" required class="form-control" placeholder="Contoh: Ambulans darurat / Palang macet">Instruksi darurat manual administrator</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top bg-light">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" id="btn-submit-override" class="btn btn-danger rounded-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                            <span>Buka Palang Sekarang</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
     @endif
 
     <!-- TOAST CONTAINER -->
-    <div id="toast-container" class="toast-container"></div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3 no-print" id="toastContainer" style="z-index: 1090;"></div>
+
+    <!-- Bootstrap 5.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Sidebar Toggle
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebar-backdrop');
-            sidebar.classList.toggle('-translate-x-full');
-            backdrop.classList.toggle('hidden');
-        }
-
-        // User Dropdown Toggle
-        function toggleUserDropdown(e) {
-            if (e) e.stopPropagation();
-            const menu = document.getElementById('user-dropdown-menu');
-            const caret = document.getElementById('user-dropdown-caret');
-            if (menu) {
-                const isHidden = menu.classList.contains('hidden');
-                if (isHidden) {
-                    menu.classList.remove('hidden');
-                    if (caret) caret.classList.add('rotate-180');
-                } else {
-                    menu.classList.add('hidden');
-                    if (caret) caret.classList.remove('rotate-180');
-                }
-            }
-        }
-
-        window.addEventListener('click', function(e) {
-            const toggle = document.getElementById('user-dropdown-toggle');
-            const menu = document.getElementById('user-dropdown-menu');
-            const caret = document.getElementById('user-dropdown-caret');
-            if (toggle && menu && !toggle.contains(e.target) && !menu.contains(e.target)) {
-                menu.classList.add('hidden');
-                if (caret) caret.classList.remove('rotate-180');
-            }
-        });
-
         // Live Clock
         function updateLiveClock() {
             const now = new Date();
@@ -509,17 +322,23 @@
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
 
-        // Emergency Modal
+        // Emergency Modal Trigger
         function openEmergencyModal(deviceCode = null) {
-            const modal = document.getElementById('emergency-modal');
+            const modalEl = document.getElementById('emergencyModal');
+            if (!modalEl) return;
             if (deviceCode) {
                 document.getElementById('emergency-device-code').value = deviceCode;
             }
-            modal.classList.remove('hidden');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
         }
 
         function closeEmergencyModal() {
-            document.getElementById('emergency-modal').classList.add('hidden');
+            const modalEl = document.getElementById('emergencyModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            }
         }
 
         async function submitEmergencyOverride(e) {
@@ -529,7 +348,7 @@
             const reason = document.getElementById('emergency-reason').value;
 
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Memproses...';
 
             try {
                 const res = await fetch('{{ url('/api/override') }}', {
@@ -551,58 +370,43 @@
                     if (typeof refreshDashboardData === 'function') {
                         refreshDashboardData();
                     }
-
-                    // Langsung jalankan animasi buka palang di web seketika tanpa jeda
                     if (typeof openBarrierGate === 'function') {
                         openBarrierGate(8000);
                     }
                 } else {
-                    showToast('Gagal', data.message, 'error');
+                    showToast('Gagal', data.message, 'danger');
                 }
             } catch (err) {
-                showToast('Error', 'Gagal menghubungi server: ' + err.message, 'error');
+                showToast('Error', 'Gagal menghubungi server: ' + err.message, 'danger');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `
-                    <div class="w-4 h-4 rounded bg-[#00719C] text-white inline-flex items-center justify-center text-[10px] mr-1">
-                        <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    </div>
-                    <span>Buka Palang Sekarang</span>
-                `;
+                btn.innerHTML = '<i class="bi bi-lightning-charge-fill me-1"></i> Buka Palang Sekarang';
             }
         }
 
-        // Toast Helper
+        // Bootstrap 5 Toast Helper
         function showToast(title, message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
+            const container = document.getElementById('toastContainer');
+            const bgClass = (type === 'error' || type === 'danger') ? 'bg-danger text-white' : (type === 'success' ? 'bg-success text-white' : 'bg-primary text-white');
+            
+            const toastEl = document.createElement('div');
+            toastEl.className = `toast align-items-center ${bgClass} border-0 shadow mb-2`;
+            toastEl.setAttribute('role', 'alert');
+            toastEl.setAttribute('aria-live', 'assertive');
+            toastEl.setAttribute('aria-atomic', 'true');
 
-            const svgIcons = {
-                success: '<div class="toast-badge-icon"><svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div>',
-                error: '<div class="toast-badge-icon badge-error"><svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg></div>',
-                info: '<div class="toast-badge-icon"><svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg></div>',
-                warning: '<div class="toast-badge-icon badge-warning"><svg class="w-3.5 h-3.5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 22 22 22 12 2"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg></div>'
-            };
-
-            const typeClass = 'toast-' + type;
-            toast.className = `toast-item ${typeClass} transform -translate-y-2 opacity-0`;
-            toast.innerHTML = `
-                ${svgIcons[type] || svgIcons.info}
-                <div class="flex-1">
-                    <div class="toast-title">${title}</div>
-                    <div class="toast-message">${message}</div>
+            toastEl.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <strong>${title}</strong>: ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
             `;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('-translate-y-2', 'opacity-0');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-x-full');
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
+            container.appendChild(toastEl);
+            const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+            toast.show();
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
         }
 
         // Web Audio Buzzer

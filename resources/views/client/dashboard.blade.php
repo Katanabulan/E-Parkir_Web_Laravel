@@ -9,48 +9,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Local FontAwesome & CSS Engine -->
-    <link rel="stylesheet" href="{{ asset('assets/css/all.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+    <!-- Bootstrap 5.3 & Bootstrap Icons CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
-        :root {
-            --c-white: #FFFFFF;
-            --c-blue: #00719C;
-            --c-blue-dark: #005677;
-            --c-yellow: #FFD51E;
-            --c-black: #000000;
-        }
         body {
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
             background-color: #F8FAFC;
             color: #000000;
             min-height: 100vh;
-            margin: 0;
-            padding: 0;
         }
-        .clean-border {
-            border: 1px solid rgba(0, 0, 0, 0.08);
-        }
-        .clean-border-b {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        }
-        .clean-border-t {
-            border-top: 1px solid rgba(0, 0, 0, 0.08);
-        }
-        .editorial-card {
-            background-color: #FFFFFF;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        }
-        .icon-box {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+        .btn-primary {
             background-color: #00719C;
-            color: #FFFFFF;
-            border-radius: 0.5rem;
-            flex-shrink: 0;
+            border-color: #00719C;
+        }
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: #005677;
+            border-color: #005677;
+        }
+        .text-primary-custom {
+            color: #00719C !important;
+        }
+        .bg-primary-custom {
+            background-color: #00719C !important;
         }
         .pulse-live {
             box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
@@ -63,392 +44,549 @@
         }
     </style>
 </head>
-<body class="antialiased flex justify-center text-black">
+<body class="d-flex flex-column justify-content-between">
 
     <!-- Container Smartphone Mobile-First (Maks 500px) -->
-    <div class="w-full max-w-lg min-h-screen flex flex-col justify-between px-4 py-5 sm:py-6">
+    <div class="container py-4" style="max-width: 500px;">
 
         <!-- Top Header & WiFi Info -->
-        <header class="space-y-3">
+        <header class="d-flex flex-column gap-3 mb-3">
             
             <!-- Top bar -->
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
                     <!-- Icon Box E-Parkir Blue -->
-                    <div class="icon-box w-10 h-10 text-base" style="border: 1.5px solid #005677;">
-                        <i class="fa-solid fa-square-parking"></i>
+                    <div class="d-flex align-items-center justify-content-center rounded-3 text-white bg-primary-custom" style="width: 2.5rem; height: 2.5rem; font-size: 1.25rem;">
+                        <i class="bi bi-p-square-fill"></i>
                     </div>
                     <div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-base font-bold tracking-tight text-black">E-Parkir</span>
-                            <span class="text-[9px] uppercase font-black px-1.5 py-0.5 rounded bg-[#FFD51E] text-black border border-black/10">IoT</span>
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00719C]/10 text-[#00719C]">CLIENT</span>
+                        <div class="d-flex align-items-center gap-1.5">
+                            <span class="fs-6 fw-bold text-dark">E-Parkir</span>
+                            <span class="badge bg-warning text-dark border fw-bold" style="font-size: 0.65rem;">IoT</span>
+                            <span class="badge bg-primary-subtle text-primary fw-bold" style="font-size: 0.65rem;">CLIENT</span>
                         </div>
-                        <p class="text-[11px] text-black/60 font-medium">Smart Barrier Gate &amp; Live Billing</p>
+                        <p class="small text-secondary mb-0" style="font-size: 0.75rem;">Smart Barrier Gate &amp; Live Billing</p>
                     </div>
                 </div>
             </div>
 
             <!-- User Identity & Logout Bar -->
-            <div class="editorial-card p-3.5 space-y-2.5">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <div class="icon-box w-8 h-8 font-bold text-xs" style="border: 1.5px solid #005677;">
-                            <i class="fa-solid fa-user text-xs"></i>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-3 d-flex flex-column gap-2">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-light border text-secondary" style="width: 2rem; height: 2rem;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div>
+                                <div class="small fw-bold text-dark">{{ $currentUser->name ?? 'Pengendara' }}</div>
+                                <div class="small text-muted" style="font-size: 0.7rem;">{{ $currentUser->email ?? '' }}</div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="text-xs font-bold text-black">{{ $currentUser->name ?? 'Pengendara' }}</div>
-                            <div class="text-[11px] text-black/60">{{ $currentUser->email ?? '' }}</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-warning text-dark border fw-bold" style="font-size: 0.7rem;">
+                                {{ ($currentUser->role === 'admin') ? 'ADMIN' : 'PENGENDARA' }}
+                            </span>
+                            <form method="POST" action="{{ route('logout') }}" id="client-logout-form" class="m-0">
+                                @csrf
+                                <button type="submit" title="Keluar / Logout" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 py-1 px-2 fw-bold" style="font-size: 0.75rem;">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span>Keluar</span>
+                                </button>
+                            </form>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] bg-[#FFD51E] text-black border border-black/10 px-2 py-0.5 rounded-full font-bold uppercase">
-                            {{ ($currentUser->role === 'admin') ? 'ADMIN' : 'PENGENDARA' }}
-                        </span>
-                        <form method="POST" action="{{ route('logout') }}" id="client-logout-form" class="inline">
-                            @csrf
-                            <button type="submit" title="Keluar / Logout" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md text-xs font-bold clean-border transition flex items-center gap-1 cursor-pointer border-none">
-                                <i class="fa-solid fa-right-from-bracket text-[10px]"></i>
-                                <span>Keluar</span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
 
-                @if ($currentUser->role === 'admin')
-                <div class="pt-2 clean-border-t flex items-center gap-2">
-                    <span class="text-[11px] font-bold text-black/60 uppercase">Mode Admin:</span>
-                    <select id="user-select" onchange="switchUser(this.value)" class="flex-1 bg-white clean-border rounded-md px-2.5 py-1.5 text-xs font-semibold text-black focus:outline-none focus:border-[#00719C]">
-                        @foreach ($clients as $cl)
-                            <option value="{{ $cl['id'] }}" {{ ($cl['id'] == $defaultUserId) ? 'selected' : '' }}>
-                                {{ $cl['name'] }} (UID: {{ $cl['uid'] ?? '-' }})
-                            </option>
-                        @endforeach
-                    </select>
-                    <button onclick="refreshData(true)" title="Sinkronkan data" class="px-2.5 py-1.5 bg-[#00719C] hover:bg-[#005677] rounded-md text-white transition active:scale-95 text-xs font-bold cursor-pointer">
-                        <i class="fa-solid fa-rotate"></i>
-                    </button>
+                    @if ($currentUser->role === 'admin')
+                    <div class="pt-2 border-top d-flex align-items-center gap-2">
+                        <span class="small fw-bold text-secondary text-uppercase" style="font-size: 0.7rem;">Mode:</span>
+                        <select id="user-select" onchange="switchUser(this.value)" class="form-select form-select-sm fw-semibold">
+                            @foreach ($clients as $cl)
+                                <option value="{{ $cl['id'] }}" {{ ($cl['id'] == $defaultUserId) ? 'selected' : '' }}>
+                                    {{ $cl['name'] }} (UID: {{ $cl['uid'] ?? '-' }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <button onclick="refreshData(true)" title="Sinkronkan data" class="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                    @else
+                        <input type="hidden" id="user-select" value="{{ $currentUser->id }}">
+                    @endif
                 </div>
-                @else
-                    <input type="hidden" id="user-select" value="{{ $currentUser->id }}">
-                @endif
             </div>
         </header>
 
         <!-- Main Body: Active Status or Idle Status -->
-        <main class="my-4 space-y-4">
+        <main class="d-flex flex-column gap-3">
 
             <!-- KARTU SALDO PENGENDARA (E-MONEY RFID BALANCE CARD) -->
-            <div id="balance-card" class="editorial-card p-4 bg-white relative overflow-hidden shadow-sm">
-                <div class="flex items-center justify-between pb-3 clean-border-b">
-                    <div class="flex items-center gap-2.5">
-                        <div class="icon-box w-10 h-10 text-base" style="border: 1.5px solid #005677; background-color: #00719C;">
-                            <i class="fa-solid fa-wallet text-white"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xs font-bold uppercase tracking-wider text-black">Saldo Kartu Pengendara</span>
-                                <span id="card-status-badge" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Aktif</span>
+            <div id="balance-card" class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between pb-3 border-bottom">
+                        <div class="d-flex align-items-center gap-2.5">
+                            <div class="d-flex align-items-center justify-content-center rounded-3 text-white bg-primary-custom" style="width: 2.5rem; height: 2.5rem; font-size: 1.25rem;">
+                                <i class="bi bi-wallet2"></i>
                             </div>
-                            <div class="text-[11px] text-black/60 font-mono mt-0.5" id="user-card-uid-sub">UID: -</div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="small fw-bold text-uppercase text-dark" style="font-size: 0.75rem;">Saldo Kartu</span>
+                                    <span id="card-status-badge" class="badge bg-success-subtle text-success border border-success-subtle fw-bold" style="font-size: 0.65rem;">Aktif</span>
+                                </div>
+                                <div class="small text-muted font-monospace" id="user-card-uid-sub" style="font-size: 0.75rem;">UID: -</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-1.5">
+                            <button type="button" onclick="openPayTicketModal()" class="btn btn-sm btn-primary fw-bold d-inline-flex align-items-center gap-1 shadow-sm" style="font-size: 0.75rem;" title="Scan / Bayar Tiket Karcis via Saldo">
+                                <i class="bi bi-qr-code-scan"></i>
+                                <span>Bayar</span>
+                            </button>
+                            <button type="button" onclick="openTopupModal()" class="btn btn-sm btn-warning fw-bold text-dark d-inline-flex align-items-center gap-1 shadow-sm" style="font-size: 0.75rem;">
+                                <i class="bi bi-plus-circle"></i>
+                                <span>Top Up</span>
+                            </button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <button type="button" onclick="openPayTicketModal()" class="px-2.5 py-1.5 rounded-lg bg-[#00719C] hover:bg-[#005677] text-white text-xs font-bold transition active:scale-95 flex items-center gap-1 shadow-sm cursor-pointer border-none" title="Scan / Bayar Tiket Karcis via Saldo">
-                            <i class="fa-solid fa-qrcode text-[11px]"></i>
-                            <span>Bayar Karcis</span>
-                        </button>
-                        <button type="button" onclick="openTopupModal()" class="px-2.5 py-1.5 rounded-lg bg-[#FFD51E] hover:bg-[#ffe054] text-black text-xs font-bold border border-black/10 transition active:scale-95 flex items-center gap-1 shadow-sm cursor-pointer">
-                            <i class="fa-solid fa-plus text-[10px]"></i>
-                            <span>Isi Saldo</span>
-                        </button>
-                    </div>
-                </div>
 
-                <div class="pt-3 flex items-baseline justify-between">
-                    <div>
-                        <span class="text-[10px] uppercase font-bold text-black/50 block">Saldo Saat Ini</span>
-                        <div id="user-balance-display" class="font-mono text-2xl sm:text-3xl font-black text-black tracking-tight">
-                            Rp 0
+                    <div class="pt-3 d-flex align-items-baseline justify-content-between">
+                        <div>
+                            <span class="small text-uppercase fw-bold text-secondary d-block" style="font-size: 0.7rem;">Saldo Saat Ini</span>
+                            <div id="user-balance-display" class="font-monospace fs-3 fw-bold text-dark">
+                                Rp 0
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="small text-secondary d-block" style="font-size: 0.7rem;">Batas Minimal Masuk</span>
+                            <span class="font-monospace small fw-bold text-dark bg-light px-2 py-0.5 rounded border d-inline-block mt-0.5">Rp 2.000</span>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <span class="text-[10px] text-black/50 block font-medium">Batas Minimal Masuk</span>
-                        <span class="font-mono text-xs font-bold text-black bg-slate-100 px-2 py-0.5 rounded clean-border inline-block mt-0.5">Rp 2.000</span>
-                    </div>
-                </div>
 
-                <!-- Banner Informasi Keterangan Potong Saldo -->
-                <div class="mt-3 pt-2.5 clean-border-t flex items-center justify-between text-[11px] text-black/60">
-                    <span class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-info text-[#00719C]"></i>
-                        <span>Berkurang otomatis saat tap keluar &rarr; Masuk ke Admin</span>
-                    </span>
-                    <span class="text-emerald-700 font-bold text-[10px] bg-emerald-50 px-2 py-0.5 rounded">Real-Time</span>
+                    <!-- Banner Informasi Keterangan Potong Saldo -->
+                    <div class="mt-3 pt-2.5 border-top d-flex align-items-center justify-content-between small text-secondary" style="font-size: 0.75rem;">
+                        <span class="d-flex align-items-center gap-1">
+                            <i class="bi bi-info-circle-fill text-primary"></i>
+                            <span>Potong otomatis saat keluar &rarr; Admin</span>
+                        </span>
+                        <span class="badge bg-success-subtle text-success fw-bold">Real-Time</span>
+                    </div>
                 </div>
             </div>
 
             <!-- KETERSEDIAAN SLOT PARKIR REALTIME (SLOT AVAILABILITY HERO CARD) -->
-            <div id="slot-availability-card" class="editorial-card p-4 space-y-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div id="slot-status-iconbox" class="icon-box w-11 h-11 text-lg" style="border: 1.5px solid #005677;">
-                            <i id="slot-icon" class="fa-solid fa-square-parking"></i>
+            <div id="slot-availability-card" class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div id="slot-status-iconbox" class="d-flex align-items-center justify-content-center rounded-3 text-white bg-primary-custom" style="width: 2.75rem; height: 2.75rem; font-size: 1.35rem;">
+                                <i id="slot-icon" class="bi bi-p-square-fill"></i>
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="small fw-bold text-uppercase text-secondary" style="font-size: 0.75rem;">Ketersediaan Slot</span>
+                                    <span id="slot-badge-status" class="badge {{ $availableInitSlots > 0 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' }} fw-bold" style="font-size: 0.7rem;">
+                                        {{ $availableInitSlots > 0 ? 'Tersedia' : 'Penuh' }}
+                                    </span>
+                                </div>
+                                <div class="small text-secondary mt-0.5" id="slot-subtext" style="font-size: 0.75rem;">
+                                    Kapasitas maksimal {{ $totalCapacity }} slot (LT 1 &amp; LT 2)
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[11px] font-bold uppercase tracking-wider text-black/60">Ketersediaan Slot</span>
-                                <span id="slot-badge-status" class="text-[10px] font-bold px-2 py-0.5 rounded-full {{ $availableInitSlots > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
-                                    {{ $availableInitSlots > 0 ? 'Tersedia' : 'Penuh' }}
+
+                        <!-- Angka Slot Tersisa -->
+                        <div class="text-end ps-3 border-start">
+                            <div class="small fw-bold text-uppercase text-secondary" style="font-size: 0.7rem;">Total Tersisa</div>
+                            <div class="d-flex align-items-baseline justify-content-end gap-1">
+                                <span id="slot-available-count" class="font-monospace fs-3 fw-bold {{ $availableInitSlots > 0 ? 'text-primary' : 'text-danger' }}">
+                                    {{ $availableInitSlots }}
                                 </span>
-                            </div>
-                            <div class="text-xs font-medium text-black/60 mt-0.5" id="slot-subtext">
-                                Kapasitas maksimal {{ $totalCapacity }} slot (LT 1 &amp; LT 2)
+                                <span class="small fw-bold text-secondary">/ {{ $totalCapacity }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Angka Slot Tersisa -->
-                    <div class="text-right pl-3 clean-border-l">
-                        <div class="text-[10px] font-bold uppercase text-black/50">Total Tersisa</div>
-                        <div class="flex items-baseline justify-end gap-1">
-                            <span id="slot-available-count" class="font-mono text-2xl sm:text-3xl font-extrabold {{ $availableInitSlots > 0 ? 'text-[#00719C]' : 'text-rose-600' }}">
-                                {{ $availableInitSlots }}
-                            </span>
-                            <span class="text-[11px] font-bold text-black/40">/ {{ $totalCapacity }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Breakdown Per Lantai: LT 1 & LT 2 -->
-                <div class="grid grid-cols-2 gap-2 pt-2 clean-border-t">
-                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full {{ ($floor1Available ?? 0) > 0 ? 'bg-emerald-500' : 'bg-rose-500' }}" id="lt1-indicator"></span>
-                            <div>
-                                <div class="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
-                                    <span>Lantai 1</span>
-                                    <span class="text-[9px] px-1.5 py-0.2 rounded font-black bg-sky-100 text-[#00719C]">LT 1</span>
+                    <!-- Breakdown Per Lantai: LT 1 & LT 2 -->
+                    <div class="row g-2 pt-2 border-top">
+                        <div class="col-6">
+                            <div class="p-2.5 rounded-3 bg-light border d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="rounded-circle d-inline-block {{ ($floor1Available ?? 0) > 0 ? 'bg-success' : 'bg-danger' }}" id="lt1-indicator" style="width: 8px; height: 8px;"></span>
+                                    <div>
+                                        <div class="small fw-bold text-dark d-flex align-items-center gap-1">
+                                            <span>LT 1</span>
+                                            <span class="badge bg-primary text-white" style="font-size: 0.6rem;">1</span>
+                                        </div>
+                                        <div class="small text-secondary" id="lt1-status-text" style="font-size: 0.65rem;">{{ ($floor1Available ?? 0) > 0 ? 'Sisa ' . ($floor1Available ?? 0) . ' slot' : 'Penuh' }}</div>
+                                    </div>
                                 </div>
-                                <div class="text-[10px] text-slate-500" id="lt1-status-text">{{ ($floor1Available ?? 0) > 0 ? 'Sisa ' . ($floor1Available ?? 0) . ' slot' : 'Penuh' }}</div>
-                            </div>
-                        </div>
-                        <div class="text-right font-mono text-xs font-bold text-slate-700">
-                            <span id="lt1-parked-count">{{ $floor1Parked ?? 0 }}</span>/10
-                        </div>
-                    </div>
-
-                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full {{ ($floor2Available ?? 0) > 0 ? 'bg-emerald-500' : 'bg-rose-500' }}" id="lt2-indicator"></span>
-                            <div>
-                                <div class="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
-                                    <span>Lantai 2</span>
-                                    <span class="text-[9px] px-1.5 py-0.2 rounded font-black bg-amber-100 text-amber-800">LT 2</span>
+                                <div class="text-end font-monospace small fw-bold text-secondary">
+                                    <span id="lt1-parked-count">{{ $floor1Parked ?? 0 }}</span>/10
                                 </div>
-                                <div class="text-[10px] text-slate-500" id="lt2-status-text">{{ ($floor2Available ?? 0) > 0 ? 'Sisa ' . ($floor2Available ?? 0) . ' slot' : 'Penuh' }}</div>
                             </div>
                         </div>
-                        <div class="text-right font-mono text-xs font-bold text-slate-700">
-                            <span id="lt2-parked-count">{{ $floor2Parked ?? 0 }}</span>/10
+
+                        <div class="col-6">
+                            <div class="p-2.5 rounded-3 bg-light border d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="rounded-circle d-inline-block {{ ($floor2Available ?? 0) > 0 ? 'bg-success' : 'bg-danger' }}" id="lt2-indicator" style="width: 8px; height: 8px;"></span>
+                                    <div>
+                                        <div class="small fw-bold text-dark d-flex align-items-center gap-1">
+                                            <span>LT 2</span>
+                                            <span class="badge bg-warning text-dark" style="font-size: 0.6rem;">2</span>
+                                        </div>
+                                        <div class="small text-secondary" id="lt2-status-text" style="font-size: 0.65rem;">{{ ($floor2Available ?? 0) > 0 ? 'Sisa ' . ($floor2Available ?? 0) . ' slot' : 'Penuh' }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-end font-monospace small fw-bold text-secondary">
+                                    <span id="lt2-parked-count">{{ $floor2Parked ?? 0 }}</span>/10
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- CARD UTAMA: STATUS PARKIR REALTIME -->
-            <div id="main-status-card" class="editorial-card p-5 transition-all duration-300 relative overflow-hidden">
-                <!-- Loading State placeholder -->
-                <div id="loading-spinner" class="py-12 flex flex-col items-center justify-center text-center">
-                    <div class="w-8 h-8 border-3 border-[#00719C] border-t-[#FFD51E] rounded-full animate-spin"></div>
-                    <p class="text-xs text-black/60 mt-3 font-medium">Menghubungkan ke E-Parkir Server...</p>
-                </div>
-
-                <!-- STATE 1: SEDANG PARKIR (PARKED) -->
-                <div id="state-parked" class="hidden space-y-4">
-                    <!-- Top Status Badge -->
-                    <div class="flex items-center justify-between pb-3 clean-border-b">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-live"></span>
-                            <span class="text-xs font-bold tracking-wide uppercase text-black">KENDARAAN PARKIR AKTIF</span>
-                        </div>
-                        <span id="parked-card-uid" class="font-mono text-xs px-2.5 py-1 rounded-md bg-[#00719C]/10 text-[#00719C] font-bold clean-border">UID: -</span>
+            <div id="main-status-card" class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <!-- Loading State placeholder -->
+                    <div id="loading-spinner" class="py-5 text-center">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="small text-secondary mt-3 fw-semibold">Menghubungkan ke E-Parkir Server...</p>
                     </div>
 
-                    <!-- Live Duration Display (Editorial Clean) -->
-                    <div class="text-center py-4 bg-slate-50 rounded-xl clean-border">
-                        <p class="text-[11px] font-bold tracking-wider uppercase text-black/60 mb-1">DURASI PARKIR BERJALAN</p>
-                        <div id="live-timer" class="font-mono text-3xl sm:text-4xl font-extrabold text-black tracking-wider">
-                            00 : 00 : 00
-                        </div>
-                        <p class="text-[10px] text-black/50 mt-1">Format: Jam : Menit : Detik</p>
-                    </div>
-
-                    <!-- Estimated Tariff Ticker (Primary Blue Card) -->
-                    <div class="rounded-xl p-4 text-white shadow-sm" style="background-color: #00719C; border: 1.5px solid #005677;">
-                        <div class="flex items-center justify-between text-xs font-semibold mb-1">
-                            <span class="text-white/90">Estimasi Tagihan</span>
-                            <span class="px-2 py-0.5 rounded bg-[#FFD51E] text-black font-bold text-[10px]">Rp 2.000 / Jam</span>
-                        </div>
-                        <div class="flex items-baseline justify-between mt-2">
-                            <div id="current-fee-display" class="text-3xl font-black text-white font-mono">
-                                Rp 0
+                    <!-- STATE 1: SEDANG PARKIR (PARKED) -->
+                    <div id="state-parked" class="d-none d-flex flex-column gap-3">
+                        <!-- Top Status Badge -->
+                        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="rounded-circle d-inline-block bg-success pulse-live" style="width: 10px; height: 10px;"></span>
+                                <span class="small fw-bold text-uppercase text-dark">KENDARAAN PARKIR AKTIF</span>
                             </div>
-                            <div class="text-right">
-                                <span id="billed-hours-display" class="text-xs font-bold text-white bg-black/20 px-2.5 py-1 rounded-md">1 Jam Dihitung</span>
+                            <span id="parked-card-uid" class="font-monospace small px-2.5 py-1 rounded-2 bg-primary-subtle text-primary fw-bold">UID: -</span>
+                        </div>
+
+                        <!-- Live Duration Display -->
+                        <div class="text-center py-4 bg-light rounded-4 border">
+                            <p class="small fw-bold text-uppercase text-secondary mb-1" style="font-size: 0.75rem;">DURASI PARKIR BERJALAN</p>
+                            <div id="live-timer" class="font-monospace fs-1 fw-bold text-dark tracking-wider">
+                                00 : 00 : 00
                             </div>
+                            <p class="small text-muted mb-0 mt-1" style="font-size: 0.7rem;">Format: Jam : Menit : Detik</p>
                         </div>
 
-                        <!-- Progress to next hour -->
-                        <div class="mt-3 pt-3" style="border-top: 1px solid rgba(255, 255, 255, 0.2);">
-                            <div class="flex justify-between text-[11px] text-white/90 mb-1.5 font-medium">
-                                <span>Menuju jam berikutnya:</span>
-                                <span id="next-hour-countdown" class="font-mono font-bold text-[#FFD51E]">-- mnt tersisa</span>
+                        <!-- Estimated Tariff Ticker -->
+                        <div class="rounded-4 p-4 text-white shadow-sm" style="background: linear-gradient(135deg, #00719C 0%, #004b68 100%);">
+                            <div class="d-flex align-items-center justify-content-between small fw-semibold mb-1">
+                                <span class="text-white-50">Estimasi Tagihan</span>
+                                <span class="badge bg-warning text-dark fw-bold">Rp 2.000 / Jam</span>
                             </div>
-                            <div class="w-full bg-black/20 rounded-full h-2 overflow-hidden">
-                                <div id="hourly-progress-bar" class="bg-[#FFD51E] h-2 rounded-full transition-all duration-300" style="width: 20%;"></div>
+                            <div class="d-flex align-items-baseline justify-content-between mt-2">
+                                <div id="current-fee-display" class="fs-2 fw-bold text-white font-monospace">
+                                    Rp 0
+                                </div>
+                                <div class="text-end">
+                                    <span id="billed-hours-display" class="badge bg-white bg-opacity-25 text-white fw-bold">1 Jam Dihitung</span>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Live Balance Calculation Box saat parkir -->
-                    <div class="p-3.5 bg-slate-50 rounded-xl clean-border text-xs space-y-2">
-                        <div class="flex items-center justify-between text-black/70 font-medium">
-                            <span class="flex items-center gap-1.5">
-                                <i class="fa-solid fa-wallet text-[#00719C]"></i>
-                                <span>Saldo Kartu Anda:</span>
-                            </span>
-                            <span id="parked-current-balance" class="font-mono font-bold text-black text-sm">Rp 0</span>
-                        </div>
-                        <div class="flex items-center justify-between text-black/70 font-medium">
-                            <span class="flex items-center gap-1.5">
-                                <i class="fa-solid fa-receipt text-rose-600"></i>
-                                <span>Estimasi Tarif Parkir:</span>
-                            </span>
-                            <span id="parked-estimated-fee" class="font-mono font-bold text-rose-600 text-sm">- Rp 0</span>
-                        </div>
-                        <div class="pt-2 clean-border-t flex items-center justify-between font-bold">
-                            <span class="text-black flex items-center gap-1.5">
-                                <i class="fa-solid fa-coins text-amber-500"></i>
-                                <span>Estimasi Sisa Saldo:</span>
-                            </span>
-                            <span id="parked-remaining-balance" class="font-mono text-emerald-700 text-sm font-extrabold">Rp 0</span>
-                        </div>
-                        <div id="insufficient-balance-warning" class="hidden mt-2 p-2.5 rounded-lg bg-rose-50 clean-border border-rose-300 text-rose-700 text-xs font-semibold flex items-center gap-2">
-                            <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm flex-shrink-0"></i>
-                            <div class="flex-1">
-                                <div>Saldo Kurang untuk Keluar!</div>
-                                <span class="text-[10px] text-rose-600 font-normal">Palang tidak akan terbuka saat tap-out. Segera isi saldo kartu Anda.</span>
-                            </div>
-                            <button type="button" onclick="openTopupModal()" class="px-2 py-1 rounded bg-rose-600 text-white text-[10px] font-bold cursor-pointer">Top Up</button>
-                        </div>
-                    </div>
-
-                    <!-- Gate In & Tap Time Details -->
-                    <div class="grid grid-cols-3 gap-2 text-xs">
-                        <div class="bg-slate-50 p-2.5 rounded-xl clean-border">
-                            <span class="text-black/50 block text-[9px] uppercase font-bold">Lantai Parkir</span>
-                            <span id="parked-floor-badge" class="inline-block mt-0.5 px-2 py-0.5 rounded text-[11px] font-black bg-sky-100 text-[#00719C]">Lantai 1 (LT 1)</span>
-                        </div>
-                        <div class="bg-slate-50 p-2.5 rounded-xl clean-border">
-                            <span class="text-black/50 block text-[9px] uppercase font-bold">Palang Masuk</span>
-                            <span id="gate-in-name" class="font-bold text-black text-xs mt-0.5 block truncate">Gate-01</span>
-                            <span id="gate-in-loc" class="text-[9px] text-black/50 block truncate">Pintu Utama</span>
-                        </div>
-                        <div class="bg-slate-50 p-2.5 rounded-xl clean-border">
-                            <span class="text-black/50 block text-[9px] uppercase font-bold">Waktu Masuk</span>
-                            <span id="tap-in-time-display" class="font-bold text-black text-xs mt-0.5 block font-mono">--:--:--</span>
-                            <span class="text-[9px] text-emerald-600 block font-semibold">✓ Tercatat</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STATE 2: BELUM PARKIR / SIAP TAP-IN (NOT PARKED) -->
-                <div id="state-idle" class="hidden space-y-4">
-                    <!-- Status Badge -->
-                    <div class="flex items-center justify-between pb-3 clean-border-b">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                            <span class="text-xs font-bold tracking-wide uppercase text-black">STATUS: TIDAK DALAM PARKIR</span>
-                        </div>
-                        <span id="idle-card-uid" class="font-mono text-xs px-2.5 py-1 rounded-md bg-black/5 text-black/70 clean-border font-bold">UID: -</span>
-                    </div>
-
-                    <!-- Saldo Status info box -->
-                    <div id="idle-balance-alert" class="p-3 rounded-xl clean-border text-xs flex items-center justify-between bg-emerald-50 border-emerald-200">
-                        <div class="flex items-center gap-2">
-                            <i id="idle-balance-icon" class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
-                            <span id="idle-balance-text" class="text-emerald-900 font-medium">Saldo mencukupi untuk tap masuk (Min. Rp 2.000).</span>
-                        </div>
-                        <span id="idle-balance-val" class="font-mono font-bold text-emerald-800 text-xs">Rp 0</span>
-                    </div>
-
-                    <!-- Welcome Box -->
-                    <div class="text-center py-6 px-4 bg-slate-50 rounded-xl clean-border space-y-2">
-                        <div class="icon-box w-12 h-12 text-lg mx-auto mb-2" style="border: 1.5px solid #005677;">
-                            <i class="fa-solid fa-credit-card"></i>
-                        </div>
-                        <h2 class="text-base font-bold text-black">Kartu RFID Siap Digunakan</h2>
-                        <p class="text-xs text-black/60 max-w-xs mx-auto leading-relaxed">
-                            Tempelkan kartu RFID Anda ke sensor scanner gerbang (<strong class="text-black font-bold">Gate-01</strong>) untuk membuka palang parkir secara otomatis.
-                        </p>
-                    </div>
-
-                    <!-- Rate Card -->
-                    <div class="p-3.5 rounded-xl bg-white clean-border flex items-center justify-between text-xs">
-                        <div class="flex items-center gap-3">
-                            <div class="icon-box w-8 h-8 font-bold text-xs" style="border: 1.5px solid #005677;">
-                                <i class="fa-solid fa-tags"></i>
-                            </div>
-                            <div>
-                                <span class="text-black/50 block text-[10px] font-bold uppercase">Tarif Flat Parkir</span>
-                                <span class="font-bold text-black text-sm">Rp 2.000 <span class="text-black/50 text-xs font-normal">/ Jam</span></span>
+                            <!-- Progress to next hour -->
+                            <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                                <div class="d-flex justify-content-between small text-white-50 mb-1.5 fw-medium" style="font-size: 0.75rem;">
+                                    <span>Menuju jam berikutnya:</span>
+                                    <span id="next-hour-countdown" class="font-monospace fw-bold text-warning">-- mnt tersisa</span>
+                                </div>
+                                <div class="progress bg-black bg-opacity-25" style="height: 6px;">
+                                    <div id="hourly-progress-bar" class="progress-bar bg-warning" role="progressbar" style="width: 20%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
                             </div>
                         </div>
-                        <span class="text-[10px] text-black font-bold bg-[#FFD51E] px-2.5 py-1 rounded-md border border-black/10">Skema Bulat Atas</span>
+
+                        <!-- Live Balance Calculation Box saat parkir -->
+                        <div class="p-3 bg-light rounded-3 border small d-flex flex-column gap-2">
+                            <div class="d-flex align-items-center justify-content-between text-secondary">
+                                <span class="d-flex align-items-center gap-1.5">
+                                    <i class="bi bi-wallet2 text-primary"></i>
+                                    <span>Saldo Kartu Anda:</span>
+                                </span>
+                                <span id="parked-current-balance" class="font-monospace fw-bold text-dark">Rp 0</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between text-secondary">
+                                <span class="d-flex align-items-center gap-1.5">
+                                    <i class="bi bi-receipt text-danger"></i>
+                                    <span>Estimasi Tarif Parkir:</span>
+                                </span>
+                                <span id="parked-estimated-fee" class="font-monospace fw-bold text-danger">- Rp 0</span>
+                            </div>
+                            <div class="pt-2 border-top d-flex align-items-center justify-content-between fw-bold">
+                                <span class="text-dark d-flex align-items-center gap-1.5">
+                                    <i class="bi bi-coin text-warning"></i>
+                                    <span>Estimasi Sisa Saldo:</span>
+                                </span>
+                                <span id="parked-remaining-balance" class="font-monospace text-success fw-bold">Rp 0</span>
+                            </div>
+                            <div id="insufficient-balance-warning" class="d-none mt-2 p-2.5 rounded-3 bg-danger-subtle border border-danger-subtle text-danger small fw-semibold d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill fs-5 flex-shrink-0"></i>
+                                <div class="flex-grow-1">
+                                    <div>Saldo Kurang untuk Keluar!</div>
+                                    <span class="small text-danger fw-normal" style="font-size: 0.7rem;">Palang tidak terbuka saat tap-out. Segera isi saldo kartu Anda.</span>
+                                </div>
+                                <button type="button" onclick="openTopupModal()" class="btn btn-sm btn-danger py-1 px-2 fw-bold" style="font-size: 0.75rem;">Top Up</button>
+                            </div>
+                        </div>
+
+                        <!-- Gate In & Tap Time Details -->
+                        <div class="row g-2 text-center">
+                            <div class="col-4">
+                                <div class="bg-light p-2 rounded-3 border">
+                                    <span class="small text-secondary d-block fw-bold text-uppercase" style="font-size: 0.65rem;">Lantai</span>
+                                    <span id="parked-floor-badge" class="badge bg-primary text-white mt-1">LT 1</span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-light p-2 rounded-3 border">
+                                    <span class="small text-secondary d-block fw-bold text-uppercase" style="font-size: 0.65rem;">Palang</span>
+                                    <span id="gate-in-name" class="fw-bold text-dark small d-block mt-0.5 text-truncate">Gate-01</span>
+                                    <span id="gate-in-loc" class="small text-muted d-block text-truncate" style="font-size: 0.65rem;">Utama</span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-light p-2 rounded-3 border">
+                                    <span class="small text-secondary d-block fw-bold text-uppercase" style="font-size: 0.65rem;">Jam Masuk</span>
+                                    <span id="tap-in-time-display" class="fw-bold text-dark small d-block mt-0.5 font-monospace">--:--:--</span>
+                                    <span class="small text-success d-block fw-bold" style="font-size: 0.65rem;">✓ Tercatat</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STATE 2: BELUM PARKIR / SIAP TAP-IN (NOT PARKED) -->
+                    <div id="state-idle" class="d-none d-flex flex-column gap-3">
+                        <!-- Status Badge -->
+                        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="rounded-circle d-inline-block bg-success" style="width: 10px; height: 10px;"></span>
+                                <span class="small fw-bold text-uppercase text-dark">STATUS: TIDAK DALAM PARKIR</span>
+                            </div>
+                            <span id="idle-card-uid" class="font-monospace small px-2.5 py-1 rounded-2 bg-light text-secondary border fw-bold">UID: -</span>
+                        </div>
+
+                        <!-- Saldo Status info box -->
+                        <div id="idle-balance-alert" class="p-3 rounded-3 border small d-flex align-items-center justify-content-between bg-success-subtle border-success-subtle">
+                            <div class="d-flex align-items-center gap-2">
+                                <i id="idle-balance-icon" class="bi bi-check-circle-fill text-success fs-5"></i>
+                                <span id="idle-balance-text" class="text-success-emphasis fw-medium">Saldo mencukupi untuk tap masuk (Min. Rp 2.000).</span>
+                            </div>
+                            <span id="idle-balance-val" class="font-monospace fw-bold text-success-emphasis">Rp 0</span>
+                        </div>
+
+                        <!-- Welcome Box -->
+                        <div class="text-center py-4 px-3 bg-light rounded-4 border d-flex flex-column align-items-center gap-2">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary" style="width: 3.5rem; height: 3.5rem; font-size: 1.75rem;">
+                                <i class="bi bi-credit-card-2-front"></i>
+                            </div>
+                            <h2 class="fs-6 fw-bold text-dark mb-0">Kartu RFID Siap Digunakan</h2>
+                            <p class="small text-secondary mb-0" style="max-width: 320px; font-size: 0.75rem;">
+                                Tempelkan kartu RFID Anda ke sensor scanner gerbang (<strong class="text-dark">Gate-01</strong>) untuk membuka palang parkir secara otomatis.
+                            </p>
+                        </div>
+
+                        <!-- Rate Card -->
+                        <div class="p-3 rounded-3 bg-white border d-flex align-items-center justify-content-between small">
+                            <div class="d-flex align-items-center gap-2.5">
+                                <div class="d-flex align-items-center justify-content-center rounded-3 bg-primary-subtle text-primary" style="width: 2rem; height: 2rem;">
+                                    <i class="bi bi-tag-fill"></i>
+                                </div>
+                                <div>
+                                    <span class="text-secondary d-block fw-bold text-uppercase" style="font-size: 0.65rem;">Tarif Flat Parkir</span>
+                                    <span class="fw-bold text-dark">Rp 2.000 <span class="text-secondary fw-normal">/ Jam</span></span>
+                                </div>
+                            </div>
+                            <span class="badge bg-warning text-dark border fw-bold">Skema Bulat Atas</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- RIWAYAT PARKIR TERAKHIR -->
-            <div class="editorial-card p-4 space-y-3">
-                <div class="flex items-center justify-between pb-2.5 clean-border-b">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-black flex items-center gap-2">
-                        <div class="icon-box w-5 h-5 text-[10px]" style="border: 1px solid #005677;">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
-                        </div>
-                        <span>Riwayat Parkir Terakhir</span>
-                    </h3>
-                    <span id="trip-count-badge" class="text-[10px] bg-black/5 px-2.5 py-0.5 rounded-full text-black/70 font-bold clean-border">0 Sesi</span>
-                </div>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center justify-content-between pb-2 border-bottom">
+                        <h3 class="fs-6 fw-bold text-uppercase text-dark d-flex align-items-center gap-2 mb-0" style="font-size: 0.8rem;">
+                            <i class="bi bi-clock-history text-primary"></i>
+                            <span>Riwayat Parkir Terakhir</span>
+                        </h3>
+                        <span id="trip-count-badge" class="badge bg-light text-secondary border fw-bold">0 Sesi</span>
+                    </div>
 
-                <!-- History List -->
-                <div id="history-container" class="space-y-2">
-                    <div class="text-center py-6 text-black/50 text-xs">Memuat riwayat transaksi...</div>
-                </div>
+                    <!-- History List -->
+                    <div id="history-container" class="d-flex flex-column gap-2">
+                        <div class="text-center py-4 text-secondary small">Memuat riwayat transaksi...</div>
+                    </div>
 
-                <!-- Total Stat Summary -->
-                <div class="pt-3 clean-border-t flex items-center justify-between text-xs text-black/70">
-                    <span class="font-semibold">Total Pengeluaran:</span>
-                    <strong id="total-spent-display" class="text-black font-mono text-sm font-bold">Rp 0</strong>
+                    <!-- Total Stat Summary -->
+                    <div class="pt-2 border-top d-flex align-items-center justify-content-between small text-secondary">
+                        <span class="fw-semibold">Total Pengeluaran:</span>
+                        <strong id="total-spent-display" class="text-dark font-monospace fs-6 fw-bold">Rp 0</strong>
+                    </div>
                 </div>
             </div>
 
         </main>
 
         <!-- Footer -->
-        <footer class="pt-4 text-center clean-border-t text-[11px] text-black/50">
-            <p class="font-medium">Sistem Palang Pintu &amp; Tarif Parkir Otomatis Berbasis IoT</p>
-            <p class="text-black/40 mt-0.5">Kelompok Sigma Boys &copy; {{ date('Y') }}</p>
+        <footer class="pt-4 mt-3 text-center border-top text-secondary" style="font-size: 0.75rem;">
+            <p class="fw-medium mb-0">Sistem Palang Pintu &amp; Tarif Parkir Otomatis Berbasis IoT</p>
+            <p class="text-muted mt-0.5 mb-0">Kelompok Sigma Boys &copy; {{ date('Y') }}</p>
         </footer>
 
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-white clean-border text-black text-xs font-bold shadow-xl transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-2">
-        <span id="toast-icon">⚡</span>
-        <span id="toast-msg">Notifikasi</span>
+    <!-- Notification Toast Container -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1090;">
+        <div id="clientToast" class="toast align-items-center border-0 shadow-lg rounded-4" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex p-2">
+                <div class="toast-body d-flex align-items-center gap-2 small fw-bold">
+                    <span id="toast-icon" class="fs-5">⚡</span>
+                    <span id="toast-msg">Notifikasi</span>
+                </div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
     </div>
+
+    <!-- Modal 1: Top Up Saldo Pengendara -->
+    <div class="modal fade" id="topupModal" tabindex="-1" aria-labelledby="topupModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom p-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-primary-custom text-white" style="width: 2rem; height: 2rem;">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fs-6 fw-bold text-dark" id="topupModalLabel">Isi Ulang Saldo</h5>
+                            <p class="small text-secondary mb-0" style="font-size: 0.7rem;">Top Up Kartu Pengendara RFID</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3 d-flex flex-column gap-3">
+                    <!-- Saldo Saat Ini -->
+                    <div class="p-2.5 rounded-3 bg-light border d-flex align-items-center justify-content-between small">
+                        <span class="text-secondary fw-medium">Saldo Saat Ini:</span>
+                        <span id="modal-current-balance" class="font-monospace fw-bold text-dark">Rp 0</span>
+                    </div>
+
+                    <!-- Pilihan Cepat Nominal -->
+                    <div>
+                        <label class="small fw-bold text-uppercase text-secondary mb-1.5 d-block" style="font-size: 0.7rem;">Pilihan Cepat</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button type="button" onclick="selectTopupAmount(10000)" class="btn btn-outline-secondary btn-sm w-100 fw-bold py-2 rounded-3">+Rp 10.000</button>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" onclick="selectTopupAmount(20000)" class="btn btn-outline-secondary btn-sm w-100 fw-bold py-2 rounded-3">+Rp 20.000</button>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" onclick="selectTopupAmount(50000)" class="btn btn-outline-secondary btn-sm w-100 fw-bold py-2 rounded-3">+Rp 50.000</button>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" onclick="selectTopupAmount(100000)" class="btn btn-outline-secondary btn-sm w-100 fw-bold py-2 rounded-3">+Rp 100.000</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Kustom Nominal -->
+                    <div>
+                        <label class="small fw-bold text-uppercase text-secondary mb-1 d-block" style="font-size: 0.7rem;">Nominal Sendiri</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light fw-bold text-secondary">Rp</span>
+                            <input type="number" id="topup-amount-input" min="1000" step="1000" placeholder="Contoh: 25000" class="form-control font-monospace fw-bold">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-3 d-flex gap-2">
+                    <button type="button" class="btn btn-light btn-sm fw-bold flex-grow-1" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" id="btn-submit-topup" onclick="executeTopup()" class="btn btn-primary btn-sm fw-bold flex-grow-1 d-inline-flex align-items-center justify-content-center gap-1 shadow-sm">
+                        <span>Isi Sekarang</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Bayar Karcis Tiket Menggunakan Saldo Member -->
+    <div class="modal fade" id="payTicketModal" tabindex="-1" aria-labelledby="payTicketModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom p-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-primary-custom text-white" style="width: 2rem; height: 2rem;">
+                            <i class="bi bi-qr-code-scan"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fs-6 fw-bold text-dark" id="payTicketModalLabel">Bayar Karcis Parkir</h5>
+                            <p class="small text-secondary mb-0" style="font-size: 0.7rem;">Gunakan Saldo Kartu RFID Member</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3 d-flex flex-column gap-3">
+                    <!-- Info Saldo Member Saat Ini -->
+                    <div class="p-2.5 rounded-3 bg-light border d-flex align-items-center justify-content-between small">
+                        <span class="text-secondary fw-medium">Saldo Kartu Anda:</span>
+                        <span id="pay-modal-balance" class="font-monospace fw-bold text-dark">Rp 0</span>
+                    </div>
+
+                    <!-- Input Kode Tiket Karcis -->
+                    <div>
+                        <label class="small fw-bold text-uppercase text-secondary mb-1 d-block" style="font-size: 0.7rem;">Kode Tiket / Hasil Scan QR</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="pay-ticket-input" placeholder="Contoh: TKT-261102-1226" class="form-control font-monospace fw-bold text-uppercase">
+                            <button type="button" id="btn-check-ticket" onclick="checkTicketCode()" class="btn btn-primary fw-bold">
+                                <span>Cek</span>
+                            </button>
+                        </div>
+                        <p class="small text-muted mb-0 mt-1" style="font-size: 0.7rem;">Masukkan kode tiket atau scan QR yang tercetak pada karcis masuk.</p>
+                    </div>
+
+                    <!-- Preview Tagihan Tiket -->
+                    <div id="ticket-preview-box" class="d-none p-3 rounded-3 bg-light border small d-flex flex-column gap-1.5">
+                        <div class="d-flex justify-content-between text-secondary pb-1 border-bottom">
+                            <span>Kode Tiket</span>
+                            <span id="ticket-prev-code" class="font-monospace fw-bold text-dark"></span>
+                        </div>
+                        <div class="d-flex justify-content-between text-secondary">
+                            <span>Waktu Masuk</span>
+                            <span id="ticket-prev-in" class="font-monospace text-dark"></span>
+                        </div>
+                        <div class="d-flex justify-content-between text-secondary">
+                            <span>Durasi Parkir</span>
+                            <span id="ticket-prev-dur" class="text-dark"></span>
+                        </div>
+                        <div class="d-flex justify-content-between pt-1 border-top fw-bold">
+                            <span class="text-dark">Total Tagihan:</span>
+                            <span id="ticket-prev-fee" class="font-monospace fs-6 text-danger fw-bold"></span>
+                        </div>
+                        <div id="ticket-balance-warning" class="d-none small text-danger fw-bold bg-danger-subtle p-2 rounded-2 border border-danger-subtle mt-1"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-3 d-flex gap-2">
+                    <button type="button" class="btn btn-light btn-sm fw-bold flex-grow-1" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" id="btn-confirm-pay-ticket" onclick="executePayTicket()" class="d-none btn btn-success btn-sm fw-bold flex-grow-1 d-inline-flex align-items-center justify-content-center gap-1 shadow-sm">
+                        <i class="bi bi-check-lg"></i>
+                        <span>Bayar Pakai Saldo</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3 JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         let currentUserId = {!! json_encode($defaultUserId) !!};
@@ -495,14 +633,19 @@
         }
 
         function showToast(msg, icon = '⚡', isSuccess = true) {
-            const toast = document.getElementById('toast');
+            const toastEl = document.getElementById('clientToast');
             document.getElementById('toast-msg').innerText = msg;
             document.getElementById('toast-icon').innerText = icon;
-            toast.className = `fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-white clean-border ${isSuccess ? 'text-black' : 'text-rose-600'} text-xs font-bold shadow-xl transition-all duration-300 opacity-100 flex items-center gap-2`;
+            
+            if (isSuccess) {
+                toastEl.className = 'toast align-items-center text-bg-dark border-0 shadow-lg rounded-4';
+            } else {
+                toastEl.className = 'toast align-items-center text-bg-danger border-0 shadow-lg rounded-4';
+            }
+
+            const toast = new bootstrap.Toast(toastEl, { delay: 3500 });
+            toast.show();
             playChime(isSuccess);
-            setTimeout(() => {
-                toast.classList.replace('opacity-100', 'opacity-0');
-            }, 3500);
         }
 
         function switchUser(userId) {
@@ -516,7 +659,7 @@
                 const data = await res.json();
 
                 if (data.status === 'success') {
-                    document.getElementById('loading-spinner').classList.add('hidden');
+                    document.getElementById('loading-spinner').classList.add('d-none');
                     renderClientState(data, manual);
                 }
             } catch (err) {
@@ -535,24 +678,24 @@
                 if (countEl) {
                     countEl.innerText = slots.available_slots;
                     if (slots.available_slots <= 0) {
-                        countEl.className = 'font-mono text-2xl sm:text-3xl font-extrabold text-rose-600';
+                        countEl.className = 'font-monospace fs-3 fw-bold text-danger';
                     } else if (slots.available_slots <= 2) {
-                        countEl.className = 'font-mono text-2xl sm:text-3xl font-extrabold text-amber-600';
+                        countEl.className = 'font-monospace fs-3 fw-bold text-warning';
                     } else {
-                        countEl.className = 'font-mono text-2xl sm:text-3xl font-extrabold text-[#00719C]';
+                        countEl.className = 'font-monospace fs-3 fw-bold text-primary';
                     }
                 }
 
                 if (badgeEl) {
                     if (slots.available_slots <= 0) {
                         badgeEl.innerText = 'Penuh';
-                        badgeEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800';
+                        badgeEl.className = 'badge bg-danger-subtle text-danger border border-danger-subtle fw-bold';
                     } else if (slots.available_slots <= 2) {
                         badgeEl.innerText = 'Sisa Sedikit';
-                        badgeEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800';
+                        badgeEl.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-bold';
                     } else {
                         badgeEl.innerText = 'Tersedia';
-                        badgeEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
+                        badgeEl.className = 'badge bg-success-subtle text-success border border-success-subtle fw-bold';
                     }
                 }
 
@@ -577,11 +720,11 @@
 
                     if (lt1ParkedEl) lt1ParkedEl.innerText = lt1Parked;
                     if (lt1StatusEl) lt1StatusEl.innerText = lt1Avail > 0 ? `Sisa ${lt1Avail} slot` : 'Penuh';
-                    if (lt1IndEl) lt1IndEl.className = `w-2 h-2 rounded-full ${lt1Avail > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`;
+                    if (lt1IndEl) lt1IndEl.className = `rounded-circle d-inline-block ${lt1Avail > 0 ? 'bg-success' : 'bg-danger'}`;
 
                     if (lt2ParkedEl) lt2ParkedEl.innerText = lt2Parked;
                     if (lt2StatusEl) lt2StatusEl.innerText = lt2Avail > 0 ? `Sisa ${lt2Avail} slot` : 'Penuh';
-                    if (lt2IndEl) lt2IndEl.className = `w-2 h-2 rounded-full ${lt2Avail > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`;
+                    if (lt2IndEl) lt2IndEl.className = `rounded-circle d-inline-block ${lt2Avail > 0 ? 'bg-success' : 'bg-danger'}`;
                 }
             }
 
@@ -607,8 +750,8 @@
             }
 
             if (!data.user) {
-                document.getElementById('state-parked').classList.add('hidden');
-                document.getElementById('state-idle').classList.remove('hidden');
+                document.getElementById('state-parked').classList.add('d-none');
+                document.getElementById('state-idle').classList.remove('d-none');
                 document.getElementById('idle-card-uid').innerText = 'Belum Ada Kartu';
                 return;
             }
@@ -629,10 +772,10 @@
             if (badgeStatus) {
                 if (data.card && data.card.status === 'active') {
                     badgeStatus.innerText = 'Aktif';
-                    badgeStatus.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
+                    badgeStatus.className = 'badge bg-success-subtle text-success border border-success-subtle fw-bold';
                 } else {
                     badgeStatus.innerText = 'Diblokir';
-                    badgeStatus.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800';
+                    badgeStatus.className = 'badge bg-danger-subtle text-danger border border-danger-subtle fw-bold';
                 }
             }
 
@@ -642,8 +785,8 @@
 
             if (isParked) {
                 // Show PARKED state
-                document.getElementById('state-idle').classList.add('hidden');
-                document.getElementById('state-parked').classList.remove('hidden');
+                document.getElementById('state-idle').classList.add('d-none');
+                document.getElementById('state-parked').classList.remove('d-none');
 
                 const tx = data.active_transaction;
                 document.getElementById('parked-card-uid').innerText = `UID: ${currentUid}`;
@@ -656,8 +799,8 @@
                     const floorNum = tx.parking_floor || 1;
                     floorBadge.innerText = `Lantai ${floorNum} (LT ${floorNum})`;
                     floorBadge.className = floorNum === 2 
-                        ? 'inline-block mt-0.5 px-2 py-0.5 rounded text-[11px] font-black bg-amber-100 text-amber-800' 
-                        : 'inline-block mt-0.5 px-2 py-0.5 rounded text-[11px] font-black bg-sky-100 text-[#00719C]';
+                        ? 'badge bg-warning text-dark fw-bold' 
+                        : 'badge bg-primary text-white fw-bold';
                 }
                 
                 // Format jam masuk
@@ -684,8 +827,8 @@
                     timerInterval = null;
                 }
 
-                document.getElementById('state-parked').classList.add('hidden');
-                document.getElementById('state-idle').classList.remove('hidden');
+                document.getElementById('state-parked').classList.add('d-none');
+                document.getElementById('state-idle').classList.remove('d-none');
                 document.getElementById('idle-card-uid').innerText = `UID: ${currentUid || 'Tidak Ada Kartu'}`;
 
                 // Update info kecukupan saldo di IDLE state
@@ -696,12 +839,12 @@
                 if (alertVal) alertVal.innerText = `Rp ${currentBalance.toLocaleString('id-ID')}`;
 
                 if (currentBalance >= 2000) {
-                    if (alertEl) alertEl.className = 'p-3 rounded-xl clean-border text-xs flex items-center justify-between bg-emerald-50 border-emerald-200';
-                    if (alertIcon) alertIcon.className = 'fa-solid fa-circle-check text-emerald-600 text-sm';
+                    if (alertEl) alertEl.className = 'p-3 rounded-3 border small d-flex align-items-center justify-content-between bg-success-subtle border-success-subtle';
+                    if (alertIcon) alertIcon.className = 'bi bi-check-circle-fill text-success fs-5';
                     if (alertText) alertText.innerText = 'Saldo Anda mencukupi untuk tap masuk (Min. Rp 2.000).';
                 } else {
-                    if (alertEl) alertEl.className = 'p-3 rounded-xl clean-border text-xs flex items-center justify-between bg-rose-50 border-rose-200';
-                    if (alertIcon) alertIcon.className = 'fa-solid fa-triangle-exclamation text-rose-600 text-sm';
+                    if (alertEl) alertEl.className = 'p-3 rounded-3 border small d-flex align-items-center justify-content-between bg-danger-subtle border-danger-subtle';
+                    if (alertIcon) alertIcon.className = 'bi bi-exclamation-triangle-fill text-danger fs-5';
                     if (alertText) alertText.innerText = 'Saldo kurang dari Rp 2.000. Isi saldo sebelum tap masuk!';
                 }
 
@@ -750,12 +893,12 @@
             if (pRemBal) {
                 if (remaining >= 0) {
                     pRemBal.innerText = `Rp ${remaining.toLocaleString('id-ID')}`;
-                    pRemBal.className = 'font-mono text-emerald-700 text-sm font-extrabold';
-                    if (pWarn) pWarn.classList.add('hidden');
+                    pRemBal.className = 'font-monospace text-success fw-bold';
+                    if (pWarn) pWarn.classList.add('d-none');
                 } else {
                     pRemBal.innerText = `- Rp ${Math.abs(remaining).toLocaleString('id-ID')} (Kurang)`;
-                    pRemBal.className = 'font-mono text-rose-600 text-sm font-extrabold';
-                    if (pWarn) pWarn.classList.remove('hidden');
+                    pRemBal.className = 'font-monospace text-danger fw-bold';
+                    if (pWarn) pWarn.classList.remove('d-none');
                 }
             }
 
@@ -771,7 +914,7 @@
         function renderHistory(list) {
             const container = document.getElementById('history-container');
             if (!list || list.length === 0) {
-                container.innerHTML = `<div class="text-center py-5 text-black/50 text-xs">Belum ada riwayat parkir yang selesai.</div>`;
+                container.innerHTML = `<div class="text-center py-4 text-secondary small">Belum ada riwayat parkir yang selesai.</div>`;
                 return;
             }
 
@@ -786,33 +929,33 @@
                 const fee = parseInt(item.total_fee || 0);
                 const floorNum = item.parking_floor || 1;
                 const floorBadge = floorNum === 2 
-                    ? '<span class="text-[9px] px-1.5 py-0.2 rounded font-black bg-amber-100 text-amber-800">LT 2</span>'
-                    : '<span class="text-[9px] px-1.5 py-0.2 rounded font-black bg-sky-100 text-[#00719C]">LT 1</span>';
+                    ? '<span class="badge bg-warning text-dark">LT 2</span>'
+                    : '<span class="badge bg-primary text-white">LT 1</span>';
                 const balAfter = item.balance_after !== null && item.balance_after !== undefined 
-                    ? `<span class="block text-[10px] text-black/50 font-mono">Sisa Saldo: Rp ${parseInt(item.balance_after).toLocaleString('id-ID')}</span>` 
+                    ? `<span class="d-block small text-secondary font-monospace" style="font-size: 0.7rem;">Sisa: Rp ${parseInt(item.balance_after).toLocaleString('id-ID')}</span>` 
                     : '';
 
                 html += `
-                    <div class="p-3 rounded-xl bg-slate-50 clean-border flex items-center justify-between hover:bg-slate-100 transition">
-                        <div class="space-y-0.5">
-                            <div class="flex items-center gap-1.5">
-                                <span class="font-bold text-black text-xs">${dateStr}</span>
+                    <div class="p-3 rounded-3 bg-light border d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="d-flex align-items-center gap-1.5 mb-1">
+                                <span class="fw-bold text-dark small">${dateStr}</span>
                                 ${floorBadge}
-                                <span class="text-[10px] text-black/60 font-mono">(${timeInStr} - ${timeOutStr})</span>
+                                <span class="small text-secondary font-monospace">(${timeInStr} - ${timeOutStr})</span>
                             </div>
-                            <div class="text-[11px] text-black/60">
-                                <span>Durasi: <strong class="text-black">${item.duration_minutes} mnt</strong></span>
+                            <div class="small text-secondary" style="font-size: 0.75rem;">
+                                <span>Durasi: <strong class="text-dark">${item.duration_minutes} mnt</strong></span>
                                 <span class="mx-1">•</span>
                                 <span>${item.gate_in_code || 'Gate-01'} &rarr; ${item.gate_out_code || 'Gate-01'}</span>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <span class="font-mono font-bold text-xs text-rose-600">- Rp ${fee.toLocaleString('id-ID')}</span>
+                        <div class="text-end">
+                            <span class="font-monospace fw-bold small text-danger">- Rp ${fee.toLocaleString('id-ID')}</span>
                             ${balAfter}
-                            <span class="inline-block text-[9px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded uppercase font-bold mt-0.5">Lunas (Admin)</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle d-inline-block mt-0.5" style="font-size: 0.65rem;">Lunas (Admin)</span>
                             <div class="mt-1">
-                                <a href="{{ url('receipt') }}/${item.id}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-[#00719C] hover:text-[#005a7d] hover:underline">
-                                    <i class="fa-solid fa-receipt text-[9px]"></i> Struk 58mm
+                                <a href="{{ url('receipt') }}/${item.id}" target="_blank" class="text-decoration-none small fw-bold text-primary" style="font-size: 0.75rem;">
+                                    <i class="bi bi-receipt"></i> Struk 58mm
                                 </a>
                             </div>
                         </div>
@@ -823,18 +966,20 @@
         }
 
         // ================= TOP UP SALDO MODAL LOGIC =================
+        let topupBsModal = null;
         function openTopupModal() {
             document.getElementById('modal-current-balance').innerText = `Rp ${currentBalance.toLocaleString('id-ID')}`;
             document.getElementById('topup-amount-input').value = '';
-            const modal = document.getElementById('topup-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            if (!topupBsModal) {
+                topupBsModal = new bootstrap.Modal(document.getElementById('topupModal'));
+            }
+            topupBsModal.show();
         }
 
         function closeTopupModal() {
-            const modal = document.getElementById('topup-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (topupBsModal) {
+                topupBsModal.hide();
+            }
         }
 
         function selectTopupAmount(amount) {
@@ -853,7 +998,7 @@
 
             const btn = document.getElementById('btn-submit-topup');
             const origHtml = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>Memproses...</span>`;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Memproses...</span>`;
             btn.disabled = true;
 
             try {
@@ -884,15 +1029,16 @@
             } finally {
                 btn.innerHTML = origHtml;
                 btn.disabled = false;
+            }
         }
 
         // ================= BAYAR TIKET KARCIS VIA SALDO MEMBER =================
+        let payTicketBsModal = null;
         function openPayTicketModal(initialCode = '') {
-            const modal = document.getElementById('pay-ticket-modal');
             const input = document.getElementById('pay-ticket-input');
             document.getElementById('pay-modal-balance').innerText = `Rp ${currentBalance.toLocaleString('id-ID')}`;
-            document.getElementById('ticket-preview-box').classList.add('hidden');
-            document.getElementById('btn-confirm-pay-ticket').classList.add('hidden');
+            document.getElementById('ticket-preview-box').classList.add('d-none');
+            document.getElementById('btn-confirm-pay-ticket').classList.add('d-none');
             
             if (initialCode) {
                 input.value = initialCode;
@@ -901,15 +1047,17 @@
                 input.value = '';
             }
 
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => input.focus(), 100);
+            if (!payTicketBsModal) {
+                payTicketBsModal = new bootstrap.Modal(document.getElementById('payTicketModal'));
+            }
+            payTicketBsModal.show();
+            setTimeout(() => input.focus(), 300);
         }
 
         function closePayTicketModal() {
-            const modal = document.getElementById('pay-ticket-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (payTicketBsModal) {
+                payTicketBsModal.hide();
+            }
         }
 
         let pendingTicketData = null;
@@ -925,7 +1073,7 @@
 
             const btn = document.getElementById('btn-check-ticket');
             const origHtml = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i>`;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
             btn.disabled = true;
 
             try {
@@ -943,20 +1091,20 @@
                     const warnEl = document.getElementById('ticket-balance-warning');
                     
                     if (currentBalance >= result.data.total_fee) {
-                        warnEl.classList.add('hidden');
-                        payBtn.classList.remove('hidden');
+                        warnEl.classList.add('d-none');
+                        payBtn.classList.remove('d-none');
                         payBtn.disabled = false;
                     } else {
                         const kurang = result.data.total_fee - currentBalance;
                         warnEl.innerText = `Saldo Anda tidak mencukupi (Kurang Rp ${kurang.toLocaleString('id-ID')}). Silakan isi saldo terlebih dahulu!`;
-                        warnEl.classList.remove('hidden');
-                        payBtn.classList.add('hidden');
+                        warnEl.classList.remove('d-none');
+                        payBtn.classList.add('d-none');
                     }
 
-                    document.getElementById('ticket-preview-box').classList.remove('hidden');
+                    document.getElementById('ticket-preview-box').classList.remove('d-none');
                 } else {
-                    document.getElementById('ticket-preview-box').classList.add('hidden');
-                    document.getElementById('btn-confirm-pay-ticket').classList.add('hidden');
+                    document.getElementById('ticket-preview-box').classList.add('d-none');
+                    document.getElementById('btn-confirm-pay-ticket').classList.add('d-none');
                     showToast(result.message || 'Tiket tidak ditemukan!', '❌', false);
                 }
             } catch (err) {
@@ -972,7 +1120,7 @@
 
             const btn = document.getElementById('btn-confirm-pay-ticket');
             const origHtml = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>Memproses Pembayaran...</span>`;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Memproses...</span>`;
             btn.disabled = true;
 
             try {
@@ -1029,122 +1177,5 @@
             }
         });
     </script>
-
-    <!-- Modal 1: Top Up Saldo Pengendara -->
-    <div id="topup-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl clean-border p-5 max-w-sm w-full space-y-4 shadow-2xl">
-            <div class="flex items-center justify-between pb-3 clean-border-b">
-                <div class="flex items-center gap-2">
-                    <div class="icon-box w-8 h-8 text-sm" style="background-color: #00719C;">
-                        <i class="fa-solid fa-wallet text-white"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-sm text-black">Isi Ulang Saldo</h3>
-                        <p class="text-[11px] text-black/60">Top Up Kartu Pengendara RFID</p>
-                    </div>
-                </div>
-                <button type="button" onclick="closeTopupModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-black flex items-center justify-center text-xs font-bold cursor-pointer border-none">&times;</button>
-            </div>
-
-            <!-- Saldo Saat Ini -->
-            <div class="p-3 rounded-xl bg-slate-50 clean-border flex items-center justify-between text-xs">
-                <span class="text-black/60 font-medium">Saldo Saat Ini:</span>
-                <span id="modal-current-balance" class="font-mono font-bold text-black">Rp 0</span>
-            </div>
-
-            <!-- Pilihan Cepat Nominal -->
-            <div class="space-y-1.5">
-                <label class="text-[11px] font-bold uppercase text-black/60">Pilih Nominal Top Up Cepat</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button type="button" onclick="selectTopupAmount(10000)" class="topup-quick-btn py-2 px-3 rounded-lg clean-border text-xs font-bold text-black hover:border-[#00719C] hover:bg-[#00719C]/5 active:scale-95 transition text-center cursor-pointer bg-white">+Rp 10.000</button>
-                    <button type="button" onclick="selectTopupAmount(20000)" class="topup-quick-btn py-2 px-3 rounded-lg clean-border text-xs font-bold text-black hover:border-[#00719C] hover:bg-[#00719C]/5 active:scale-95 transition text-center cursor-pointer bg-white">+Rp 20.000</button>
-                    <button type="button" onclick="selectTopupAmount(50000)" class="topup-quick-btn py-2 px-3 rounded-lg clean-border text-xs font-bold text-black hover:border-[#00719C] hover:bg-[#00719C]/5 active:scale-95 transition text-center cursor-pointer bg-white">+Rp 50.000</button>
-                    <button type="button" onclick="selectTopupAmount(100000)" class="topup-quick-btn py-2 px-3 rounded-lg clean-border text-xs font-bold text-black hover:border-[#00719C] hover:bg-[#00719C]/5 active:scale-95 transition text-center cursor-pointer bg-white">+Rp 100.000</button>
-                </div>
-            </div>
-
-            <!-- Input Kustom Nominal -->
-            <div class="space-y-1">
-                <label class="text-[11px] font-bold uppercase text-black/60">Atau Masukkan Nominal Sendiri</label>
-                <div class="relative">
-                    <span class="absolute left-3 top-2.5 text-xs font-bold text-black/50">Rp</span>
-                    <input type="number" id="topup-amount-input" min="1000" step="1000" placeholder="Contoh: 25000" class="w-full pl-9 pr-3 py-2 text-xs font-mono font-bold rounded-lg clean-border focus:outline-none focus:border-[#00719C]">
-                </div>
-            </div>
-
-            <div class="pt-2 flex items-center gap-2">
-                <button type="button" onclick="closeTopupModal()" class="flex-1 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-black text-xs font-bold transition cursor-pointer border-none">Batal</button>
-                <button type="button" id="btn-submit-topup" onclick="executeTopup()" class="flex-1 py-2 rounded-lg bg-[#00719C] hover:bg-[#005677] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer border-none">
-                    <span>Isi Sekarang</span>
-                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal 2: Bayar Karcis Tiket Menggunakan Saldo Member (Scan QR) -->
-    <div id="pay-ticket-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl clean-border p-5 max-w-sm w-full space-y-4 shadow-2xl">
-            <div class="flex items-center justify-between pb-3 clean-border-b">
-                <div class="flex items-center gap-2">
-                    <div class="icon-box w-8 h-8 text-sm" style="background-color: #00719C;">
-                        <i class="fa-solid fa-qrcode text-white"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-sm text-black">Bayar Karcis Parkir</h3>
-                        <p class="text-[11px] text-black/60">Gunakan Saldo Kartu RFID Member</p>
-                    </div>
-                </div>
-                <button type="button" onclick="closePayTicketModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-black flex items-center justify-center text-xs font-bold cursor-pointer border-none">&times;</button>
-            </div>
-
-            <!-- Info Saldo Member Saat Ini -->
-            <div class="p-3 rounded-xl bg-slate-50 clean-border flex items-center justify-between text-xs">
-                <span class="text-black/60 font-medium">Saldo Kartu Anda:</span>
-                <span id="pay-modal-balance" class="font-mono font-bold text-black">Rp 0</span>
-            </div>
-
-            <!-- Input Kode Tiket Karcis -->
-            <div class="space-y-1.5">
-                <label class="text-[11px] font-bold uppercase text-black/60">Kode Tiket / Hasil Scan QR Karcis</label>
-                <div class="flex gap-2">
-                    <input type="text" id="pay-ticket-input" placeholder="Contoh: TKT-261102-1226" class="flex-1 px-3 py-2 text-xs font-mono font-bold rounded-lg clean-border uppercase focus:outline-none focus:border-[#00719C]">
-                    <button type="button" id="btn-check-ticket" onclick="checkTicketCode()" class="px-3 py-2 bg-[#00719C] hover:bg-[#005677] text-white text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer border-none">
-                        <span>Cek</span>
-                    </button>
-                </div>
-                <p class="text-[10px] text-black/50">Masukkan kode tiket atau scan QR yang tercetak pada karcis masuk.</p>
-            </div>
-
-            <!-- Preview Tagihan Tiket -->
-            <div id="ticket-preview-box" class="hidden p-3.5 rounded-xl bg-slate-50 clean-border space-y-2 text-xs">
-                <div class="flex justify-between items-center text-black/60 pb-1.5 clean-border-b">
-                    <span>Kode Tiket</span>
-                    <span id="ticket-prev-code" class="font-mono font-bold text-black"></span>
-                </div>
-                <div class="flex justify-between items-center text-black/60">
-                    <span>Waktu Masuk</span>
-                    <span id="ticket-prev-in" class="font-mono text-black"></span>
-                </div>
-                <div class="flex justify-between items-center text-black/60">
-                    <span>Durasi Parkir</span>
-                    <span id="ticket-prev-dur" class="text-black"></span>
-                </div>
-                <div class="flex justify-between items-center pt-1.5 clean-border-t">
-                    <span class="font-bold text-black">Total Tagihan:</span>
-                    <span id="ticket-prev-fee" class="font-mono font-black text-sm text-rose-600"></span>
-                </div>
-                <div id="ticket-balance-warning" class="hidden text-[11px] text-rose-600 font-bold bg-rose-50 p-2 rounded clean-border mt-1"></div>
-            </div>
-
-            <div class="pt-2 flex items-center gap-2">
-                <button type="button" onclick="closePayTicketModal()" class="flex-1 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-black text-xs font-bold transition cursor-pointer border-none">Batal</button>
-                <button type="button" id="btn-confirm-pay-ticket" onclick="executePayTicket()" class="hidden flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer border-none">
-                    <i class="fa-solid fa-check text-[11px]"></i>
-                    <span>Bayar Pakai Saldo</span>
-                </button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

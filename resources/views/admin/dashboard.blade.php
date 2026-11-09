@@ -5,251 +5,254 @@
 @section('header_subtitle', 'Monitoring sistem palang pintu & transaksi parkir otomatis')
 
 @section('content')
-<!-- 1. STAT CARDS ROW: Clean-Cut 1px Borders, Teks Hitam & Icon Badges Biru/Putih -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-    <!-- Card 1: Kendaraan Parkir Saat Ini -->
-    <div class="editorial-card p-6 bg-[#FFFFFF] flex flex-col justify-between">
-        <div class="flex items-center justify-between">
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-black/60">Sedang Terparkir</span>
-            <!-- Icon with Blue Background & White Icon -->
-            <div class="w-9 h-9 rounded-md bg-[#00719C] text-white flex items-center justify-center text-sm flex-shrink-0">
-                <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
-            </div>
-        </div>
-        <div class="mt-4 flex items-baseline gap-2">
-            <span id="metric-parked-count" class="text-3xl font-bold text-black">{{ $parkedCount }}</span>
-            <span class="text-xs font-medium text-black/60">/ 20 kendaraan</span>
-        </div>
-        <div class="mt-3 pt-3 clean-border-t text-xs text-black/70 flex items-center justify-between font-medium">
-            <div class="flex items-center gap-1.5">
-                <span class="status-dot-active"></span>
-                <span>Real-time</span>
-            </div>
-            <div class="flex items-center gap-1 text-[11px] font-mono">
-                <span class="px-1.5 py-0.5 rounded bg-sky-50 text-[#00719C] font-bold clean-border">LT1: <b id="dash-lt1">{{ $parkedLt1 }}</b>/10</span>
-                <span class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 font-bold clean-border">LT2: <b id="dash-lt2">{{ $parkedLt2 }}</b>/10</span>
-            </div>
-        </div>
-    </div>
+<div class="d-flex flex-column gap-4">
 
-    <!-- Card 2: Saldo Kas Admin (Total Penerimaan Saldo Pengendara) -->
-    <div class="editorial-card p-6 bg-[#FFFFFF] flex flex-col justify-between">
-        <div class="flex items-center justify-between">
-            <div>
-                <span class="text-[11px] font-semibold uppercase tracking-wider text-black/60 block">Saldo Kas Admin</span>
-                <span class="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">Uang Masuk Dari Tap</span>
-            </div>
-            <!-- Icon with Blue Background & White Icon -->
-            <div class="w-9 h-9 rounded-md bg-[#00719C] text-white flex items-center justify-center text-sm flex-shrink-0">
-                <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
-            </div>
-        </div>
-        <div class="mt-4 flex items-baseline gap-2">
-            <span id="metric-admin-cash" class="text-2xl lg:text-3xl font-bold text-black">Rp {{ number_format($totalAdminCash, 0, ',', '.') }}</span>
-        </div>
-        <div class="mt-3 pt-3 clean-border-t text-xs text-black/60 font-medium flex items-center justify-between">
-            <span>Hari ini: <strong id="metric-today-revenue" class="text-black">Rp {{ number_format($todayRevenue, 0, ',', '.') }}</strong></span>
-            <span class="text-[11px] text-black/50">(<span id="metric-today-completed">{{ $todayCompletedTx }}</span> selesai)</span>
-        </div>
-    </div>
-
-    <!-- Card 3: Total Masuk Hari Ini -->
-    <div class="editorial-card p-6 bg-[#FFFFFF] flex flex-col justify-between">
-        <div class="flex items-center justify-between">
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-black/60">Total Masuk Hari Ini</span>
-            <!-- Icon with Blue Background & White Icon -->
-            <div class="w-9 h-9 rounded-md bg-[#00719C] text-white flex items-center justify-center text-sm flex-shrink-0">
-                <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
-            </div>
-        </div>
-        <div class="mt-4 flex items-baseline gap-2">
-            <span id="metric-today-in" class="text-3xl font-bold text-black">{{ $todayTotalIn }}</span>
-            <span class="text-xs font-medium text-black/60">tap-in</span>
-        </div>
-        <div class="mt-3 pt-3 clean-border-t text-xs text-black/60 font-medium">
-            Lalu lintas masuk hari ini
-        </div>
-    </div>
-
-    <!-- Card 4: Kartu RFID Terdaftar -->
-    <div class="editorial-card p-6 bg-[#FFFFFF] flex flex-col justify-between">
-        <div class="flex items-center justify-between">
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-black/60">Kartu RFID Terdaftar</span>
-            <!-- Icon with Blue Background & White Icon -->
-            <div class="w-9 h-9 rounded-md bg-[#00719C] text-white flex items-center justify-center text-sm flex-shrink-0">
-                <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-            </div>
-        </div>
-        <div class="mt-4 flex items-baseline gap-2">
-            <span id="metric-active-cards" class="text-3xl font-bold text-black">{{ $activeCardsCount }}</span>
-            <span class="text-xs font-medium text-black/60">kartu aktif</span>
-        </div>
-        <div class="mt-3 pt-3 clean-border-t text-xs font-semibold text-black">
-            <a href="{{ route('admin.cards.index') }}" class="hover:underline flex items-center gap-1.5 text-black">
-                <span>Kelola Kartu</span>
-                <svg class="w-3 h-3 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- 2. GERBANG IOT STATUS SECTION -->
-<div class="editorial-card p-6 bg-[#FFFFFF]">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 clean-border-b">
-        <div>
-            <h3 class="text-base font-bold text-black flex items-center gap-2">
-                <span>Status Gerbang ESP8266 IoT</span>
-            </h3>
-            <p class="text-xs text-black/60 mt-0.5">Kondisi konektivitas dan kontrol langsung setiap titik akses pintu gerbang</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('receipt.latest') }}" target="_blank" class="px-3 py-1.5 rounded-md clean-border text-xs flex items-center gap-1.5 text-black hover:bg-slate-50 transition" title="Cetak struk transaksi selesai terakhir pada printer Eppos EP589 V2">
-                <i class="fa-solid fa-print text-[#00719C]"></i>
-                <span class="hidden sm:inline">Struk Terakhir (58mm)</span>
-            </a>
-            <a href="{{ route('admin.monitoring') }}" class="btn-accent text-xs flex items-center gap-2 text-black">
-                <div class="w-5 h-5 rounded bg-[#00719C] text-white flex items-center justify-center text-[10px]">
-                    <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+    <!-- 1. STAT CARDS ROW -->
+    <div class="row g-3">
+        <!-- Card 1: Kendaraan Parkir Saat Ini -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-uppercase small fw-bold text-secondary">Sedang Terparkir</span>
+                    <span class="badge bg-primary p-2 rounded-3 text-white">
+                        <i class="bi bi-car-front-fill fs-6"></i>
+                    </span>
                 </div>
-                <span>Buka Simulator Visual</span>
-            </a>
-        </div>
-    </div>
-
-    <div id="device-container" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        @foreach ($devices as $dev)
-            <div class="clean-border rounded-md p-5 flex flex-col justify-between bg-[#FFFFFF] hover:border-[#00719C] transition">
-                <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="font-mono text-xs font-bold text-white bg-[#00719C] px-2.5 py-1 rounded">
-                            {{ $dev->device_code }}
-                        </span>
-                        <span class="flex items-center gap-1.5 text-xs text-black font-medium">
-                            <span class="status-dot-active"></span> Online
-                        </span>
-                    </div>
-
-                    <div class="text-sm font-bold text-black mt-1">
-                        {{ $dev->location }}
-                    </div>
-
-                    <div class="mt-3 text-xs text-black/60 flex items-center gap-3 font-medium">
-                        <span>Tipe: <b class="text-black">{{ $dev->gate_type }}</b></span>
-                        <span>&bull;</span>
-                        <span>Update: <span class="font-mono text-black">{{ $dev->last_seen ? \Carbon\Carbon::parse($dev->last_seen)->format('H:i:s') : date('H:i:s') }}</span></span>
+                <div class="my-3 d-flex align-items-baseline gap-2">
+                    <h2 id="metric-parked-count" class="fw-bold text-dark mb-0 font-monospace">{{ $parkedCount }}</h2>
+                    <span class="text-secondary small">/ 20 kendaraan</span>
+                </div>
+                <div class="pt-2 border-top d-flex align-items-center justify-content-between small">
+                    <span class="text-success d-flex align-items-center gap-1">
+                        <i class="bi bi-broadcast"></i> Realtime
+                    </span>
+                    <div class="d-flex gap-1 font-monospace">
+                        <span class="badge bg-info-subtle text-info border">LT1: <strong id="dash-lt1">{{ $parkedLt1 }}</strong>/10</span>
+                        <span class="badge bg-warning-subtle text-warning border">LT2: <strong id="dash-lt2">{{ $parkedLt2 }}</strong>/10</span>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div class="mt-5 pt-3 clean-border-t flex items-center gap-2">
-                    <button onclick="openEmergencyModal('{{ $dev->device_code }}')"
-                        class="btn-accent flex-1 py-2 px-3 text-xs flex items-center justify-center gap-2 text-black cursor-pointer">
-                        <div class="w-5 h-5 rounded bg-[#00719C] text-white flex items-center justify-center text-[10px]">
-                            <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-                        </div>
-                        <span>Override Buka</span>
-                    </button>
-                    <a href="{{ route('admin.monitoring', ['device' => $dev->device_code]) }}"
-                        class="w-9 h-9 bg-[#00719C] text-white rounded-md text-xs font-semibold hover:opacity-90 transition flex items-center justify-center" title="Buka Simulasi">
-                        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <!-- Card 2: Saldo Kas Admin -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-uppercase small fw-bold text-secondary d-block">Saldo Kas Admin</span>
+                        <span class="badge bg-success-subtle text-success mt-1">Uang Masuk Tap</span>
+                    </div>
+                    <span class="badge bg-primary p-2 rounded-3 text-white">
+                        <i class="bi bi-wallet2 fs-6"></i>
+                    </span>
+                </div>
+                <div class="my-3">
+                    <h3 id="metric-admin-cash" class="fw-bold text-dark mb-0 font-monospace">Rp {{ number_format($totalAdminCash, 0, ',', '.') }}</h3>
+                </div>
+                <div class="pt-2 border-top d-flex align-items-center justify-content-between small text-secondary">
+                    <span>Hari ini: <strong id="metric-today-revenue" class="text-dark">Rp {{ number_format($todayRevenue, 0, ',', '.') }}</strong></span>
+                    <span class="small">(<span id="metric-today-completed">{{ $todayCompletedTx }}</span> selesai)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Total Masuk Hari Ini -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-uppercase small fw-bold text-secondary">Total Masuk Hari Ini</span>
+                    <span class="badge bg-primary p-2 rounded-3 text-white">
+                        <i class="bi bi-box-arrow-in-right fs-6"></i>
+                    </span>
+                </div>
+                <div class="my-3 d-flex align-items-baseline gap-2">
+                    <h2 id="metric-today-in" class="fw-bold text-dark mb-0 font-monospace">{{ $todayTotalIn }}</h2>
+                    <span class="text-secondary small">tap-in</span>
+                </div>
+                <div class="pt-2 border-top text-secondary small">
+                    Lalu lintas masuk hari ini
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Kartu RFID Terdaftar -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-uppercase small fw-bold text-secondary">Kartu RFID Terdaftar</span>
+                    <span class="badge bg-primary p-2 rounded-3 text-white">
+                        <i class="bi bi-credit-card-2-front-fill fs-6"></i>
+                    </span>
+                </div>
+                <div class="my-3 d-flex align-items-baseline gap-2">
+                    <h2 id="metric-active-cards" class="fw-bold text-dark mb-0 font-monospace">{{ $activeCardsCount }}</h2>
+                    <span class="text-secondary small">kartu aktif</span>
+                </div>
+                <div class="pt-2 border-top">
+                    <a href="{{ route('admin.cards.index') }}" class="text-decoration-none small fw-semibold text-primary d-flex align-items-center gap-1">
+                        <span>Kelola Kartu</span>
+                        <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
             </div>
-        @endforeach
-    </div>
-</div>
-
-<!-- 3. KENDARAAN SEDANG PARKIR (ACTIVE SESSIONS) -->
-<div class="editorial-card p-6 bg-[#FFFFFF]">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 clean-border-b">
-        <div>
-            <h3 class="text-base font-bold text-black flex items-center gap-2">
-                <span>Kendaraan Sedang Terparkir</span>
-                <span id="badge-parked-count" class="px-2 py-0.5 text-xs rounded clean-border font-mono font-bold text-black">{{ $parkedCount }}</span>
-            </h3>
-            <p class="text-xs text-black/60 mt-0.5">Daftar kendaraan aktif di dalam area parkir beserta hitungan estimasi biaya berjalan</p>
-        </div>
-        <div class="text-xs text-black/60 flex items-center gap-1.5 font-medium">
-            <span class="status-dot-active"></span>
-            <span>Live ticker diperbarui otomatis</span>
         </div>
     </div>
 
-    <!-- Active Parked Table -->
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm border-collapse">
-            <thead>
-                <tr class="clean-border-b text-[11px] font-semibold uppercase tracking-wider text-black/60">
-                    <th class="py-3 px-4">Nama Pengendara</th>
-                    <th class="py-3 px-4">UID Kartu</th>
-                    <th class="py-3 px-4">Saldo Pengendara</th>
-                    <th class="py-3 px-4">Waktu Masuk</th>
-                    <th class="py-3 px-4">Durasi Parkir</th>
-                    <th class="py-3 px-4">Estimasi Tarif</th>
-                    <th class="py-3 px-4 text-center">Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="parked-tbody" class="divide-y divide-black/10 font-medium">
-                <tr>
-                    <td colspan="7" class="py-8 text-center text-black/40 text-xs">
-                        <svg class="w-5 h-5 animate-spin inline mr-2 text-[#00719C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>
-                        <span>Memuat data kendaraan aktif...</span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- 4. LOG AUDIT TERKINI (LIVE ACCESS FEED) -->
-<div class="editorial-card p-6 bg-[#FFFFFF]">
-    <div class="flex items-center justify-between mb-5 pb-4 clean-border-b">
-        <div>
-            <h3 class="text-base font-bold text-black flex items-center gap-2">
-                <span>Aktivitas Tap &amp; Log Audit Terakhir</span>
-            </h3>
-            <p class="text-xs text-black/60 mt-0.5">Rekaman riwayat verifikasi kartu pada gerbang masuk dan keluar</p>
+    <!-- 2. GERBANG IOT STATUS SECTION -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between pb-3 mb-4 border-bottom gap-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-router-fill text-primary"></i>
+                    <span>Status Gerbang ESP8266 IoT</span>
+                </h5>
+                <small class="text-muted">Kondisi konektivitas dan kontrol langsung setiap titik akses pintu gerbang</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ route('receipt.latest') }}" target="_blank" class="btn btn-outline-secondary btn-sm rounded-3 d-flex align-items-center gap-2" title="Cetak struk 58mm">
+                    <i class="bi bi-printer-fill text-primary"></i>
+                    <span class="d-none d-sm-inline">Struk Terakhir (58mm)</span>
+                </a>
+                <a href="{{ route('admin.monitoring') }}" class="btn btn-primary btn-sm rounded-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-play-circle-fill"></i>
+                    <span>Buka Simulator Visual</span>
+                </a>
+            </div>
         </div>
-        <a href="{{ route('admin.logs.index') }}" class="text-xs text-black hover:underline font-semibold flex items-center gap-1">
-            <span>Lihat Semua Log</span>
-            <svg class="w-3 h-3 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </a>
+
+        <div id="device-container" class="row g-3">
+            @foreach ($devices as $dev)
+                <div class="col-12 col-md-6">
+                    <div class="card border rounded-4 p-3 bg-white h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="badge bg-primary font-monospace px-2.5 py-1.5">
+                                    {{ $dev->device_code }}
+                                </span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle d-flex align-items-center gap-1">
+                                    <span class="spinner-grow spinner-grow-sm text-success" style="width: 8px; height: 8px;" role="status"></span>
+                                    <span>Online</span>
+                                </span>
+                            </div>
+
+                            <h6 class="fw-bold text-dark mt-2 mb-1">
+                                {{ $dev->location }}
+                            </h6>
+
+                            <div class="small text-secondary d-flex align-items-center gap-2">
+                                <span>Tipe: <strong class="text-dark">{{ $dev->gate_type }}</strong></span>
+                                <span>&bull;</span>
+                                <span>Update: <span class="font-monospace text-dark">{{ $dev->last_seen ? \Carbon\Carbon::parse($dev->last_seen)->format('H:i:s') : date('H:i:s') }}</span></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top d-flex align-items-center gap-2">
+                            <button onclick="openEmergencyModal('{{ $dev->device_code }}')" class="btn btn-danger btn-sm rounded-3 flex-grow-1 d-flex align-items-center justify-content-center gap-2">
+                                <i class="bi bi-shield-lock-fill"></i>
+                                <span>Override Buka</span>
+                            </button>
+                            <a href="{{ route('admin.monitoring', ['device' => $dev->device_code]) }}" class="btn btn-outline-primary btn-sm rounded-3" title="Buka Simulasi">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
-            <thead>
-                <tr class="clean-border-b text-[11px] font-semibold uppercase tracking-wider text-black/60">
-                    <th class="py-2.5 px-4">Waktu</th>
-                    <th class="py-2.5 px-4">Gerbang</th>
-                    <th class="py-2.5 px-4">UID Kartu</th>
-                    <th class="py-2.5 px-4">Metode</th>
-                    <th class="py-2.5 px-4">Status</th>
-                    <th class="py-2.5 px-4">Catatan Aktivitas</th>
-                </tr>
-            </thead>
-            <tbody id="logs-tbody" class="divide-y divide-black/10">
-                <tr>
-                    <td colspan="6" class="py-6 text-center text-black/40">Memuat log...</td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- 3. KENDARAAN SEDANG PARKIR (ACTIVE SESSIONS) -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between pb-3 mb-3 border-bottom gap-2">
+            <div>
+                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-car-front text-primary"></i>
+                    <span>Kendaraan Sedang Terparkir</span>
+                    <span id="badge-parked-count" class="badge bg-primary font-monospace">{{ $parkedCount }}</span>
+                </h5>
+                <small class="text-muted">Daftar kendaraan aktif beserta hitungan estimasi biaya berjalan</small>
+            </div>
+            <small class="text-success d-flex align-items-center gap-1">
+                <i class="bi bi-broadcast"></i> Live ticker diperbarui otomatis
+            </small>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr class="text-secondary small text-uppercase">
+                        <th>Nama Pengendara</th>
+                        <th>UID Kartu</th>
+                        <th>Saldo Pengendara</th>
+                        <th>Waktu Masuk</th>
+                        <th>Durasi Parkir</th>
+                        <th>Estimasi Tarif</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="parked-tbody">
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <span>Memuat data kendaraan aktif...</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <!-- 4. LOG AUDIT TERKINI -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+            <div>
+                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history text-primary"></i>
+                    <span>Aktivitas Tap &amp; Log Audit Terakhir</span>
+                </h5>
+                <small class="text-muted">Rekaman riwayat verifikasi kartu pada gerbang masuk dan keluar</small>
+            </div>
+            <a href="{{ route('admin.logs.index') }}" class="btn btn-outline-primary btn-sm rounded-3 d-flex align-items-center gap-1">
+                <span>Lihat Semua Log</span>
+                <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr class="text-secondary small text-uppercase">
+                        <th>Waktu</th>
+                        <th>Gerbang</th>
+                        <th>UID Kartu</th>
+                        <th>Metode</th>
+                        <th>Status</th>
+                        <th>Catatan Aktivitas</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-tbody">
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Memuat log...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 @endsection
 
 @push('scripts')
-<!-- SCRIPT DASHBOARD LIVE POLLING -->
 <script>
-    // Live AJAX Polling Dashboard
     async function refreshDashboardData() {
         try {
             const res = await fetch('{{ route('admin.api.stats') }}');
             const data = await res.json();
             if (data.status !== 'success') return;
 
-            // 1. Update Metrics
             document.getElementById('metric-parked-count').textContent = data.metrics.parked_count;
             document.getElementById('badge-parked-count').textContent = data.metrics.parked_count;
+            
             if (document.getElementById('dash-lt1') && data.metrics.parked_lt1 !== undefined) {
                 document.getElementById('dash-lt1').textContent = data.metrics.parked_lt1;
             }
@@ -264,66 +267,62 @@
             document.getElementById('metric-today-in').textContent = data.metrics.today_total_in;
             document.getElementById('metric-active-cards').textContent = data.metrics.active_cards_count;
 
-            // 2. Update Active Parked Table
             const parkedTbody = document.getElementById('parked-tbody');
             if (!data.active_parked_list || data.active_parked_list.length === 0) {
                 parkedTbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="py-8 text-center text-black/40 text-xs">
-                            <div class="w-10 h-10 mx-auto rounded-md bg-[#00719C] text-white flex items-center justify-center mb-2">
-                                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="3"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>
-                            </div>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-1 text-secondary"></i>
                             Tidak ada kendaraan yang sedang terparkir saat ini.
                         </td>
                     </tr>
                 `;
             } else {
                 let html = '';
-                data.active_parked_list.forEach((item, index) => {
+                data.active_parked_list.forEach((item) => {
                     const hours = Math.floor(item.duration_minutes / 60);
                     const mins = item.duration_minutes % 60;
                     const durationText = (hours > 0 ? `${hours} Jam ` : '') + `${mins} Menit`;
 
                     const floorBadge = (item.parking_floor === 2) 
-                        ? '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 clean-border">LT 2</span>'
-                        : '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-sky-100 text-[#00719C] clean-border">LT 1</span>';
+                        ? '<span class="badge bg-warning text-dark">LT 2</span>'
+                        : '<span class="badge bg-info text-dark">LT 1</span>';
 
                     html += `
-                        <tr class="hover:bg-black/5 transition">
-                            <td class="py-3 px-4">
-                                <div class="font-bold text-black flex items-center gap-1.5">
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark d-flex align-items-center gap-1">
                                     <span>${item.user_name}</span>
                                     ${floorBadge}
                                 </div>
-                                <div class="text-[11px] text-black/50">${item.phone || '-'}</div>
+                                <small class="text-muted">${item.phone || '-'}</small>
                             </td>
-                            <td class="py-3 px-4 font-mono text-xs font-bold text-black">
-                                ${item.uid}
+                            <td>
+                                <span class="font-monospace fw-bold text-dark">${item.uid}</span>
                             </td>
-                            <td class="py-3 px-4">
-                                <div class="font-mono text-xs font-bold text-black">${item.user_balance_formatted}</div>
-                                <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${item.is_balance_sufficient ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                            <td>
+                                <div class="font-monospace fw-bold text-dark">${item.user_balance_formatted}</div>
+                                <span class="badge ${item.is_balance_sufficient ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}">
                                     ${item.is_balance_sufficient ? '✓ Cukup' : '⚠️ Kurang'}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 text-xs text-black/70">
-                                <div class="font-mono text-black">${item.tap_in_time}</div>
-                                <div class="text-[11px] text-black/50 font-semibold">${item.gate_in}</div>
+                            <td>
+                                <div class="font-monospace small text-dark">${item.tap_in_time}</div>
+                                <small class="text-muted">${item.gate_in}</small>
                             </td>
-                            <td class="py-3 px-4">
-                                <span class="px-2.5 py-1 rounded text-xs font-semibold clean-border inline-flex items-center gap-1.5 text-black">
-                                    <span class="status-dot-active"></span>
+                            <td>
+                                <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                                    <span class="spinner-grow spinner-grow-sm text-primary" style="width: 6px; height: 6px;" role="status"></span>
                                     ${durationText}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 font-bold text-black text-sm">
-                                ${item.estimated_fee_formatted}
-                                <span class="text-[10px] text-black/50 font-normal block">(${item.billed_hours} Jam)</span>
+                            <td>
+                                <strong class="text-dark font-monospace">${item.estimated_fee_formatted}</strong>
+                                <small class="text-muted d-block font-monospace">(${item.billed_hours} Jam)</small>
                             </td>
-                            <td class="py-3 px-4 text-center">
-                                <button onclick="checkoutManual('${item.uid}')"
-                                    class="btn-primary py-1.5 px-3 text-xs inline-flex items-center gap-1.5 bg-[#00719C] text-white cursor-pointer" title="Tap-out Manual & Potong Saldo">
-                                    <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                            <td class="text-center">
+                                <button onclick="checkoutManual('${item.uid}')" class="btn btn-outline-danger btn-sm rounded-3 d-inline-flex align-items-center gap-1" title="Tap-out Manual">
+                                    <i class="bi bi-box-arrow-right"></i>
                                     <span>Tap-Out</span>
                                 </button>
                             </td>
@@ -333,28 +332,27 @@
                 parkedTbody.innerHTML = html;
             }
 
-            // 3. Update Recent Logs Table
             const logsTbody = document.getElementById('logs-tbody');
             if (!data.recent_logs || data.recent_logs.length === 0) {
-                logsTbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-black/40">Belum ada riwayat log.</td></tr>`;
+                logsTbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Belum ada riwayat log.</td></tr>`;
             } else {
                 let logHtml = '';
                 data.recent_logs.forEach(log => {
                     const isGranted = log.status === 'granted';
-                    const statusText = isGranted ? 'GRANTED' : 'DENIED';
+                    const badgeClass = isGranted ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger';
 
                     logHtml += `
-                        <tr class="hover:bg-black/5 transition">
-                            <td class="py-2.5 px-4 text-black/60 font-mono text-[11px]">${log.created_at}</td>
-                            <td class="py-2.5 px-4 font-mono font-bold text-black">${log.device_code}</td>
-                            <td class="py-2.5 px-4 font-mono text-black font-bold">${log.scan_uid}</td>
-                            <td class="py-2.5 px-4 uppercase text-[11px] font-semibold text-black">${log.access_method}</td>
-                            <td class="py-2.5 px-4">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold clean-border text-black">
-                                    ${statusText}
+                        <tr>
+                            <td class="font-monospace small text-secondary">${log.created_at}</td>
+                            <td class="font-monospace fw-bold text-dark">${log.device_code}</td>
+                            <td class="font-monospace text-dark">${log.scan_uid}</td>
+                            <td class="text-uppercase small">${log.access_method}</td>
+                            <td>
+                                <span class="badge ${badgeClass}">
+                                    ${isGranted ? 'GRANTED' : 'DENIED'}
                                 </span>
                             </td>
-                            <td class="py-2.5 px-4 text-black font-medium">${log.notes || '-'}</td>
+                            <td class="small text-secondary">${log.notes || '-'}</td>
                         </tr>
                     `;
                 });
@@ -366,7 +364,6 @@
         }
     }
 
-    // Checkout Manual via Tap-Out API (Anti-Spam & Menunggu)
     let isProcessingDashCheckout = false;
     async function checkoutManual(uid) {
         if (isProcessingDashCheckout) {
@@ -397,11 +394,11 @@
                 playWebBuzzer(2);
                 refreshDashboardData();
             } else {
-                showToast('Gagal Tap-Out', data.message, 'error');
+                showToast('Gagal Tap-Out', data.message, 'danger');
                 playWebBuzzer(3, 'low');
             }
         } catch (e) {
-            showToast('Error', e.message, 'error');
+            showToast('Error', e.message, 'danger');
         } finally {
             setTimeout(() => {
                 isProcessingDashCheckout = false;
@@ -410,7 +407,6 @@
         }
     }
 
-    // Poll every 3.5 seconds
     refreshDashboardData();
     setInterval(refreshDashboardData, 3500);
 </script>
