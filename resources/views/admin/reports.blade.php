@@ -8,6 +8,18 @@
 <!-- PRINT SECTION -->
 <style>
 @media print {
+    @page {
+        margin: 0;
+    }
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+    }
+    main {
+        padding: 12mm 15mm !important;
+        background: #ffffff !important;
+    }
     thead {
         display: table-row-group !important;
     }
@@ -18,64 +30,11 @@
 }
 </style>
 
-<div class="d-none d-print-block mb-4 text-dark">
-    <!-- Kop Surat Resmi -->
+<div class="d-none d-print-block mb-3 text-dark">
     <div class="border-bottom border-2 pb-2 mb-3 d-flex align-items-center justify-content-between">
-        <div>
-            <small class="text-uppercase fw-bold text-primary">E-Parkir IoT Platform &bull; Sigma Boys</small>
-            <h4 class="fw-bold mb-0">LAPORAN REKAPITULASI PENDAPATAN & TRANSAKSI PARKIR</h4>
-            <small class="text-muted">Sistem Palang Pintu Otomatis & Pemotongan Saldo RFID Real-Time</small>
-        </div>
+        <h4 class="fw-bold mb-0">LAPORAN REKAPITULASI PENDAPATAN & TRANSAKSI PARKIR</h4>
         <div class="text-end font-monospace small">
-            <div><strong>Tanggal Cetak:</strong> {{ date('d/m/Y H:i') }} WIB</div>
-            <div><strong>Dicetak Oleh:</strong> {{ auth()->user()->name ?? 'Administrator' }}</div>
-            <div><strong>Status Sistem:</strong> Gate-01 Online</div>
-        </div>
-    </div>
-
-    <!-- Parameter Filter Info Badge Print -->
-    <div class="card bg-light border p-2 mb-3">
-        <div class="row g-2 small">
-            <div class="col-4">
-                <span class="text-muted text-uppercase d-block" style="font-size: 0.75rem;">Periode Laporan:</span>
-                <strong class="font-monospace">{{ $startDate ?: 'Semua' }} {{ $startTime ? "($startTime)" : '' }} s/d {{ $endDate ?: 'Semua' }} {{ $endTime ? "($endTime)" : '' }}</strong>
-            </div>
-            <div class="col-4">
-                <span class="text-muted text-uppercase d-block" style="font-size: 0.75rem;">Filter Status:</span>
-                <strong class="font-monospace">{{ $statusFilter === 'COMPLETED' ? 'Hanya Selesai' : ($statusFilter === 'PARKED' ? 'Hanya Sedang Parkir' : 'Semua Transaksi') }}</strong>
-            </div>
-            <div class="col-4">
-                <span class="text-muted text-uppercase d-block" style="font-size: 0.75rem;">Kata Kunci:</span>
-                <strong class="font-monospace">{{ $search ?: 'Tidak ada (Semua)' }}</strong>
-            </div>
-        </div>
-    </div>
-
-    <!-- Summary Box Print -->
-    <div class="row g-2 mb-3 text-center">
-        <div class="col-3">
-            <div class="border p-2 rounded">
-                <small class="text-uppercase text-muted">Total Pendapatan</small>
-                <div class="fw-bold fs-6">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
-            </div>
-        </div>
-        <div class="col-3">
-            <div class="border p-2 rounded">
-                <small class="text-uppercase text-muted">Transaksi Selesai</small>
-                <div class="fw-bold fs-6">{{ $completedCount }} Unit</div>
-            </div>
-        </div>
-        <div class="col-3">
-            <div class="border p-2 rounded">
-                <small class="text-uppercase text-muted">Sedang Parkir</small>
-                <div class="fw-bold fs-6">{{ $parkedCount }} Unit</div>
-            </div>
-        </div>
-        <div class="col-3">
-            <div class="border p-2 rounded">
-                <small class="text-uppercase text-muted">Rata-rata Durasi</small>
-                <div class="fw-bold fs-6">{{ $avgMinutes }} Menit</div>
-            </div>
+            <strong>Tanggal:</strong> {{ date('d/m/Y H:i') }} WIB
         </div>
     </div>
 </div>
@@ -301,9 +260,7 @@
             <thead class="table-light">
                 <tr class="text-secondary small text-uppercase">
                     <th class="text-center" style="width: 40px;">No</th>
-                    <th>ID</th>
                     <th>Tipe Akses</th>
-                    <th>Identitas / Kode</th>
                     <th>Pengendara</th>
                     <th>Waktu Masuk</th>
                     <th>Waktu Keluar</th>
@@ -315,7 +272,7 @@
             <tbody id="transactions-tbody">
                 @if ($transactions->isEmpty())
                     <tr id="no-tx-row">
-                        <td colspan="10" class="text-center py-5 text-muted">
+                        <td colspan="8" class="text-center py-5 text-muted">
                             <i class="bi bi-receipt fs-1 d-block mb-2 text-secondary"></i>
                             Tidak ada transaksi ditemukan.
                         </td>
@@ -333,7 +290,6 @@
                         @endphp
                         <tr class="tx-row" data-search="{{ strtolower(($t->user->name ?? '') . ' ' . ($t->ticket_code ?? '') . ' ' . ($t->card->license_plate ?? '') . ' ' . ($t->card->uid ?? '') . ' #' . $t->id . ' ' . ($t->deviceIn->device_code ?? '') . ' ' . ($t->deviceOut->device_code ?? '')) }}">
                             <td class="text-center text-muted font-monospace small">{{ $rowNo++ }}</td>
-                            <td><strong class="font-monospace text-dark">#{{ $t->id }}</strong></td>
                             <td>
                                 @if($isTicket)
                                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
@@ -343,15 +299,6 @@
                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
                                         <i class="bi bi-credit-card-2-front-fill me-1"></i> RFID
                                     </span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($isTicket)
-                                    <span class="fw-bold font-monospace text-dark d-block">{{ $t->ticket_code }}</span>
-                                    <small class="text-muted">Karcis Pengunjung</small>
-                                @else
-                                    <span class="fw-bold text-dark d-block">{{ $t->card->license_plate ?? 'NON-PLAT' }}</span>
-                                    <small class="text-muted font-monospace">UID: {{ $t->card->uid ?? '-' }}</small>
                                 @endif
                             </td>
                             <td>
@@ -399,7 +346,7 @@
                         </tr>
                     @endforeach
                     <tr class="table-light fw-bold">
-                        <td colspan="8" class="text-end text-uppercase">TOTAL PENDAPATAN:</td>
+                        <td colspan="6" class="text-end text-uppercase">TOTAL PENDAPATAN:</td>
                         <td class="text-end font-monospace text-primary fs-6">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</td>
                         <td class="text-center">{{ $completedCount }} Selesai</td>
                     </tr>

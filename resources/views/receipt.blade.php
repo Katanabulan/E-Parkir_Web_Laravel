@@ -36,6 +36,10 @@
             #qrcode-container img, #qrcode-container canvas {
                 margin: 0 auto !important;
             }
+            .barcode-wrapper img {
+                max-width: 48mm !important;
+                height: auto !important;
+            }
         }
 
         body {
@@ -253,7 +257,7 @@
 
             <div class="barcode-wrapper position-relative text-center my-2 p-2 bg-white rounded border border-dark" id="ticket-barcode-box">
                 <!-- Gambar Barcode dari User Upload -->
-                <img src="{{ asset('assets/images/karcis-barcode.png') }}" alt="Barcode Tiket #{{ $receiptData['ticket_code'] }}" class="img-fluid" style="max-height: 65px; width: auto; display: block; margin: 0 auto; image-rendering: pixelated;">
+                <img src="{{ asset('assets/images/karcis-barcode.png') }}?v={{ @filemtime(public_path('assets/images/karcis-barcode.png')) }}" alt="Barcode Tiket #{{ $receiptData['ticket_code'] }}" class="img-fluid" style="max-height: 70px; width: 100%; max-width: 260px; object-fit: contain; display: block; margin: 0 auto;">
                 <!-- Garis Laser Merah Gimmick Scan Kasir -->
                 <div id="scanner-laser-line" class="scanner-laser d-none"></div>
                 <div class="fw-bold font-monospace mt-1 text-dark" style="font-size: 13px; letter-spacing: 1.5px;">

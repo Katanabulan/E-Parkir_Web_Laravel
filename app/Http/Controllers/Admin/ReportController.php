@@ -92,11 +92,12 @@ class ReportController extends Controller
         $totalMinutes = 0;
         $durationBuckets = ['< 1 Jam' => 0, '1-2 Jam' => 0, '3-4 Jam' => 0, '> 4 Jam' => 0];
 
-        $trendData = [];
+        $trendBuckets = [];
 
         if ($chartMode === 'hourly') {
             for ($h = 6; $h <= 22; $h++) {
-                $trendData[sprintf('%02d:00', $h)] = 0;
+                $hKey = sprintf('%02d:00', $h);
+                $trendBuckets[$hKey] = ['label' => $hKey, 'value' => 0];
             }
         }
 
@@ -120,36 +121,40 @@ class ReportController extends Controller
 
                 $refTime = $t->tap_out_time ? Carbon::parse($t->tap_out_time) : Carbon::parse($t->tap_in_time);
                 if ($chartMode === 'hourly') {
-                    $hKey = $refTime->format('H:00');
-                    if (!isset($trendData[$hKey])) {
-                        $trendData[$hKey] = 0;
-                    }
-                    $trendData[$hKey] += $fee;
+                    $sortKey = $refTime->format('H:00');
+                    $label = $sortKey;
                 } elseif ($chartMode === 'monthly') {
-                    $mKey = $refTime->format('M Y');
-                    if (!isset($trendData[$mKey])) {
-                        $trendData[$mKey] = 0;
-                    }
-                    $trendData[$mKey] += $fee;
+                    $sortKey = $refTime->format('Y-m');
+                    $label = $refTime->format('M Y');
                 } else {
                     // Daily (Harian)
-                    $dKey = $refTime->format('d M');
-                    if (!isset($trendData[$dKey])) {
-                        $trendData[$dKey] = 0;
-                    }
-                    $trendData[$dKey] += $fee;
+                    $sortKey = $refTime->format('Y-m-d');
+                    $label = $refTime->format('d M');
                 }
+
+                if (!isset($trendBuckets[$sortKey])) {
+                    $trendBuckets[$sortKey] = ['label' => $label, 'value' => 0];
+                }
+                $trendBuckets[$sortKey]['value'] += $fee;
             } else {
                 $parkedCount++;
             }
         }
 
-        if (empty($trendData)) {
-            $trendData[Carbon::now()->format($chartMode === 'monthly' ? 'M Y' : 'd M')] = 0;
+        if (empty($trendBuckets)) {
+            $now = Carbon::now();
+            $sortKey = $chartMode === 'monthly' ? $now->format('Y-m') : $now->format('Y-m-d');
+            $label = $now->format($chartMode === 'monthly' ? 'M Y' : 'd M');
+            $trendBuckets[$sortKey] = ['label' => $label, 'value' => 0];
         }
 
-        if ($chartMode === 'hourly') {
-            ksort($trendData);
+        // Urutkan kronologis dari terlama ke terbaru (kiri ke kanan pada grafik)
+        ksort($trendBuckets);
+
+        $trendData = [];
+        foreach ($trendBuckets as $bucket) {
+            $label = $bucket['label'];
+            $trendData[$label] = ($trendData[$label] ?? 0) + $bucket['value'];
         }
 
         $avgMinutes = $completedCount > 0 ? round($totalMinutes / $completedCount) : 0;

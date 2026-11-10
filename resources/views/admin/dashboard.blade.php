@@ -341,12 +341,26 @@
                     const isGranted = log.status === 'granted';
                     const badgeClass = isGranted ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger';
 
+                    let methodBadge = '';
+                    const m = (log.access_method || '').toLowerCase();
+                    if (m === 'ticket' || m === 'karcis') {
+                        methodBadge = '<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-ticket-perforated-fill me-1"></i> KARCIS</span>';
+                    } else if (m === 'rfid') {
+                        methodBadge = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-credit-card-2-front-fill me-1"></i> RFID</span>';
+                    } else if (m === 'web_admin') {
+                        methodBadge = '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="bi bi-shield-lock me-1"></i> ADMIN</span>';
+                    } else if (m === 'mobile_app') {
+                        methodBadge = '<span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-phone me-1"></i> MOBILE</span>';
+                    } else {
+                        methodBadge = `<span class="badge bg-light text-dark border">${(log.access_method || '-').toUpperCase()}</span>`;
+                    }
+
                     logHtml += `
                         <tr>
                             <td class="font-monospace small text-secondary">${log.created_at}</td>
                             <td class="font-monospace fw-bold text-dark">${log.device_code}</td>
                             <td class="font-monospace text-dark">${log.scan_uid}</td>
-                            <td class="text-uppercase small">${log.access_method}</td>
+                            <td>${methodBadge}</td>
                             <td>
                                 <span class="badge ${badgeClass}">
                                     ${isGranted ? 'GRANTED' : 'DENIED'}

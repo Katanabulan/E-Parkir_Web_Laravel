@@ -307,3 +307,21 @@ Jika data masih belum muncul di HP:
    - `NoSuchMethodError: The method '[]' was called on null` $\rightarrow$ Ada sub-objek yang dicari tetapi bernilai null.
 
 Cukup kirimkan pesan error merah tersebut, maka backend atau kode mobile dapat langsung disinkronkan secara sempurna!
+
+---
+
+## 🪪 6. Alur Pendaftaran Member dari Mobile & Pembuatan Kartu di Web Admin
+
+1. **Client Daftar Data Diri di Mobile (`POST /api/client/register` atau `POST /api/client?action=register`)**:
+   - **Body JSON / Form**: `name`, `email`, `password` (min. 6 karakter), `phone` (opsional), `license_plate` (opsional).
+   - Backend menyimpan akun ke tabel `users` (`role = client`) **tanpa langsung membuat kartu RFID virtual**.
+   - Respon JSON (`201 Created`):
+     - `has_card`: `false`
+     - `pending_card`: `true`
+     - `card_status`: `"pending_card"`
+     - `card`: fallback objek aman (`id: 0`, `uid: "-"`, `balance: 0`, `status: "inactive"`).
+2. **Data Masuk ke Web Admin (`/admin/cards`)**:
+   - Pendaftar tampil pada panel **Pendaftar Member dari Mobile** (daftar calon member yang belum memiliki kartu RFID).
+   - Admin menekan tombol **Buatkan Kartu**, men-tap kartu RFID fisik pada reader (atau input UID manual), lalu menyimpan kartu.
+3. **Sinkronisasi Otomatis ke Mobile (`login`, `status`, `profile`)**:
+   - Setelah kartu dibuat oleh admin, endpoint `login`, `status`, dan `profile` otomatis mengembalikan `has_card: true`, `pending_card: false`, `card_status: "active"`, serta objek `card` dengan `uid` fisik dan saldo aktif.

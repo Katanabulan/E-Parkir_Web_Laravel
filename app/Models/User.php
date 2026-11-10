@@ -19,6 +19,7 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'license_plate',
         'avatar',
         'name_changes_count',
         'name_changed_at',

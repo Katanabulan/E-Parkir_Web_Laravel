@@ -118,6 +118,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::match(['post', 'put'], '/cards/{id}', [CardController::class, 'update'])->name('admin.cards.update');
     Route::post('/cards/{id}/topup', [CardController::class, 'topup'])->name('admin.cards.topup');
     Route::match(['post', 'delete'], '/cards/{id}/delete', [CardController::class, 'destroy'])->name('admin.cards.destroy');
+    Route::match(['post', 'delete'], '/cards/pending/{id}/delete', [CardController::class, 'destroyPendingMember'])->name('admin.cards.destroy-pending');
     Route::get('/cards-latest-scan', [CardController::class, 'latestScan'])->name('admin.cards.latest-scan');
     Route::get('/api_register_scan.php', [CardController::class, 'latestScan']);
 

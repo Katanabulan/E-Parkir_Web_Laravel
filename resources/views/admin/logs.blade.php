@@ -95,7 +95,9 @@
             <select name="method" onchange="this.form.submit()" class="form-select bg-light" style="width: auto;">
                 <option value="">Semua Metode</option>
                 <option value="rfid" {{ $filterMethod === 'rfid' ? 'selected' : '' }}>RFID Tap</option>
+                <option value="ticket" {{ $filterMethod === 'ticket' ? 'selected' : '' }}>Karcis Tiket</option>
                 <option value="web_admin" {{ $filterMethod === 'web_admin' ? 'selected' : '' }}>Web Admin (Override)</option>
+                <option value="mobile_app" {{ $filterMethod === 'mobile_app' ? 'selected' : '' }}>Aplikasi Mobile</option>
             </select>
 
             <button type="submit" class="btn btn-secondary btn-sm px-3 rounded-3">Filter</button>
@@ -143,11 +145,15 @@
                                 </td>
                                 <td class="text-uppercase small fw-bold">
                                     @if ($l->access_method === 'rfid')
-                                        <span class="text-primary"><i class="bi bi-wifi me-1"></i> RFID</span>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-credit-card-2-front-fill me-1"></i> RFID</span>
+                                    @elseif ($l->access_method === 'ticket' || $l->access_method === 'karcis')
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-ticket-perforated-fill me-1"></i> KARCIS</span>
                                     @elseif ($l->access_method === 'web_admin')
-                                        <span class="text-warning"><i class="bi bi-shield-lock me-1"></i> ADMIN</span>
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="bi bi-shield-lock me-1"></i> ADMIN</span>
+                                    @elseif ($l->access_method === 'mobile_app')
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-phone me-1"></i> MOBILE</span>
                                     @else
-                                        <span class="text-info"><i class="bi bi-phone me-1"></i> MOBILE</span>
+                                        <span class="badge bg-light text-dark border">{{ strtoupper($l->access_method) }}</span>
                                     @endif
                                 </td>
                                 <td>

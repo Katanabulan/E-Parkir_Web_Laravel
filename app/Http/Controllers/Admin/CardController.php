@@ -9,6 +9,7 @@ use App\Models\AccessLog;
 use App\Models\ParkingTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
@@ -42,11 +43,17 @@ class CardController extends Controller
         $activeCards = RfidCard::where('status', 'active')->count();
         $blockedCards = RfidCard::where('status', 'blocked')->count();
 
+        $pendingMembers = User::where('role', 'client')
+            ->doesntHave('rfidCard')
+            ->orderBy('id', 'desc')
+            ->get();
+
         return view('admin.cards', compact(
             'cards',
             'totalCards',
             'activeCards',
             'blockedCards',
+            'pendingMembers',
             'search',
             'status'
         ));
@@ -54,14 +61,16 @@ class CardController extends Controller
 
     public function store(Request $request)
     {
+        $userId = (int) $request->input('user_id', 0);
         $uid = strtoupper(trim($request->input('uid', '')));
         $name = trim($request->input('name', ''));
         $email = trim($request->input('email', ''));
         $phone = trim($request->input('phone', ''));
+        $licensePlate = strtoupper(trim($request->input('license_plate', '')));
         $avatar = trim($request->input('avatar', ''));
         $password = trim($request->input('password', ''));
         $status = in_array($request->input('status'), ['active', 'blocked']) ? $request->input('status') : 'active';
-        $balance = (int) $request->input('balance', 50000);
+        $balance = max(0, (int) $request->input('balance', 50000));
 
         if (empty($uid)) {
             return redirect()->route('admin.cards.index')->with('error', 'UID Kartu RFID wajib diisi!');
@@ -75,47 +84,79 @@ class CardController extends Controller
             return redirect()->route('admin.cards.index')->with('error', 'Nama pemilik / label kartu wajib diisi!');
         }
 
-        if (empty($email)) {
+        if (empty($email) && $userId <= 0) {
             $email = "kartu_" . strtolower($uid) . "@eparkir.local";
         }
 
-        if (empty($password)) {
-            return redirect()->route('admin.cards.index')->with('error', 'Password akun pengendara wajib diisi!');
-        }
-
-        // Cari atau buat user baru
-        $user = User::where('email', $email)->first();
-        if ($user) {
-            $userData = [
-                'name' => $name,
-                'phone' => !empty($phone) ? $phone : ($user->phone ?: '0812000000'),
-                'password' => Hash::make($password)
-            ];
-            if (!empty($avatar)) {
-                $userData['avatar'] = $avatar;
+        $targetUser = null;
+        if ($userId > 0) {
+            $targetUser = User::where('role', 'client')->find($userId);
+            if (!$targetUser) {
+                return redirect()->route('admin.cards.index')->with('error', 'Data pendaftar mobile tidak ditemukan!');
             }
-            $user->update($userData);
+            if ($targetUser->rfidCard()->exists()) {
+                return redirect()->route('admin.cards.index')->with('error', "Akun '{$targetUser->name}' sudah memiliki kartu RFID!");
+            }
+            if (empty($email)) {
+                $email = $targetUser->email;
+            }
+            if (User::whereRaw('LOWER(email) = ?', [strtolower($email)])->where('id', '!=', $targetUser->id)->exists()) {
+                return redirect()->route('admin.cards.index')->with('error', "Email '{$email}' sudah digunakan akun lain!");
+            }
         } else {
-            $user = User::create([
-                'name' => $name,
-                'email' => $email,
-                'password' => Hash::make($password),
-                'phone' => !empty($phone) ? $phone : '0812000000',
-                'avatar' => !empty($avatar) ? $avatar : null,
-                'role' => 'client'
-            ]);
+            $existingUser = User::whereRaw('LOWER(email) = ?', [strtolower($email)])->first();
+            if ($existingUser) {
+                if ($existingUser->role !== 'client') {
+                    return redirect()->route('admin.cards.index')->with('error', "Email '{$email}' sudah digunakan oleh akun Admin/Owner!");
+                }
+                if ($existingUser->rfidCard()->exists()) {
+                    return redirect()->route('admin.cards.index')->with('error', "Akun dengan email '{$email}' sudah memiliki kartu RFID aktif!");
+                }
+                $targetUser = $existingUser;
+            } elseif (empty($password)) {
+                return redirect()->route('admin.cards.index')->with('error', 'Password akun pengendara wajib diisi untuk pendaftar baru!');
+            }
         }
 
-        $card = RfidCard::create([
-            'user_id' => $user->id,
-            'uid' => $uid,
-            'license_plate' => null,
-            'balance' => $balance,
-            'status' => $status,
-            'created_at' => now(),
-        ]);
+        $card = DB::transaction(function () use ($targetUser, $uid, $name, $email, $phone, $licensePlate, $avatar, $password, $status, $balance) {
+            if ($targetUser) {
+                $userData = [
+                    'name' => $name,
+                    'email' => $email,
+                    'phone' => !empty($phone) ? $phone : $targetUser->phone,
+                    'license_plate' => !empty($licensePlate) ? $licensePlate : $targetUser->license_plate,
+                ];
+                if (!empty($password)) {
+                    $userData['password'] = Hash::make($password);
+                }
+                if (!empty($avatar)) {
+                    $userData['avatar'] = $avatar;
+                }
+                $targetUser->update($userData);
+                $user = $targetUser;
+            } else {
+                $user = User::create([
+                    'name' => $name,
+                    'email' => $email,
+                    'password' => Hash::make($password),
+                    'phone' => !empty($phone) ? $phone : '0812000000',
+                    'license_plate' => !empty($licensePlate) ? $licensePlate : null,
+                    'avatar' => !empty($avatar) ? $avatar : null,
+                    'role' => 'client',
+                ]);
+            }
 
-        return redirect()->route('admin.cards.index')->with('success', "Kartu RFID '{$card->uid}' berhasil didaftarkan dengan saldo awal Rp " . number_format($balance, 0, ',', '.') . "!");
+            return RfidCard::create([
+                'user_id' => $user->id,
+                'uid' => $uid,
+                'license_plate' => !empty($licensePlate) ? $licensePlate : ($user->license_plate ?? null),
+                'balance' => $balance,
+                'status' => $status,
+                'created_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('admin.cards.index')->with('success', "Kartu RFID '{$card->uid}' berhasil dibuatkan untuk {$name} dengan saldo awal Rp " . number_format($balance, 0, ',', '.') . "!");
     }
 
     public function update(Request $request, $id)
@@ -125,6 +166,7 @@ class CardController extends Controller
         $name = trim($request->input('name', ''));
         $email = trim($request->input('email', ''));
         $phone = trim($request->input('phone', ''));
+        $licensePlate = strtoupper(trim($request->input('license_plate', '')));
         $avatar = trim($request->input('avatar', ''));
         $status = in_array($request->input('status'), ['active', 'blocked']) ? $request->input('status') : 'active';
         $newBalance = $request->has('balance') ? (int) $request->input('balance') : null;
@@ -134,8 +176,11 @@ class CardController extends Controller
             $userData = [
                 'name' => $name,
                 'email' => !empty($email) ? $email : $card->user->email,
-                'phone' => $phone
+                'phone' => $phone,
             ];
+            if ($request->has('license_plate')) {
+                $userData['license_plate'] = $licensePlate !== '' ? $licensePlate : null;
+            }
             if ($request->has('avatar')) {
                 $userData['avatar'] = !empty($avatar) ? $avatar : null;
             }
@@ -146,6 +191,9 @@ class CardController extends Controller
         }
 
         $cardData = ['status' => $status];
+        if ($request->has('license_plate')) {
+            $cardData['license_plate'] = $licensePlate !== '' ? $licensePlate : null;
+        }
         if ($newBalance !== null) {
             $cardData['balance'] = $newBalance;
         }
@@ -197,6 +245,18 @@ class CardController extends Controller
         }
 
         return redirect()->route('admin.cards.index')->with('success', "Kartu RFID '{$uid}' dan data terkait berhasil dihapus!");
+    }
+
+    public function destroyPendingMember($id)
+    {
+        $user = User::where('role', 'client')
+            ->doesntHave('rfidCard')
+            ->findOrFail($id);
+
+        $name = $user->name;
+        $user->delete();
+
+        return redirect()->route('admin.cards.index')->with('success', "Pendaftaran akun mobile '{$name}' berhasil dihapus!");
     }
 
     public function latestScan(Request $request): JsonResponse

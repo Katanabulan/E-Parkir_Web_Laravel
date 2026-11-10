@@ -127,35 +127,12 @@ class ClientApiController extends Controller
         }
 
         $card = RfidCard::where('user_id', $user->id)->first();
+        $hasCard = $card !== null;
+        $pendingCard = $user->role === 'client' && !$hasCard;
+        $cardStatus = $hasCard ? (string) $card->status : 'pending_card';
 
-        $userData = [
-            'id' => (int) $user->id,
-            'name' => (string) $user->name,
-            'email' => (string) $user->email,
-            'phone' => (string) ($user->phone ?? ''),
-            'avatar' => $user->avatar,
-            'avatar_url' => $user->avatar_url,
-            'can_change_name' => $user->can_change_name,
-            'name_changes_count' => (int) ($user->name_changes_count ?? 0),
-            'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
-            'role' => (string) $user->role,
-        ];
-
-        $cardData = $card ? [
-            'id' => (int) $card->id,
-            'uid' => (string) $card->uid,
-            'license_plate' => (string) ($card->license_plate ?? '-'),
-            'balance' => (int) $card->balance,
-            'balance_formatted' => 'Rp ' . number_format($card->balance, 0, ',', '.'),
-            'status' => (string) $card->status,
-        ] : [
-            'id' => 0,
-            'uid' => '-',
-            'license_plate' => '-',
-            'balance' => 0,
-            'balance_formatted' => 'Rp 0',
-            'status' => 'inactive',
-        ];
+        $userData = $this->formatUserData($user, $card);
+        $cardData = $this->formatCardData($card, $user);
 
         $token = base64_encode($user->id . '|' . $user->email . '|' . time());
 
@@ -163,12 +140,18 @@ class ClientApiController extends Controller
             'status' => 'success',
             'message' => 'Login berhasil!',
             'token' => $token,
+            'has_card' => $hasCard,
+            'pending_card' => $pendingCard,
+            'card_status' => $cardStatus,
             // 1. Root level (Dibaca langsung oleh Flutter & Android Kotlin)
             'user' => $userData,
             'card' => $cardData,
             // 2. Data wrapper level (Untuk fleksibilitas REST Client)
             'data' => [
                 'token' => $token,
+                'has_card' => $hasCard,
+                'pending_card' => $pendingCard,
+                'card_status' => $cardStatus,
                 'user' => $userData,
                 'card' => $cardData,
             ],
@@ -176,15 +159,19 @@ class ClientApiController extends Controller
     }
 
     /**
-     * 2. REGISTER API MOBILE (Pendaftaran Pengendara Baru)
+     * 2. REGISTER API MOBILE (Pendaftaran Data Diri Pengendara - Menunggu Pembuatan Kartu Member di Web Admin)
      */
     public function register(Request $request): JsonResponse
     {
+        if ($request->isMethod('OPTIONS')) {
+            return response()->json(['status' => 'ok'], 200);
+        }
+
         $name = trim($request->input('name', ''));
         $email = trim($request->input('email', ''));
         $password = trim($request->input('password', ''));
         $phone = trim($request->input('phone', ''));
-        $licensePlate = trim($request->input('license_plate', ''));
+        $licensePlate = strtoupper(trim($request->input('license_plate', '')));
 
         if (empty($name) || empty($email) || empty($password)) {
             return response()->json([
@@ -207,7 +194,7 @@ class ClientApiController extends Controller
             ], 400);
         }
 
-        if (User::where('email', $email)->exists()) {
+        if (User::whereRaw('LOWER(email) = ?', [strtolower($email)])->exists()) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Email ini sudah terdaftar di sistem!'
@@ -218,26 +205,44 @@ class ClientApiController extends Controller
             'name' => $name,
             'email' => $email,
             'phone' => !empty($phone) ? $phone : null,
+            'license_plate' => !empty($licensePlate) ? $licensePlate : null,
             'role' => 'client',
             'password' => Hash::make($password),
         ]);
 
-        // Buat kartu RFID virtual untuk user baru jika plat diisi
-        $virtualUid = strtoupper(Str::random(10));
-        $card = RfidCard::create([
-            'user_id' => $user->id,
-            'uid' => $virtualUid,
-            'license_plate' => !empty($licensePlate) ? $licensePlate : null,
-            'balance' => 50000,
-            'status' => 'active',
-            'created_at' => now(),
-        ]);
+        $userData = $this->formatUserData($user);
+        $cardData = $this->formatCardData(null, $user);
 
-        $userData = [
+        $token = base64_encode($user->id . '|' . $user->email . '|' . time());
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pendaftaran data diri berhasil! Data Anda telah masuk ke admin untuk pembuatan kartu member RFID.',
+            'token' => $token,
+            'has_card' => false,
+            'pending_card' => true,
+            'card_status' => 'pending_card',
+            'user' => $userData,
+            'card' => $cardData,
+            'data' => [
+                'token' => $token,
+                'has_card' => false,
+                'pending_card' => true,
+                'card_status' => 'pending_card',
+                'user' => $userData,
+                'card' => $cardData,
+            ]
+        ], 201);
+    }
+
+    private function formatUserData(User $user, ?RfidCard $card = null): array
+    {
+        return [
             'id' => (int) $user->id,
             'name' => (string) $user->name,
             'email' => (string) $user->email,
             'phone' => (string) ($user->phone ?? ''),
+            'license_plate' => (string) ($card?->license_plate ?? $user->license_plate ?? '-'),
             'avatar' => $user->avatar,
             'avatar_url' => $user->avatar_url,
             'can_change_name' => $user->can_change_name,
@@ -245,30 +250,29 @@ class ClientApiController extends Controller
             'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
             'role' => (string) $user->role,
         ];
+    }
 
-        $cardData = [
-            'id' => (int) $card->id,
-            'uid' => (string) $card->uid,
-            'license_plate' => (string) ($card->license_plate ?? '-'),
-            'balance' => (int) $card->balance,
-            'balance_formatted' => 'Rp ' . number_format($card->balance, 0, ',', '.'),
-            'status' => (string) $card->status,
+    private function formatCardData(?RfidCard $card, ?User $user = null): array
+    {
+        if ($card) {
+            return [
+                'id' => (int) $card->id,
+                'uid' => (string) $card->uid,
+                'license_plate' => (string) ($card->license_plate ?? ($user?->license_plate ?? '-')),
+                'balance' => (int) $card->balance,
+                'balance_formatted' => 'Rp ' . number_format($card->balance, 0, ',', '.'),
+                'status' => (string) $card->status,
+            ];
+        }
+
+        return [
+            'id' => 0,
+            'uid' => '-',
+            'license_plate' => (string) ($user?->license_plate ?? '-'),
+            'balance' => 0,
+            'balance_formatted' => 'Rp 0',
+            'status' => 'inactive',
         ];
-
-        $token = base64_encode($user->id . '|' . $user->email . '|' . time());
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Pendaftaran berhasil! Akun dan kartu telah siap digunakan.',
-            'token' => $token,
-            'user' => $userData,
-            'card' => $cardData,
-            'data' => [
-                'token' => $token,
-                'user' => $userData,
-                'card' => $cardData,
-            ]
-        ], 201);
     }
 
     /**
@@ -346,9 +350,19 @@ class ClientApiController extends Controller
                 ->limit(5)
                 ->get()
                 ->map(function ($t) {
+                    $isTicket = !empty($t->ticket_code);
                     return [
-                        'id' => $t->id,
+                        'id' => (int) $t->id,
+                        'transaction_id' => (int) $t->id,
                         'ticket_code' => $t->ticket_code,
+                        'is_ticket' => (bool) $isTicket,
+                        'access_type' => $isTicket ? 'KARCIS' : 'RFID',
+                        'access_method' => $isTicket ? 'ticket' : 'rfid',
+                        'method' => $isTicket ? 'karcis' : 'rfid',
+                        'metode' => $isTicket ? 'Karcis' : 'RFID',
+                        'metode_transaksi' => $isTicket ? 'Karcis Parkir' : 'Kartu RFID',
+                        'metode_akses' => $isTicket ? 'Karcis' : 'RFID',
+                        'metode_pembayaran' => $isTicket ? 'Tunai di Kasir' : 'Potong Saldo Kartu RFID',
                         'tap_in_time' => $t->tap_in_time ? Carbon::parse($t->tap_in_time)->toDateTimeString() : null,
                         'tap_out_time' => $t->tap_out_time ? Carbon::parse($t->tap_out_time)->toDateTimeString() : null,
                         'duration_minutes' => (int) $t->duration_minutes,
@@ -356,7 +370,10 @@ class ClientApiController extends Controller
                         'total_fee_formatted' => 'Rp ' . number_format($t->total_fee ?? 0, 0, ',', '.'),
                         'balance_before' => $t->balance_before,
                         'balance_after' => $t->balance_after,
-                        'payment_method' => $t->payment_method ?? 'card',
+                        'payment_method' => $isTicket ? 'cash' : ($t->payment_method ?? 'card'),
+                        'payment_method_label' => $isTicket ? 'Tunai di Kasir (Karcis)' : 'Potong Saldo Kartu RFID',
+                        'payment_type' => $isTicket ? 'karcis' : 'rfid',
+                        'type' => $isTicket ? 'karcis' : 'rfid',
                         'status' => $t->status,
                         'gate_in_code' => $t->deviceIn ? $t->deviceIn->device_code : 'Gate In',
                         'gate_out_code' => $t->deviceOut ? $t->deviceOut->device_code : 'Gate Out',
@@ -400,34 +417,12 @@ class ClientApiController extends Controller
         $statusCode = $isParked ? 'PARKED' : 'IDLE';
         $statusLabel = $isParked ? 'Sedang Parkir' : 'Tidak Ada Kendaraan di Parkiran';
 
-        $userData = $user ? [
-            'id' => (int) $user->id,
-            'name' => (string) $user->name,
-            'email' => (string) $user->email,
-            'phone' => (string) ($user->phone ?? ''),
-            'avatar' => $user->avatar,
-            'avatar_url' => $user->avatar_url,
-            'can_change_name' => $user->can_change_name,
-            'name_changes_count' => (int) ($user->name_changes_count ?? 0),
-            'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
-            'role' => (string) $user->role,
-        ] : null;
+        $hasCard = $card !== null;
+        $pendingCard = $user ? ($user->role === 'client' && !$hasCard) : false;
+        $cardStatus = $hasCard ? (string) $card->status : 'pending_card';
 
-        $cardData = $card ? [
-            'id' => (int) $card->id,
-            'uid' => (string) $card->uid,
-            'license_plate' => (string) ($card->license_plate ?? '-'),
-            'balance' => (int) $card->balance,
-            'balance_formatted' => 'Rp ' . number_format($card->balance, 0, ',', '.'),
-            'status' => (string) $card->status,
-        ] : [
-            'id' => 0,
-            'uid' => '-',
-            'license_plate' => '-',
-            'balance' => 0,
-            'balance_formatted' => 'Rp 0',
-            'status' => 'inactive',
-        ];
+        $userData = $user ? $this->formatUserData($user, $card) : null;
+        $cardData = $this->formatCardData($card, $user);
 
         $activeTxData = $activeTx ? [
             'id' => (int) $activeTx->id,
@@ -531,6 +526,9 @@ class ClientApiController extends Controller
             'is_parked' => $isParked,
             'status_code' => $statusCode,
             'status_label' => $statusLabel,
+            'has_card' => $hasCard,
+            'pending_card' => $pendingCard,
+            'card_status' => $cardStatus,
             'user' => $userData,
             'card' => $cardData,
             'active_transaction' => $activeTxData,
@@ -551,6 +549,9 @@ class ClientApiController extends Controller
                 'is_parked' => $isParked,
                 'status_code' => $statusCode,
                 'status_label' => $statusLabel,
+                'has_card' => $hasCard,
+                'pending_card' => $pendingCard,
+                'card_status' => $cardStatus,
                 'user' => $userData,
                 'card' => $cardData,
                 'active_transaction' => $activeTxData,
@@ -598,9 +599,19 @@ class ClientApiController extends Controller
         }
 
         $history = $query->limit(30)->get()->map(function ($t) {
+            $isTicket = !empty($t->ticket_code);
             return [
-                'id' => $t->id,
+                'id' => (int) $t->id,
+                'transaction_id' => (int) $t->id,
                 'ticket_code' => $t->ticket_code,
+                'is_ticket' => (bool) $isTicket,
+                'access_type' => $isTicket ? 'KARCIS' : 'RFID',
+                'access_method' => $isTicket ? 'ticket' : 'rfid',
+                'method' => $isTicket ? 'karcis' : 'rfid',
+                'metode' => $isTicket ? 'Karcis' : 'RFID',
+                'metode_transaksi' => $isTicket ? 'Karcis Parkir' : 'Kartu RFID',
+                'metode_akses' => $isTicket ? 'Karcis' : 'RFID',
+                'metode_pembayaran' => $isTicket ? 'Tunai di Kasir' : 'Potong Saldo Kartu RFID',
                 'tap_in_time' => $t->tap_in_time ? Carbon::parse($t->tap_in_time)->toDateTimeString() : null,
                 'tap_out_time' => $t->tap_out_time ? Carbon::parse($t->tap_out_time)->toDateTimeString() : null,
                 'tap_in_formatted' => $t->tap_in_time ? Carbon::parse($t->tap_in_time)->format('d/m/Y H:i') : '-',
@@ -612,7 +623,10 @@ class ClientApiController extends Controller
                 'balance_before' => $t->balance_before,
                 'balance_after' => $t->balance_after,
                 'status' => $t->status,
-                'payment_method' => $t->payment_method ?? 'card',
+                'payment_method' => $isTicket ? 'cash' : ($t->payment_method ?? 'card'),
+                'payment_method_label' => $isTicket ? 'Tunai di Kasir (Karcis)' : 'Potong Saldo Kartu RFID',
+                'payment_type' => $isTicket ? 'karcis' : 'rfid',
+                'type' => $isTicket ? 'karcis' : 'rfid',
                 'gate_in_code' => $t->deviceIn ? $t->deviceIn->device_code : 'Gate In',
                 'gate_out_code' => $t->deviceOut ? $t->deviceOut->device_code : 'Gate Out',
             ];
@@ -660,9 +674,12 @@ class ClientApiController extends Controller
         }
 
         if (!$targetCard) {
+            $userExists = $userId > 0 && User::where('id', $userId)->exists();
             return response()->json([
                 'status' => 'error',
-                'message' => 'Kartu RFID pengendara tidak ditemukan!'
+                'message' => $userExists
+                    ? 'Kartu member RFID Anda belum dibuat oleh admin. Silakan tunggu pembuatan kartu member terlebih dahulu.'
+                    : 'Kartu RFID pengendara tidak ditemukan!'
             ], 404);
         }
 
@@ -708,40 +725,25 @@ class ClientApiController extends Controller
             ], 404);
         }
 
-        $userData = [
-            'id' => (int) $user->id,
-            'name' => (string) $user->name,
-            'email' => (string) $user->email,
-            'phone' => (string) ($user->phone ?? ''),
-            'avatar' => $user->avatar,
-            'avatar_url' => $user->avatar_url,
-            'can_change_name' => $user->can_change_name,
-            'name_changes_count' => (int) ($user->name_changes_count ?? 0),
-            'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
-            'role' => (string) $user->role,
-        ];
+        $card = $user->rfidCard;
+        $hasCard = $card !== null;
+        $pendingCard = $user->role === 'client' && !$hasCard;
+        $cardStatus = $hasCard ? (string) $card->status : 'pending_card';
 
-        $cardData = $user->rfidCard ? [
-            'id' => (int) $user->rfidCard->id,
-            'uid' => (string) $user->rfidCard->uid,
-            'license_plate' => (string) ($user->rfidCard->license_plate ?? '-'),
-            'balance' => (int) $user->rfidCard->balance,
-            'balance_formatted' => 'Rp ' . number_format($user->rfidCard->balance, 0, ',', '.'),
-            'status' => (string) $user->rfidCard->status,
-        ] : [
-            'id' => 0,
-            'uid' => '-',
-            'license_plate' => '-',
-            'balance' => 0,
-            'balance_formatted' => 'Rp 0',
-            'status' => 'inactive',
-        ];
+        $userData = $this->formatUserData($user, $card);
+        $cardData = $this->formatCardData($card, $user);
 
         return response()->json([
             'status' => 'success',
+            'has_card' => $hasCard,
+            'pending_card' => $pendingCard,
+            'card_status' => $cardStatus,
             'user' => $userData,
             'card' => $cardData,
             'data' => [
+                'has_card' => $hasCard,
+                'pending_card' => $pendingCard,
+                'card_status' => $cardStatus,
                 'user' => $userData,
                 'card' => $cardData,
             ]
@@ -944,28 +946,20 @@ class ClientApiController extends Controller
             }
         }
 
-        // 4. PLAT NOMOR KENDARAAN (Jika disertakan & user punya kartu)
-        if ($request->has('license_plate') && $user->rfidCard) {
-            $user->rfidCard->update([
-                'license_plate' => strtoupper(trim((string) $request->input('license_plate')))
-            ]);
+        // 4. PLAT NOMOR KENDARAAN (Simpan di user & kartu jika sudah dibuat)
+        if ($request->has('license_plate')) {
+            $plate = strtoupper(trim((string) $request->input('license_plate')));
+            $user->license_plate = $plate !== '' ? $plate : null;
+            if ($user->rfidCard) {
+                $user->rfidCard->update([
+                    'license_plate' => $user->license_plate,
+                ]);
+            }
         }
 
         $user->save();
 
-        $userData = [
-            'id' => (int) $user->id,
-            'name' => (string) $user->name,
-            'email' => (string) $user->email,
-            'phone' => (string) ($user->phone ?? ''),
-            'avatar' => $user->avatar,
-            'avatar_url' => $user->avatar_url,
-            'can_change_name' => $user->can_change_name,
-            'name_changes_count' => (int) ($user->name_changes_count ?? 0),
-            'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,
-            'role' => (string) $user->role,
-            'license_plate' => $user->rfidCard ? ($user->rfidCard->license_plate ?? '-') : '-',
-        ];
+        $userData = $this->formatUserData($user, $user->rfidCard);
 
         return response()->json([
             'status' => 'success',
@@ -1117,7 +1111,7 @@ class ClientApiController extends Controller
         \App\Models\AccessLog::create([
             'device_id' => $tx->device_in_id,
             'scan_uid' => $ticketCode,
-            'access_method' => 'mobile_app',
+            'access_method' => 'ticket',
             'status' => 'granted',
             'notes' => "Karcis Tiket #{$ticketCode} dibayar menggunakan saldo kartu RFID {$card->uid} oleh Member '{$user->name}'. Terpotong Rp " . number_format($totalFee, 0, ',', '.') . ", Sisa saldo: Rp " . number_format($balanceAfter, 0, ',', '.'),
             'created_at' => $now,
@@ -1252,13 +1246,21 @@ class ClientApiController extends Controller
                 $codeOrUid = $isTicket ? $t->ticket_code : ($t->card->license_plate ?? ($t->card->uid ?? '-'));
                 return [
                     'id' => (int) $t->id,
+                    'transaction_id' => (int) $t->id,
                     'ticket_code' => $t->ticket_code,
                     'is_ticket' => (bool) $isTicket,
                     'access_type' => $isTicket ? 'KARCIS' : 'RFID',
+                    'access_method' => $isTicket ? 'ticket' : 'rfid',
+                    'method' => $isTicket ? 'karcis' : 'rfid',
+                    'metode' => $isTicket ? 'Karcis' : 'RFID',
+                    'metode_transaksi' => $isTicket ? 'Karcis Parkir' : 'Kartu RFID',
+                    'metode_akses' => $isTicket ? 'Karcis' : 'RFID',
+                    'metode_pembayaran' => $isTicket ? 'Tunai di Kasir' : 'Potong Saldo Kartu RFID',
                     'parking_floor' => (int) ($t->parking_floor ?? 1),
                     'parking_floor_label' => ($t->parking_floor == 2) ? 'Lantai 2 (LT 2)' : 'Lantai 1 (LT 1)',
                     'name' => (string) $userName,
                     'user_name' => (string) $userName,
+                    'driver_name' => (string) $userName,
                     'code' => (string) $codeOrUid,
                     'license_plate' => (string) ($t->card->license_plate ?? ($isTicket ? 'Karcis' : '-')),
                     'plate_number' => (string) ($t->card->license_plate ?? ($isTicket ? 'Karcis' : '-')),
@@ -1276,7 +1278,10 @@ class ClientApiController extends Controller
                     'fee' => (int) ($t->total_fee ?? 0),
                     'amount' => (int) ($t->total_fee ?? 0),
                     'status' => (string) $t->status,
-                    'payment_method' => (string) ($t->payment_method ?? ($isTicket ? 'cash' : 'card')),
+                    'payment_method' => (string) ($isTicket ? 'cash' : ($t->payment_method ?? 'card')),
+                    'payment_method_label' => (string) ($isTicket ? 'Tunai di Kasir (Karcis)' : 'Potong Saldo Kartu RFID'),
+                    'payment_type' => (string) ($isTicket ? 'karcis' : 'rfid'),
+                    'type' => (string) ($isTicket ? 'karcis' : 'rfid'),
                     'gate_in_code' => (string) ($t->deviceIn ? $t->deviceIn->device_code : 'Gate In'),
                     'gate_out_code' => (string) ($t->deviceOut ? $t->deviceOut->device_code : 'Gate Out'),
                 ];
@@ -1595,29 +1600,45 @@ class ClientApiController extends Controller
             $userName = $isTicket ? 'Pengendara Umum' : ($t->user->name ?? 'Member');
             $codeOrUid = $isTicket ? $t->ticket_code : ($t->card->license_plate ?? ($t->card->uid ?? '-'));
             return [
-                'id' => $t->id,
+                'id' => (int) $t->id,
+                'transaction_id' => (int) $t->id,
                 'ticket_code' => $t->ticket_code,
-                'is_ticket' => $isTicket,
+                'is_ticket' => (bool) $isTicket,
                 'access_type' => $isTicket ? 'KARCIS' : 'RFID',
-                'parking_floor' => $t->parking_floor ?? 1,
+                'access_method' => $isTicket ? 'ticket' : 'rfid',
+                'method' => $isTicket ? 'karcis' : 'rfid',
+                'metode' => $isTicket ? 'Karcis' : 'RFID',
+                'metode_transaksi' => $isTicket ? 'Karcis Parkir' : 'Kartu RFID',
+                'metode_akses' => $isTicket ? 'Karcis' : 'RFID',
+                'metode_pembayaran' => $isTicket ? 'Tunai di Kasir' : 'Potong Saldo Kartu RFID',
+                'parking_floor' => (int) ($t->parking_floor ?? 1),
                 'parking_floor_label' => ($t->parking_floor == 2) ? 'Lantai 2 (LT 2)' : 'Lantai 1 (LT 1)',
-                'name' => $userName,
-                'user_name' => $userName,
-                'code' => $codeOrUid,
-                'license_plate' => $t->card->license_plate ?? ($isTicket ? 'Karcis' : '-'),
-                'uid' => $t->card->uid ?? ($isTicket ? $t->ticket_code : '-'),
+                'name' => (string) $userName,
+                'user_name' => (string) $userName,
+                'driver_name' => (string) $userName,
+                'code' => (string) $codeOrUid,
+                'license_plate' => (string) ($t->card->license_plate ?? ($isTicket ? 'Karcis' : '-')),
+                'plate_number' => (string) ($t->card->license_plate ?? ($isTicket ? 'Karcis' : '-')),
+                'plat_nomor' => (string) ($t->card->license_plate ?? ($isTicket ? 'Karcis' : '-')),
+                'uid' => (string) ($t->card->uid ?? ($isTicket ? $t->ticket_code : '-')),
                 'tap_in_time' => $t->tap_in_time ? Carbon::parse($t->tap_in_time)->toDateTimeString() : null,
                 'tap_out_time' => $t->tap_out_time ? Carbon::parse($t->tap_out_time)->toDateTimeString() : null,
                 'tap_in_formatted' => $t->tap_in_time ? Carbon::parse($t->tap_in_time)->format('d/m/Y H:i') : '-',
                 'tap_out_formatted' => $t->tap_out_time ? Carbon::parse($t->tap_out_time)->format('d/m/Y H:i') : '-',
-                'duration_minutes' => (int) $t->duration_minutes,
+                'duration_minutes' => (int) ($t->duration_minutes ?? 0),
+                'duration' => (int) ($t->duration_minutes ?? 0),
                 'duration_formatted' => $t->duration_minutes ? $t->duration_minutes . ' menit' : '-',
-                'total_fee' => (int) $t->total_fee,
+                'total_fee' => (int) ($t->total_fee ?? 0),
                 'total_fee_formatted' => 'Rp ' . number_format($t->total_fee ?? 0, 0, ',', '.'),
-                'status' => $t->status,
-                'payment_method' => $t->payment_method ?? ($isTicket ? 'cash' : 'card'),
-                'gate_in_code' => $t->deviceIn ? $t->deviceIn->device_code : 'Gate In',
-                'gate_out_code' => $t->deviceOut ? $t->deviceOut->device_code : 'Gate Out',
+                'fee' => (int) ($t->total_fee ?? 0),
+                'amount' => (int) ($t->total_fee ?? 0),
+                'status' => (string) $t->status,
+                'payment_method' => (string) ($isTicket ? 'cash' : ($t->payment_method ?? 'card')),
+                'payment_method_label' => (string) ($isTicket ? 'Tunai di Kasir (Karcis)' : 'Potong Saldo Kartu RFID'),
+                'payment_type' => (string) ($isTicket ? 'karcis' : 'rfid'),
+                'type' => (string) ($isTicket ? 'karcis' : 'rfid'),
+                'gate_in_code' => (string) ($t->deviceIn ? $t->deviceIn->device_code : 'Gate In'),
+                'gate_out_code' => (string) ($t->deviceOut ? $t->deviceOut->device_code : 'Gate Out'),
             ];
         });
 
