@@ -297,6 +297,13 @@ class ClientApiController extends Controller
         $user = null;
         if ($userId > 0) {
             $user = User::find($userId);
+            if (!$user && empty($uid)) {
+                return response()->json([
+                    'status' => 'error',
+                    'account_deleted' => true,
+                    'message' => 'Akun pendaftaran tidak ditemukan atau telah dihapus oleh admin.'
+                ], 404);
+            }
         }
         if (!$user && !empty($uid)) {
             $card = RfidCard::where('uid', $uid)->first();
@@ -721,7 +728,8 @@ class ClientApiController extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'User tidak ditemukan'
+                'account_deleted' => true,
+                'message' => 'User tidak ditemukan atau pendaftaran telah dihapus oleh admin.'
             ], 404);
         }
 
@@ -844,7 +852,8 @@ class ClientApiController extends Controller
         if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'User tidak ditemukan'
+                'account_deleted' => true,
+                'message' => 'User tidak ditemukan atau pendaftaran telah dihapus oleh admin.'
             ], 404);
         }
 

@@ -118,6 +118,16 @@ class MobileMemberRegistrationTest extends TestCase
                     'status' => 'active',
                 ],
             ]);
+
+        // 7. Polling profile juga mengembalikan has_card: true dan pending_card: false setelah di-ACC admin
+        $profileAfter = $this->getJson('/api/client/profile?user_id=' . $user->id);
+        $profileAfter->assertStatus(200)
+            ->assertJson([
+                'status' => 'success',
+                'has_card' => true,
+                'pending_card' => false,
+                'card_status' => 'active',
+            ]);
     }
 
     public function test_admin_can_delete_pending_mobile_member(): void
@@ -140,6 +150,14 @@ class MobileMemberRegistrationTest extends TestCase
         $response->assertRedirect(route('admin.cards.index'));
 
         $this->assertDatabaseMissing('users', ['id' => $pending->id]);
+
+        $this->getJson('/api/client/profile?user_id=' . $pending->id)
+            ->assertStatus(404)
+            ->assertJson(['status' => 'error', 'account_deleted' => true]);
+
+        $this->getJson('/api/client/status?user_id=' . $pending->id)
+            ->assertStatus(404)
+            ->assertJson(['status' => 'error', 'account_deleted' => true]);
     }
 }
 
