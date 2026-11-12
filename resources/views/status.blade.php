@@ -372,12 +372,12 @@
                                         <i class="bi bi-car-front-fill"></i>
                                     </span>
                                     <div>
-                                        <h6 class="fw-bold mb-0 text-white text-truncate" style="max-width: 150px;">\${escapeHtml(v.user_name)}</h6>
-                                        <small class="text-secondary font-monospace">UID: <span class="text-warning fw-bold">\${escapeHtml(v.uid)}</span></small>
+                                        <h6 class="fw-bold mb-0 text-white text-truncate" style="max-width: 150px;">${escapeHtml(v.user_name)}</h6>
+                                        <small class="text-secondary font-monospace">UID: <span class="text-warning fw-bold">${escapeHtml(v.uid)}</span></small>
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-1">
-                                    \${floorBadge}
+                                    ${floorBadge}
                                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle">PARKIR</span>
                                 </div>
                             </div>
@@ -386,13 +386,13 @@
                                 <div class="col-6">
                                     <div class="bg-black bg-opacity-50 p-2 rounded-3 border border-secondary border-opacity-25">
                                         <small class="text-secondary text-uppercase d-block" style="font-size: 0.7rem;">Durasi</small>
-                                        <div id="timer-\${v.id}" class="font-monospace fw-bold fs-6 text-white">00:00:00</div>
+                                        <div id="timer-${v.id}" class="font-monospace fw-bold fs-6 text-white">00:00:00</div>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="bg-primary-subtle p-2 rounded-3 border border-primary-subtle">
                                         <small class="text-primary text-uppercase d-block fw-semibold" style="font-size: 0.7rem;">Estimasi Biaya</small>
-                                        <div id="fee-\${v.id}" class="font-monospace fw-bold fs-6 text-primary">\${v.fee_formatted}</div>
+                                        <div id="fee-${v.id}" class="font-monospace fw-bold fs-6 text-primary">${escapeHtml(v.fee_formatted)}</div>
                                     </div>
                                 </div>
                             </div>
@@ -400,9 +400,9 @@
                             <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary border-opacity-25 small text-secondary">
                                 <div class="d-flex align-items-center gap-1">
                                     <i class="bi bi-box-arrow-in-right text-primary"></i>
-                                    <span>\${escapeHtml(v.gate_in)}</span>
+                                    <span>${escapeHtml(v.gate_in)}</span>
                                 </div>
-                                <span class="font-monospace text-light">Masuk: \${v.tap_in_formatted}</span>
+                                <span class="font-monospace text-light">Masuk: ${escapeHtml(v.tap_in_formatted)}</span>
                             </div>
                         </div>
                     `;
@@ -416,8 +416,8 @@
         function updateAllTimers() {
             const now = Date.now();
             liveVehicles.forEach(v => {
-                const elTimer = document.getElementById(`timer-\${v.id}`);
-                const elFee = document.getElementById(`fee-\${v.id}`);
+                const elTimer = document.getElementById(`timer-${v.id}`);
+                const elFee = document.getElementById(`fee-${v.id}`);
                 if (!elTimer) return;
 
                 const inTime = new Date(v.tap_in_time).getTime();
@@ -460,10 +460,13 @@
         }
 
         function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.innerText = text;
-            return div.innerHTML;
+            if (text === null || text === undefined) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
     </script>
 </body>

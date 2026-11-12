@@ -278,12 +278,12 @@
                                         <i class="bi bi-car-front-fill fs-6"></i>
                                     </span>
                                     <div>
-                                        <h6 class="fw-bold mb-0 text-dark">\${escapeHtml(v.user_name)}</h6>
-                                        <small class="text-muted font-monospace">UID: <strong>\${escapeHtml(v.uid)}</strong></small>
+                                        <h6 class="fw-bold mb-0 text-dark">${escapeHtml(v.user_name)}</h6>
+                                        <small class="text-muted font-monospace">UID: <strong>${escapeHtml(v.uid)}</strong></small>
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-1">
-                                    \${floorBadge}
+                                    ${floorBadge}
                                     <span class="badge bg-success-subtle text-success border border-success-subtle">PARKED</span>
                                 </div>
                             </div>
@@ -292,13 +292,13 @@
                                 <div class="col-6">
                                     <div class="p-2 rounded-3 bg-light border">
                                         <small class="text-secondary text-uppercase d-block" style="font-size: 0.7rem;">Durasi Parkir</small>
-                                        <div id="adm-timer-\${v.id}" class="font-monospace fw-bold fs-6 text-dark">00:00:00</div>
+                                        <div id="adm-timer-${v.id}" class="font-monospace fw-bold fs-6 text-dark">00:00:00</div>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="p-2 rounded-3 bg-primary-subtle border border-primary-subtle">
                                         <small class="text-primary text-uppercase d-block fw-semibold" style="font-size: 0.7rem;">Estimasi Tarif</small>
-                                        <div id="adm-fee-\${v.id}" class="font-monospace fw-bold fs-6 text-primary">\${v.fee_formatted}</div>
+                                        <div id="adm-fee-${v.id}" class="font-monospace fw-bold fs-6 text-primary">${escapeHtml(v.fee_formatted)}</div>
                                     </div>
                                 </div>
                             </div>
@@ -306,14 +306,16 @@
                             <div class="d-flex align-items-center justify-content-between small text-muted pb-3 mb-3 border-bottom">
                                 <div class="d-flex align-items-center gap-1">
                                     <i class="bi bi-box-arrow-in-right text-primary"></i>
-                                    <span>\${escapeHtml(v.gate_in)}</span>
+                                    <span>${escapeHtml(v.gate_in)}</span>
                                 </div>
-                                <span class="font-monospace">Masuk: <strong>\${v.tap_in_formatted}</strong></span>
+                                <span class="font-monospace">Masuk: <strong>${escapeHtml(v.tap_in_formatted)}</strong></span>
                             </div>
                         </div>
 
-                        <button type="button" 
-                                onclick="checkoutManualAdmin('\${escapeHtml(v.uid)}', '\${escapeHtml(v.user_name)}', this)"
+                        <button type="button"
+                                data-uid="${escapeHtml(v.uid)}"
+                                data-name="${escapeHtml(v.user_name)}"
+                                onclick="checkoutManualAdmin(this.dataset.uid, this.dataset.name, this)"
                                 class="btn btn-outline-danger btn-sm w-full py-2 rounded-3 d-flex align-items-center justify-content-center gap-2 btn-selesai-status">
                             <i class="bi bi-box-arrow-right"></i>
                             <span>Selesaikan Parkir</span>
@@ -336,7 +338,7 @@
             return;
         }
 
-        if (!confirm(`Selesaikan parkir untuk "\${userName}" (UID: \${uid})?\n\nOpsi ini digunakan jika gerbang keluar atau sensor RFID mengalami kendala.`)) {
+        if (!confirm(`Selesaikan parkir untuk "${userName}" (UID: ${uid})?\n\nOpsi ini digunakan jika gerbang keluar atau sensor RFID mengalami kendala.`)) {
             return;
         }
 
@@ -399,9 +401,9 @@
     function updateAdminTimers() {
         const now = Date.now();
         adminVehicles.forEach(v => {
-            const elTimer = document.getElementById(`adm-timer-\${v.id}`);
-            const elFee = document.getElementById(`adm-fee-\${v.id}`);
-            const elHours = document.getElementById(`adm-hours-\${v.id}`);
+            const elTimer = document.getElementById(`adm-timer-${v.id}`);
+            const elFee = document.getElementById(`adm-fee-${v.id}`);
+            const elHours = document.getElementById(`adm-hours-${v.id}`);
             if (!elTimer) return;
 
             const inTime = new Date(v.tap_in_time).getTime();
@@ -432,10 +434,13 @@
     fetchAdminParkingStatus();
 
     function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.innerText = text;
-        return div.innerHTML;
+        if (text === null || text === undefined) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 </script>
 @endpush

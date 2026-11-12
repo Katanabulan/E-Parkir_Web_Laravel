@@ -7,12 +7,14 @@ use App\Models\User;
 use App\Models\RfidCard;
 use App\Models\ParkingTransaction;
 use App\Models\Device;
+use App\Services\GoogleAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use InvalidArgumentException;
 
 class ClientApiController extends Controller
 {
@@ -36,6 +38,11 @@ class ClientApiController extends Controller
                 return $this->login($request);
             case 'register':
                 return $this->register($request);
+            case 'google':
+            case 'google_login':
+            case 'google_register':
+            case 'google_auth':
+                return $this->googleAuth($request);
             case 'profile':
                 return $this->profile($request);
             case 'slots':
@@ -235,6 +242,124 @@ class ClientApiController extends Controller
         ], 201);
     }
 
+    /**
+     * 2B. LOGIN / REGISTER VIA GOOGLE API MOBILE (id_token / access_token)
+     */
+    public function googleAuth(Request $request): JsonResponse
+    {
+        if ($request->isMethod('OPTIONS')) {
+            return response()->json(['status' => 'ok'], 200);
+        }
+
+        $idToken = trim((string) ($request->input('id_token') ?? $request->input('idToken') ?? $request->input('credential') ?? ''));
+        $accessToken = trim((string) ($request->input('access_token') ?? $request->input('accessToken') ?? ''));
+
+        if ($idToken === '' && $accessToken === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Token Google (id_token atau access_token) wajib dikirim!'
+            ], 400);
+        }
+
+        try {
+            $googleUser = app(GoogleAuthService::class)->verifyMobileToken($idToken, $accessToken);
+        } catch (InvalidArgumentException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 401);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memverifikasi akun Google. Silakan coba lagi.',
+            ], 401);
+        }
+
+        $phone = trim((string) $request->input('phone', ''));
+        $licensePlate = strtoupper(trim((string) $request->input('license_plate', '')));
+
+        $user = User::where('google_id', $googleUser['google_id'])
+            ->orWhereRaw('LOWER(email) = ?', [$googleUser['email']])
+            ->first();
+
+        $isNewUser = false;
+
+        if ($user) {
+            $updates = [];
+            if (empty($user->google_id)) {
+                $updates['google_id'] = $googleUser['google_id'];
+            }
+            if (empty($user->avatar) && !empty($googleUser['avatar'])) {
+                $updates['avatar'] = $googleUser['avatar'];
+            }
+            if (empty($user->phone) && $phone !== '') {
+                $updates['phone'] = $phone;
+            }
+            if (empty($user->license_plate) && $licensePlate !== '') {
+                $updates['license_plate'] = $licensePlate;
+            }
+            if (!empty($updates)) {
+                $user->update($updates);
+            }
+        } else {
+            $isNewUser = true;
+            $user = User::create([
+                'name' => $googleUser['name'],
+                'email' => $googleUser['email'],
+                'google_id' => $googleUser['google_id'],
+                'auth_provider' => 'google',
+                'avatar' => $googleUser['avatar'],
+                'phone' => $phone !== '' ? $phone : null,
+                'license_plate' => $licensePlate !== '' ? $licensePlate : null,
+                'role' => 'client',
+                'password' => Hash::make(Str::random(32)),
+            ]);
+        }
+
+        $card = RfidCard::where('user_id', $user->id)->first();
+        $message = $isNewUser
+            ? 'Pendaftaran dengan Google berhasil! Data Anda telah masuk ke admin untuk pembuatan kartu member RFID.'
+            : 'Login dengan Google berhasil!';
+
+        return $this->buildAuthResponse($user, $card, $message, $isNewUser ? 201 : 200, [
+            'is_new_user' => $isNewUser,
+            'auth_provider' => 'google',
+        ]);
+    }
+
+    private function buildAuthResponse(User $user, ?RfidCard $card, string $message, int $statusCode = 200, array $extra = []): JsonResponse
+    {
+        $hasCard = $card !== null;
+        $pendingCard = $user->role === 'client' && !$hasCard;
+        $cardStatus = $hasCard ? (string) $card->status : 'pending_card';
+
+        $userData = $this->formatUserData($user, $card);
+        $cardData = $this->formatCardData($card, $user);
+        $token = base64_encode($user->id . '|' . $user->email . '|' . time());
+
+        $payload = array_merge([
+            'status' => 'success',
+            'message' => $message,
+            'token' => $token,
+            'has_card' => $hasCard,
+            'pending_card' => $pendingCard,
+            'card_status' => $cardStatus,
+            'user' => $userData,
+            'card' => $cardData,
+        ], $extra);
+
+        $payload['data'] = array_merge([
+            'token' => $token,
+            'has_card' => $hasCard,
+            'pending_card' => $pendingCard,
+            'card_status' => $cardStatus,
+            'user' => $userData,
+            'card' => $cardData,
+        ], $extra);
+
+        return response()->json($payload, $statusCode);
+    }
+
     private function formatUserData(User $user, ?RfidCard $card = null): array
     {
         return [
@@ -245,6 +370,7 @@ class ClientApiController extends Controller
             'license_plate' => (string) ($card?->license_plate ?? $user->license_plate ?? '-'),
             'avatar' => $user->avatar,
             'avatar_url' => $user->avatar_url,
+            'auth_provider' => (string) ($user->auth_provider ?? 'local'),
             'can_change_name' => $user->can_change_name,
             'name_changes_count' => (int) ($user->name_changes_count ?? 0),
             'name_changed_at' => $user->name_changed_at ? $user->name_changed_at->format('Y-m-d H:i:s') : null,

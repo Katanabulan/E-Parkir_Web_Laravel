@@ -474,18 +474,12 @@
                         </small>
                     </div>
 
-                    <div class="row g-2 mb-4">
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold text-secondary">Status Kartu</label>
-                            <select name="status" class="form-select">
-                                <option value="active">AKTIF</option>
-                                <option value="blocked">DIBLOKIR</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold text-secondary">Saldo Awal (Rp)</label>
-                            <input type="number" name="balance" value="50000" min="0" step="5000" class="form-control font-monospace">
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold text-secondary">Status Kartu</label>
+                        <select name="status" class="form-select">
+                            <option value="active">AKTIF</option>
+                            <option value="blocked">DIBLOKIR</option>
+                        </select>
                     </div>
 
                     <div class="d-flex gap-2">

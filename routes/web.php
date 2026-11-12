@@ -20,6 +20,10 @@ $registerCompatibilityRoutes = function () {
     Route::prefix('client')->group(function () {
         Route::match(['get', 'post'], '/login', [ClientApiController::class, 'login']);
         Route::match(['get', 'post'], '/register', [ClientApiController::class, 'register']);
+        Route::match(['get', 'post', 'options'], '/google', [ClientApiController::class, 'googleAuth']);
+        Route::match(['get', 'post', 'options'], '/google_login', [ClientApiController::class, 'googleAuth']);
+        Route::match(['get', 'post', 'options'], '/google_register', [ClientApiController::class, 'googleAuth']);
+        Route::match(['get', 'post', 'options'], '/google_auth', [ClientApiController::class, 'googleAuth']);
         Route::match(['get', 'post'], '/profile', [ClientApiController::class, 'profile']);
         Route::match(['get', 'post'], '/update_profile', [ClientApiController::class, 'updateProfile']);
         Route::match(['get', 'post'], '/status', [ClientApiController::class, 'status']);
@@ -48,6 +52,8 @@ Route::get('/', function () {
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/status', [PublicStatusController::class, 'index'])->name('status');
 Route::get('/status.php', [PublicStatusController::class, 'index']);
@@ -69,6 +75,10 @@ Route::prefix('client')->group(function () {
     Route::match(['get', 'post'], '/api_status.php', [ClientApiController::class, 'handle']);
     Route::match(['get', 'post'], '/login', [ClientApiController::class, 'login']);
     Route::match(['get', 'post'], '/register', [ClientApiController::class, 'register']);
+    Route::match(['get', 'post', 'options'], '/google', [ClientApiController::class, 'googleAuth']);
+    Route::match(['get', 'post', 'options'], '/google_login', [ClientApiController::class, 'googleAuth']);
+    Route::match(['get', 'post', 'options'], '/google_register', [ClientApiController::class, 'googleAuth']);
+    Route::match(['get', 'post', 'options'], '/google_auth', [ClientApiController::class, 'googleAuth']);
     Route::match(['get', 'post'], '/profile', [ClientApiController::class, 'profile']);
     Route::match(['get', 'post'], '/update_profile', [ClientApiController::class, 'updateProfile']);
     Route::match(['get', 'post'], '/status', [ClientApiController::class, 'status']);

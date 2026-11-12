@@ -33,7 +33,7 @@ class PublicStatusController extends Controller
 
             $vehicles = $parkedRows->map(function ($r) use ($now) {
                 $inTime = $r->tap_in_time ? Carbon::parse($r->tap_in_time) : $now;
-                $diffSeconds = max(0, $now->diffInSeconds($inTime));
+                $diffSeconds = max(0, $inTime->diffInSeconds($now));
                 $diffMinutes = max(1, (int) ceil($diffSeconds / 60));
                 $billedHours = max(1, (int) ceil($diffMinutes / 60));
                 $fee = $billedHours * self::RATE_PER_HOUR;

@@ -70,7 +70,7 @@ class CardController extends Controller
         $avatar = trim($request->input('avatar', ''));
         $password = trim($request->input('password', ''));
         $status = in_array($request->input('status'), ['active', 'blocked']) ? $request->input('status') : 'active';
-        $balance = max(0, (int) $request->input('balance', 50000));
+        $balance = max(0, (int) $request->input('balance', 0));
 
         if (empty($uid)) {
             return redirect()->route('admin.cards.index')->with('error', 'UID Kartu RFID wajib diisi!');
@@ -156,7 +156,11 @@ class CardController extends Controller
             ]);
         });
 
-        return redirect()->route('admin.cards.index')->with('success', "Kartu RFID '{$card->uid}' berhasil dibuatkan untuk {$name} dengan saldo awal Rp " . number_format($balance, 0, ',', '.') . "!");
+        $successMessage = $balance > 0
+            ? "Kartu RFID '{$card->uid}' berhasil dibuatkan untuk {$name} dengan saldo awal Rp " . number_format($balance, 0, ',', '.') . "!"
+            : "Kartu RFID '{$card->uid}' berhasil dibuatkan untuk {$name}!";
+
+        return redirect()->route('admin.cards.index')->with('success', $successMessage);
     }
 
     public function update(Request $request, $id)
