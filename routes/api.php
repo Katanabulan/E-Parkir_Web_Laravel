@@ -20,6 +20,9 @@ Route::match(['get', 'post'], '/override.php', [OverrideController::class, 'over
 Route::match(['get', 'post'], '/telemetry', [TelemetryController::class, 'telemetry']);
 Route::match(['get', 'post'], '/telemetry.php', [TelemetryController::class, 'telemetry']);
 
+// Root API dispatcher (mendukung request langsung ke /api?action=...)
+Route::any('/', [ClientApiController::class, 'handle']);
+
 // Mobile Client API (Dispatcher fleksibel + Sub-rute eksplisit)
 Route::any('/client', [ClientApiController::class, 'handle']);
 Route::any('/client.php', [ClientApiController::class, 'handle']);
@@ -35,10 +38,16 @@ Route::match(['get', 'post', 'options'], '/client/status', [ClientApiController:
 Route::match(['get', 'post', 'options'], '/client/slots', [ClientApiController::class, 'slots']);
 Route::match(['get', 'post', 'options'], '/client/history', [ClientApiController::class, 'history']);
 Route::match(['get', 'post', 'options'], '/client/topup', [ClientApiController::class, 'topup']);
+Route::match(['get', 'post', 'options'], '/client/check_ticket', [ClientApiController::class, 'checkTicket']);
+Route::match(['get', 'post', 'options'], '/client/pay_ticket', [ClientApiController::class, 'payTicket']);
 Route::match(['get', 'post', 'options'], '/client/owner_dashboard', [ClientApiController::class, 'ownerDashboard']);
 Route::match(['get', 'post', 'options'], '/client/dashboard', [ClientApiController::class, 'ownerDashboard']);
 Route::match(['get', 'post', 'options'], '/client/owner_reports', [ClientApiController::class, 'ownerReports']);
 Route::match(['get', 'post', 'options'], '/client/reports', [ClientApiController::class, 'ownerReports']);
+
+// Direct routes for Ticket & Owner
+Route::match(['get', 'post', 'options'], '/check_ticket', [ClientApiController::class, 'checkTicket']);
+Route::match(['get', 'post', 'options'], '/pay_ticket', [ClientApiController::class, 'payTicket']);
 
 // Direct routes for Owner & Reporting
 Route::match(['get', 'post', 'options'], '/owner/dashboard', [ClientApiController::class, 'ownerDashboard']);

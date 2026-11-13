@@ -282,6 +282,52 @@ class ClientApiController extends Controller
             ->orWhereRaw('LOWER(email) = ?', [$googleUser['email']])
             ->first();
 
+        // Validasi Mode Google:
+        // - 'login': HANYA untuk akun yang sudah terdaftar di sistem
+        // - 'register': HANYA untuk akun baru yang belum terdaftar di sistem
+        // - Di luar kedua mode tersebut tidak diperbolehkan
+        $mode = strtolower(trim((string) ($request->input('mode') ?? '')));
+        if ($mode === '') {
+            $action = strtolower(trim((string) ($request->input('action') ?? '')));
+            if ($action === 'google_login' || $action === 'login') {
+                $mode = 'login';
+            } elseif ($action === 'google_register' || $action === 'register') {
+                $mode = 'register';
+            } elseif ($request->is('*google_login*') || $request->is('*client/login*')) {
+                $mode = 'login';
+            } elseif ($request->is('*google_register*') || $request->is('*client/register*')) {
+                $mode = 'register';
+            } elseif ($request->has('phone') || $request->has('license_plate')) {
+                $mode = 'register';
+            }
+        }
+
+        if ($mode !== 'login' && $mode !== 'register') {
+            return response()->json([
+                'status' => 'error',
+                'code' => 'INVALID_AUTH_MODE',
+                'message' => 'Mode autentikasi Google tidak valid. Hanya diperbolehkan mode "login" (untuk akun yang sudah terdaftar) atau "register" (untuk akun baru yang belum terdaftar).'
+            ], 422);
+        }
+
+        if ($mode === 'login') {
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 'ACCOUNT_NOT_FOUND',
+                    'message' => 'Akun Google ini belum terdaftar. Fitur Masuk hanya untuk akun yang sudah punya akun. Silakan lakukan pendaftaran terlebih dahulu melalui menu Daftar.'
+                ], 404);
+            }
+        } elseif ($mode === 'register') {
+            if ($user) {
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 'ACCOUNT_ALREADY_EXISTS',
+                    'message' => 'Akun Google ini sudah terdaftar. Fitur Daftar hanya untuk yang belum punya akun. Silakan masuk melalui menu Masuk.'
+                ], 409);
+            }
+        }
+
         $isNewUser = false;
 
         if ($user) {

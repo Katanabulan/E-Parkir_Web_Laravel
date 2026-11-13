@@ -122,6 +122,102 @@ class GoogleAuthTest extends TestCase
         $this->assertSame('https://lh3.googleusercontent.com/a/avatar-siti', $user->avatar);
     }
 
+    public function test_mobile_google_login_rejects_unregistered_account(): void
+    {
+        config([
+            'services.google.client_id' => 'test-web-client-id.apps.googleusercontent.com',
+            'services.google.allowed_client_ids' => [],
+        ]);
+
+        Http::fake([
+            'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
+                'aud' => 'test-web-client-id.apps.googleusercontent.com',
+                'email' => 'unknown.user@gmail.com',
+                'email_verified' => 'true',
+                'sub' => 'google-sub-unknown',
+                'name' => 'Unknown User',
+            ], 200),
+        ]);
+
+        // Menggunakan mode: login atau action: google_login saat user belum ada
+        $response = $this->postJson('/api/client?action=google_login', [
+            'id_token' => 'fake-token-unknown',
+            'mode' => 'login',
+        ]);
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'status' => 'error',
+                'code' => 'ACCOUNT_NOT_FOUND',
+            ]);
+    }
+
+    public function test_mobile_google_register_rejects_already_registered_account(): void
+    {
+        config([
+            'services.google.client_id' => 'test-web-client-id.apps.googleusercontent.com',
+            'services.google.allowed_client_ids' => [],
+        ]);
+
+        User::create([
+            'name' => 'Existing Member',
+            'email' => 'existing@gmail.com',
+            'password' => Hash::make('secret123'),
+            'role' => 'client',
+        ]);
+
+        Http::fake([
+            'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
+                'aud' => 'test-web-client-id.apps.googleusercontent.com',
+                'email' => 'existing@gmail.com',
+                'email_verified' => 'true',
+                'sub' => 'google-sub-existing',
+                'name' => 'Existing Member',
+            ], 200),
+        ]);
+
+        // Menggunakan mode: register atau action: google_register saat user sudah ada
+        $response = $this->postJson('/api/client?action=google_register', [
+            'id_token' => 'fake-token-existing',
+            'mode' => 'register',
+        ]);
+
+        $response->assertStatus(409)
+            ->assertJson([
+                'status' => 'error',
+                'code' => 'ACCOUNT_ALREADY_EXISTS',
+            ]);
+    }
+
+    public function test_mobile_google_rejects_invalid_or_missing_mode(): void
+    {
+        config([
+            'services.google.client_id' => 'test-web-client-id.apps.googleusercontent.com',
+            'services.google.allowed_client_ids' => [],
+        ]);
+
+        Http::fake([
+            'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
+                'aud' => 'test-web-client-id.apps.googleusercontent.com',
+                'email' => 'random@gmail.com',
+                'email_verified' => 'true',
+                'sub' => 'google-sub-random',
+                'name' => 'Random User',
+            ], 200),
+        ]);
+
+        $response = $this->postJson('/api/client/google', [
+            'id_token' => 'fake-token-random',
+            'mode' => 'invalid_mode',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'status' => 'error',
+                'code' => 'INVALID_AUTH_MODE',
+            ]);
+    }
+
     public function test_mobile_google_rejects_missing_or_invalid_token(): void
     {
         $missing = $this->postJson('/api/client/google', []);
