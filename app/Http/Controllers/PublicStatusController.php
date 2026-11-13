@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ParkingTransaction;
 use App\Models\Device;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class PublicStatusController extends Controller
@@ -59,17 +60,21 @@ class PublicStatusController extends Controller
                 ];
             });
 
-            // Status ESP8266
+            // Status ESP8266 (dinamis via IP Router/DHCP + heartbeat)
+            $espIp = Cache::get('esp8266_last_ip');
             $isEspOnline = false;
-            $fp = @fsockopen('192.168.4.1', 80, $errno, $errstr, 0.2);
-            if ($fp) {
-                $isEspOnline = true;
-                fclose($fp);
-                Device::whereIn('device_code', ['Gate-01', 'GATE_MASUK_01'])->update([
-                    'status' => 'online',
-                    'last_seen' => now()
-                ]);
-            } else {
+            if ($espIp) {
+                $fp = @fsockopen($espIp, 80, $errno, $errstr, 0.2);
+                if ($fp) {
+                    $isEspOnline = true;
+                    fclose($fp);
+                    Device::whereIn('device_code', ['Gate-01', 'GATE_MASUK_01'])->update([
+                        'status' => 'online',
+                        'last_seen' => now()
+                    ]);
+                }
+            }
+            if (!$isEspOnline) {
                 $gate = Device::whereIn('device_code', ['Gate-01', 'GATE_MASUK_01'])->first();
                 if ($gate && $gate->last_seen) {
                     $sec = Carbon::parse($gate->last_seen)->diffInSeconds(now());
@@ -86,6 +91,7 @@ class PublicStatusController extends Controller
             return response()->json([
                 'status' => 'success',
                 'server_time' => date('Y-m-d H:i:s'),
+                'server_ip' => request()->server('SERVER_ADDR', request()->getHost()),
                 'has_vehicles' => $parkedCount > 0,
                 'parked_count' => $parkedCount,
                 'parked_lt1' => $parkedLt1,
@@ -95,6 +101,7 @@ class PublicStatusController extends Controller
                 'capacity' => $totalCapacity,
                 'available_slots' => $availableSlots,
                 'esp_online' => $isEspOnline,
+                'esp_ip' => $espIp,
                 'today_in' => $todayIn,
                 'today_out' => $todayOut,
                 'vehicles' => $vehicles

@@ -410,11 +410,12 @@ Memuat struk parkir...
         document.getElementById('current-device-display').textContent = 'Device: ' + dev;
     }
 
-    async function pingEspWifi() {
+    async function pingEspWifi(espIp) {
+        if (!espIp) return false;
         try {
             const ctrl = new AbortController();
             const tid = setTimeout(() => ctrl.abort(), 2000);
-            await fetch('http://192.168.4.1/api/status', {
+            await fetch(`http://${espIp}/api/status`, {
                 method: 'GET',
                 mode: 'no-cors',
                 cache: 'no-store',
@@ -426,12 +427,38 @@ Memuat struk parkir...
         return false;
     }
 
+    let lastSyncedBackendIp = null;
+
+    async function syncBackendIpToEsp(espIp, serverIp) {
+        if (!espIp || !serverIp || serverIp === '127.0.0.1' || serverIp === 'localhost' || lastSyncedBackendIp === serverIp) return;
+        try {
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), 2500);
+            await fetch(`http://${espIp}/api/set_backend?ip=${encodeURIComponent(serverIp)}`, {
+                method: 'GET',
+                mode: 'no-cors',
+                cache: 'no-store',
+                signal: ctrl.signal
+            });
+            clearTimeout(tid);
+            lastSyncedBackendIp = serverIp;
+            console.log(`[IoT Auto-Sync] Berhasil memperbarui backend host ESP8266 ke: ${serverIp}`);
+        } catch (e) {
+            console.warn('[IoT Auto-Sync] Gagal push backend IP ke ESP:', e);
+        }
+    }
+
     async function checkHardwareSync() {
         try {
-            const [statsRes, isWifiDirect] = await Promise.all([
-                fetch('{{ route('admin.api.stats') }}').then(r => r.json()).catch(() => null),
-                pingEspWifi()
-            ]);
+            const statsRes = await fetch('{{ route('admin.api.stats') }}').then(r => r.json()).catch(() => null);
+            const isWifiDirect = (statsRes && statsRes.esp_ip) ? await pingEspWifi(statsRes.esp_ip) : false;
+
+            if (statsRes && statsRes.esp_ip) {
+                const targetServerIp = (statsRes.server_ip && statsRes.server_ip !== '127.0.0.1' && statsRes.server_ip !== '::1') 
+                    ? statsRes.server_ip 
+                    : window.location.hostname;
+                syncBackendIpToEsp(statsRes.esp_ip, targetServerIp);
+            }
 
             const badge = document.getElementById('esp-status-badge');
             if (badge) {

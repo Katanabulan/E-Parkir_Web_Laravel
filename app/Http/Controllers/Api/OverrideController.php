@@ -7,6 +7,7 @@ use App\Models\Device;
 use App\Models\AccessLog;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class OverrideController extends Controller
 {
@@ -19,6 +20,14 @@ class OverrideController extends Controller
 
         // 1. POLLING DARI ESP8266 (Memeriksa apakah ada perintah buka darurat)
         if ($isCheck) {
+            $clientIp = $request->ip();
+            if ($clientIp && !in_array($clientIp, ['127.0.0.1', '::1'])) {
+                Cache::put('esp8266_last_ip', $clientIp, now()->addMinutes(5));
+                if (!empty($deviceCode)) {
+                    Cache::put("esp8266_ip_{$deviceCode}", $clientIp, now()->addMinutes(5));
+                }
+            }
+
             Device::where('device_code', $deviceCode ?: 'Gate-01')
                 ->orWhereIn('device_code', ['Gate-01', 'GATE_MASUK_01'])
                 ->update(['status' => 'online', 'last_seen' => now()]);

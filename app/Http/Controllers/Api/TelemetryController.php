@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Device;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class TelemetryController extends Controller
 {
@@ -22,6 +23,12 @@ class TelemetryController extends Controller
 
         if (!$device) {
             return response()->json(['status' => 'error', 'message' => 'Device tidak ditemukan'], 404);
+        }
+
+        $clientIp = $request->ip();
+        if ($clientIp && !in_array($clientIp, ['127.0.0.1', '::1'])) {
+            Cache::put('esp8266_last_ip', $clientIp, now()->addMinutes(5));
+            Cache::put("esp8266_ip_{$deviceCode}", $clientIp, now()->addMinutes(5));
         }
 
         $device->update([

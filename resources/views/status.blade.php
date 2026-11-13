@@ -254,11 +254,12 @@
         setInterval(updateDigitalClock, 1000);
         updateDigitalClock();
 
-        async function pingEspWifi() {
+        async function pingEspWifi(espIp) {
+            if (!espIp) return false;
             try {
                 const ctrl = new AbortController();
                 const tid = setTimeout(() => ctrl.abort(), 2000);
-                await fetch('http://192.168.4.1/api/status', {
+                await fetch(`http://${espIp}/api/status`, {
                     method: 'GET',
                     mode: 'no-cors',
                     cache: 'no-store',
@@ -270,15 +271,38 @@
             return false;
         }
 
+        let lastSyncedBackendIp = null;
+        async function syncBackendIpToEsp(espIp, serverIp) {
+            if (!espIp || !serverIp || serverIp === '127.0.0.1' || serverIp === 'localhost' || lastSyncedBackendIp === serverIp) return;
+            try {
+                const ctrl = new AbortController();
+                const tid = setTimeout(() => ctrl.abort(), 2500);
+                await fetch(`http://${espIp}/api/set_backend?ip=${encodeURIComponent(serverIp)}`, {
+                    method: 'GET',
+                    mode: 'no-cors',
+                    cache: 'no-store',
+                    signal: ctrl.signal
+                });
+                clearTimeout(tid);
+                lastSyncedBackendIp = serverIp;
+            } catch (e) {}
+        }
+
         async function fetchParkingStatus() {
             try {
-                const [resAjax, isWifiDirect] = await Promise.all([
-                    fetch('{{ url("status") }}?ajax=1').then(r => r.json()).catch(() => null),
-                    pingEspWifi()
-                ]);
+                const resAjax = await fetch('{{ url("status") }}?ajax=1').then(r => r.json()).catch(() => null);
 
                 if (resAjax && resAjax.status === 'success') {
+                    const isWifiDirect = resAjax.esp_ip ? await pingEspWifi(resAjax.esp_ip) : false;
                     resAjax.esp_online = isWifiDirect || resAjax.esp_online;
+
+                    if (resAjax.esp_ip) {
+                        const targetServerIp = (resAjax.server_ip && resAjax.server_ip !== '127.0.0.1' && resAjax.server_ip !== '::1') 
+                            ? resAjax.server_ip 
+                            : window.location.hostname;
+                        syncBackendIpToEsp(resAjax.esp_ip, targetServerIp);
+                    }
+
                     renderDashboard(resAjax);
                 }
             } catch (err) {

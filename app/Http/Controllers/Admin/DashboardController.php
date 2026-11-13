@@ -9,6 +9,7 @@ use App\Models\RfidCard;
 use App\Models\AccessLog;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -78,16 +79,28 @@ class DashboardController extends Controller
         $todayTotalIn = ParkingTransaction::whereDate('tap_in_time', $today)->count();
         $activeCardsCount = RfidCard::where('status', 'active')->count();
 
-        // ESP8266 check
+        // ESP8266 check (dinamis via IP Router/DHCP + heartbeat)
+        $espIp = Cache::get('esp8266_last_ip');
         $isEspReachable = false;
-        $fp = @fsockopen('192.168.4.1', 80, $errno, $errstr, 0.3);
-        if ($fp) {
-            $isEspReachable = true;
-            fclose($fp);
-            Device::whereIn('device_code', ['Gate-01', 'GATE_MASUK_01'])->update([
-                'status' => 'online',
-                'last_seen' => now()
-            ]);
+        if ($espIp) {
+            $fp = @fsockopen($espIp, 80, $errno, $errstr, 0.3);
+            if ($fp) {
+                $isEspReachable = true;
+                fclose($fp);
+                Device::whereIn('device_code', ['Gate-01', 'GATE_MASUK_01'])->update([
+                    'status' => 'online',
+                    'last_seen' => now()
+                ]);
+            }
+        }
+        if (!$isEspReachable) {
+            $gate = Device::whereIn('device_code', ['Gate-01', 'GATE_MASUK_01'])->first();
+            if ($gate && $gate->last_seen) {
+                $sec = Carbon::parse($gate->last_seen)->diffInSeconds(now());
+                if ($sec <= 25) {
+                    $isEspReachable = true;
+                }
+            }
         }
 
         $devices = Device::orderBy('id', 'asc')->get();
@@ -152,7 +165,10 @@ class DashboardController extends Controller
         return response()->json([
             'status' => 'success',
             'server_time' => date('Y-m-d H:i:s'),
+            'server_ip' => request()->server('SERVER_ADDR', request()->getHost()),
+            'client_ip' => request()->ip(),
             'esp_online' => $isEspReachable,
+            'esp_ip' => $espIp,
             'metrics' => [
                 'parked_count' => $parkedCount,
                 'parked_lt1' => $parkedLt1,

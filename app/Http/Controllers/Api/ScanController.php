@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use App\Services\ReceiptPrinterService;
 
 class ScanController extends Controller
@@ -77,6 +78,10 @@ class ScanController extends Controller
         }
 
         // Perbarui status device dan last_seen
+        $clientIp = $request->ip();
+        if ($clientIp && !in_array($clientIp, ['127.0.0.1', '::1'])) {
+            Cache::put('esp8266_last_ip', $clientIp, now()->addMinutes(5));
+        }
         $device->update([
             'status' => 'online',
             'last_seen' => now(),
@@ -522,9 +527,10 @@ class ScanController extends Controller
         // 5.1 Jika request datang dari Web Simulator (bukan tombol fisik ESP8266),
         // picu manual_override = 2 (tipe tiket dengan jeda pengambilan karcis)
         // agar ESP8266 memberi jeda 4.5 detik untuk ambil tiket sebelum palang fisik dibuka.
+        $cachedEspIp = Cache::get('esp8266_last_ip');
         $isFromHardwareEsp = $request->input('scan_uid') === 'TICKET_BUTTON' 
             || $request->input('access_method') === 'esp8266'
-            || $request->ip() === '192.168.4.1';
+            || ($cachedEspIp && $request->ip() === $cachedEspIp);
 
         if (!$isFromHardwareEsp) {
             Device::whereIn('device_code', [$device->device_code, 'Gate-01', 'GATE_MASUK_01'])
