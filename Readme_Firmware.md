@@ -31,7 +31,8 @@ ESP8266 beroperasi dalam mode `WIFI_STA` (terhubung ke router Wi-Fi yang sama de
 * **Port Web Server ESP:** `80`
 
 ### B. Target Backend Server (Laptop)
-* **Host Backend (`backend_host`):** `192.168.4.158` (port `80`, sesuaikan dengan IPv4 laptop pada jaringan router lewat `ipconfig`)
+* **Host Backend (`backend_host`):** `192.168.4.158` (IP awal di jaringan router, otomatis diperbarui secara dinamis via REST API `/api/set_backend?ip=<IP_LAPTOP>` oleh Web Admin tanpa perlu reflash)
+* **Port Web Server:** `80`
 
 ---
 
@@ -60,7 +61,7 @@ const bool BUTTON_ACTIVE_LOW = true;
 
 const int ANGLE_CLOSED     = 0;
 const int ANGLE_OPEN       = 90;
-const bool SERVO_IN_MIRROR = false; // Set true jika servo masuk (D3) dipasang berlawanan arah
+const bool SERVO_IN_MIRROR = true; // Servo Masuk (D3) berlawanan arah dengan Servo Keluar (D4) (D4: 0°->90°, D3: 90°->0°)
 ```
 
 ---
