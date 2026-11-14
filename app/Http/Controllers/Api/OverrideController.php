@@ -29,11 +29,11 @@ class OverrideController extends Controller
             }
 
             Device::where('device_code', $deviceCode ?: 'Gate-01')
-                ->orWhereIn('device_code', ['Gate-01', 'GATE_MASUK_01'])
+                ->orWhereIn('device_code', ['Gate-01', 'GATE_MASUK_01', 'GATE_KELUAR_01'])
                 ->update(['status' => 'online', 'last_seen' => now()]);
 
             $deviceQuery = Device::whereIn('manual_override', [1, 2]);
-            if (!empty($deviceCode)) {
+            if (!empty($deviceCode) && $deviceCode !== 'ALL' && $deviceCode !== 'GATE_CONTROLLER') {
                 $deviceQuery->where(function ($q) use ($deviceCode) {
                     $q->where('device_code', $deviceCode)->orWhere('device_code', 'Gate-01');
                 });
@@ -43,9 +43,19 @@ class OverrideController extends Controller
 
             if ($device) {
                 $overrideType = (int) $device->manual_override;
-                // Reset flag override pada device dan seluruh aliasnya
-                Device::whereIn('device_code', [$device->device_code, 'Gate-01', 'GATE_MASUK_01'])
-                    ->update(['manual_override' => 0]);
+                // Reset flag override pada device yang bersangkutan
+                $device->update(['manual_override' => 0]);
+                if (in_array($device->device_code, ['Gate-01', 'ALL'])) {
+                    Device::whereIn('device_code', ['Gate-01', 'GATE_MASUK_01', 'GATE_KELUAR_01'])
+                        ->update(['manual_override' => 0]);
+                }
+
+                $gateTarget = 'BOTH';
+                if ($device->device_code === 'GATE_MASUK_01' || $device->gate_type === 'IN') {
+                    $gateTarget = 'IN';
+                } elseif ($device->device_code === 'GATE_KELUAR_01' || $device->gate_type === 'OUT') {
+                    $gateTarget = 'OUT';
+                }
 
                 if ($overrideType === 2) {
                     return response()->json([
@@ -53,6 +63,7 @@ class OverrideController extends Controller
                         'delay_ms' => 3000,
                         'duration_ms' => 10000,
                         'device_code' => $device->device_code,
+                        'gate_target' => $gateTarget,
                         'message' => 'Tiket karcis masuk dicetak. Menunggu pengambilan karcis...'
                     ]);
                 }
@@ -61,7 +72,8 @@ class OverrideController extends Controller
                     'action' => 'OPEN',
                     'duration_ms' => 8000,
                     'device_code' => $device->device_code,
-                    'message' => 'Emergency override aktif! Palang dibuka.'
+                    'gate_target' => $gateTarget,
+                    'message' => "Emergency override aktif ({$gateTarget})! Palang dibuka."
                 ]);
             }
 

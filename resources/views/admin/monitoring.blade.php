@@ -682,9 +682,17 @@ Memuat struk parkir...
         openEmergencyModal(gate === 'OUT' ? DEVICE_OUT : DEVICE_IN);
     }
 
-    function openAllGates() {
+    async function openAllGates() {
         openBarrierGate(8000, 'IN');
         setTimeout(() => openBarrierGate(8000, 'OUT'), 300);
+        showToast('Darurat (ALL)', 'Membuka semua palang gerbang fisik & virtual...', 'warning');
+        try {
+            await fetch('{{ url('/api/override') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ device_code: 'ALL', reason: 'Buka Semua (ALL) dari Monitoring Web Admin' })
+            });
+        } catch (e) {}
     }
 
     // ── Traffic Light helpers ──────────────────────────────────────────
