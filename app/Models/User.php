@@ -90,4 +90,9 @@ class User extends Authenticatable
     {
         return $this->role === 'owner';
     }
+
+    public function isPetugas(): bool
+    {
+        return $this->role === 'petugas';
+    }
 }

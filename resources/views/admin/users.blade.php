@@ -41,7 +41,7 @@
     <!-- METRIK KPI RINGKAS -->
     <div class="row g-3">
         <!-- Card 1: Total Admin -->
-        <div class="col-12 col-sm-4">
+        <div class="col-12 col-sm-6 col-lg-3">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center justify-content-between">
                     <span class="text-uppercase small fw-bold text-secondary">Administrator</span>
@@ -56,11 +56,27 @@
             </div>
         </div>
 
-        <!-- Card 2: Total Owner -->
-        <div class="col-12 col-sm-4">
+        <!-- Card 2: Total Petugas (Palang Keluar) -->
+        <div class="col-12 col-sm-6 col-lg-3">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center justify-content-between">
-                    <span class="text-uppercase small fw-bold text-secondary">Owner (Pemilik Usaha)</span>
+                    <span class="text-uppercase small fw-bold text-secondary">Petugas Palang</span>
+                    <span class="badge bg-success p-2 rounded-3 text-white">
+                        <i class="bi bi-person-badge-fill fs-6"></i>
+                    </span>
+                </div>
+                <div class="my-3">
+                    <h2 class="fw-bold text-success mb-0 font-monospace">{{ $petugasCount }} <span class="fs-6 text-muted fw-normal">Akun</span></h2>
+                    <small class="text-muted">Penjaga gerbang keluar & kasir</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Total Owner -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-uppercase small fw-bold text-secondary">Owner (Pemilik)</span>
                     <span class="badge bg-warning p-2 rounded-3 text-dark">
                         <i class="bi bi-award-fill fs-6"></i>
                     </span>
@@ -72,8 +88,8 @@
             </div>
         </div>
 
-        <!-- Card 3: Total Pengelola -->
-        <div class="col-12 col-sm-4">
+        <!-- Card 4: Total Pengelola -->
+        <div class="col-12 col-sm-6 col-lg-3">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center justify-content-between">
                     <span class="text-uppercase small fw-bold text-secondary">Total Pengelola</span>
@@ -119,6 +135,10 @@
                     <a href="{{ route('admin.users.index', ['role' => 'admin', 'search' => $search]) }}" 
                        class="btn {{ $roleFilter === 'admin' ? 'btn-primary' : 'btn-outline-secondary' }}">
                         Admin
+                    </a>
+                    <a href="{{ route('admin.users.index', ['role' => 'petugas', 'search' => $search]) }}" 
+                       class="btn {{ $roleFilter === 'petugas' ? 'btn-primary' : 'btn-outline-secondary' }}">
+                        Petugas
                     </a>
                     <a href="{{ route('admin.users.index', ['role' => 'owner', 'search' => $search]) }}" 
                        class="btn {{ $roleFilter === 'owner' ? 'btn-primary' : 'btn-outline-secondary' }}">
@@ -180,6 +200,10 @@
                                     @if ($u->role === 'admin')
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
                                             <i class="bi bi-shield-lock-fill me-1"></i> ADMIN
+                                        </span>
+                                    @elseif ($u->role === 'petugas')
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-person-badge-fill me-1"></i> PETUGAS
                                         </span>
                                     @elseif ($u->role === 'owner')
                                         <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
@@ -269,6 +293,7 @@
                     <div class="mb-3">
                         <label for="create_role" class="form-label small fw-semibold text-secondary">Pilih Peran Akun (Role) <span class="text-danger">*</span></label>
                         <select id="create_role" name="role" required class="form-select">
+                            <option value="petugas" selected>Petugas (Penjaga Palang Keluar & Kasir Pos)</option>
                             <option value="admin">Administrator (Akses Penuh Operasional & Sistem)</option>
                             <option value="owner">Owner (Akses Eksekutif Laporan & Finansial)</option>
                         </select>
@@ -338,6 +363,7 @@
                     <div class="mb-3">
                         <label for="edit_role" class="form-label small fw-semibold text-secondary">Peran Akun (Role) <span class="text-danger">*</span></label>
                         <select id="edit_role" name="role" required class="form-select">
+                            <option value="petugas">Petugas (Penjaga Palang Keluar & Kasir Pos)</option>
                             <option value="admin">Administrator (Akses Penuh Operasional & Sistem)</option>
                             <option value="owner">Owner (Akses Eksekutif Laporan & Finansial)</option>
                         </select>

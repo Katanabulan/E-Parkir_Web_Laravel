@@ -12,14 +12,14 @@ use Illuminate\Validation\Rule;
 class UserController extends Controller
 {
     /**
-     * Tampilkan daftar akun Admin dan Owner (tanpa client)
+     * Tampilkan daftar akun Admin, Petugas, dan Owner (tanpa client)
      */
     public function index(Request $request)
     {
         $search = trim($request->query('search', ''));
         $roleFilter = trim($request->query('role', 'all'));
 
-        $query = User::whereIn('role', ['admin', 'owner']);
+        $query = User::whereIn('role', ['admin', 'petugas', 'owner']);
 
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -29,7 +29,7 @@ class UserController extends Controller
             });
         }
 
-        if (in_array($roleFilter, ['admin', 'owner'])) {
+        if (in_array($roleFilter, ['admin', 'petugas', 'owner'])) {
             $query->where('role', $roleFilter);
         }
 
@@ -37,13 +37,15 @@ class UserController extends Controller
                       ->orderBy('id', 'desc')
                       ->get();
 
-        $adminCount = User::where('role', 'admin')->count();
-        $ownerCount = User::where('role', 'owner')->count();
-        $totalStaff = $adminCount + $ownerCount;
+        $adminCount   = User::where('role', 'admin')->count();
+        $petugasCount = User::where('role', 'petugas')->count();
+        $ownerCount   = User::where('role', 'owner')->count();
+        $totalStaff   = $adminCount + $petugasCount + $ownerCount;
 
         return view('admin.users', compact(
             'users',
             'adminCount',
+            'petugasCount',
             'ownerCount',
             'totalStaff',
             'search',
@@ -52,7 +54,7 @@ class UserController extends Controller
     }
 
     /**
-     * Tambah akun Admin atau Owner baru
+     * Tambah akun Admin, Petugas, atau Owner baru
      */
     public function store(Request $request)
     {
@@ -61,15 +63,15 @@ class UserController extends Controller
             'email' => 'required|email|max:100|unique:users,email',
             'phone' => 'nullable|string|max:20',
             'avatar' => 'nullable|string|max:1000',
-            'role' => ['required', Rule::in(['admin', 'owner'])],
+            'role' => ['required', Rule::in(['admin', 'petugas', 'owner'])],
             'password' => 'required|string|min:6',
         ], [
             'name.required' => 'Nama lengkap wajib diisi!',
             'email.required' => 'Email wajib diisi!',
             'email.email' => 'Format email tidak valid!',
             'email.unique' => 'Email ini sudah terdaftar di sistem!',
-            'role.required' => 'Pilih role akun (Admin / Owner)!',
-            'role.in' => 'Role hanya boleh Administrator atau Owner!',
+            'role.required' => 'Pilih role akun (Admin / Petugas / Owner)!',
+            'role.in' => 'Role hanya boleh Administrator, Petugas, atau Owner!',
             'password.required' => 'Password wajib diisi!',
             'password.min' => 'Password minimal terdiri dari 6 karakter!',
         ]);
@@ -83,32 +85,37 @@ class UserController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        $roleLabel = $user->role === 'admin' ? 'Administrator' : 'Owner';
+        $roleLabel = match($user->role) {
+            'admin' => 'Administrator',
+            'petugas' => 'Petugas Palang Keluar',
+            'owner' => 'Owner',
+            default => ucfirst($user->role)
+        };
         return redirect()->route('admin.users.index')
             ->with('success', "Akun {$roleLabel} '{$user->name}' berhasil ditambahkan ke sistem!");
     }
 
     /**
-     * Perbarui data akun Admin atau Owner
+     * Perbarui data akun Admin, Petugas, atau Owner
      */
     public function update(Request $request, $id)
     {
-        $user = User::whereIn('role', ['admin', 'owner'])->findOrFail($id);
+        $user = User::whereIn('role', ['admin', 'petugas', 'owner'])->findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'email' => ['required', 'email', 'max:100', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => 'nullable|string|max:20',
             'avatar' => 'nullable|string|max:1000',
-            'role' => ['required', Rule::in(['admin', 'owner'])],
+            'role' => ['required', Rule::in(['admin', 'petugas', 'owner'])],
             'password' => 'nullable|string|min:6',
         ], [
             'name.required' => 'Nama lengkap wajib diisi!',
             'email.required' => 'Email wajib diisi!',
             'email.email' => 'Format email tidak valid!',
             'email.unique' => 'Email ini sudah digunakan oleh akun lain!',
-            'role.required' => 'Pilih role akun (Admin / Owner)!',
-            'role.in' => 'Role hanya boleh Administrator atau Owner!',
+            'role.required' => 'Pilih role akun (Admin / Petugas / Owner)!',
+            'role.in' => 'Role hanya boleh Administrator, Petugas, atau Owner!',
             'password.min' => 'Password baru minimal terdiri dari 6 karakter!',
         ]);
 
@@ -126,17 +133,22 @@ class UserController extends Controller
 
         $user->save();
 
-        $roleLabel = $user->role === 'admin' ? 'Administrator' : 'Owner';
+        $roleLabel = match($user->role) {
+            'admin' => 'Administrator',
+            'petugas' => 'Petugas Palang Keluar',
+            'owner' => 'Owner',
+            default => ucfirst($user->role)
+        };
         return redirect()->route('admin.users.index')
             ->with('success', "Data akun {$roleLabel} '{$user->name}' berhasil diperbarui!");
     }
 
     /**
-     * Hapus akun Admin atau Owner
+     * Hapus akun Admin, Petugas, atau Owner
      */
     public function destroy($id)
     {
-        $user = User::whereIn('role', ['admin', 'owner'])->findOrFail($id);
+        $user = User::whereIn('role', ['admin', 'petugas', 'owner'])->findOrFail($id);
 
         // Keamanan 1: Cegah menghapus akun sendiri yang sedang login
         if ($user->id === Auth::id()) {
@@ -154,7 +166,12 @@ class UserController extends Controller
         }
 
         $userName = $user->name;
-        $roleLabel = $user->role === 'admin' ? 'Administrator' : 'Owner';
+        $roleLabel = match($user->role) {
+            'admin' => 'Administrator',
+            'petugas' => 'Petugas Palang Keluar',
+            'owner' => 'Owner',
+            default => ucfirst($user->role)
+        };
 
         $user->delete();
 

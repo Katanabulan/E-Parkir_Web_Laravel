@@ -294,6 +294,7 @@ class ScanController extends Controller
             return response()->json([
                 'status' => 'success',
                 'action' => 'OPEN',
+                'gate_target' => 'IN',
                 'duration_ms' => 5000,
                 'beep_count' => 2,
                 'led' => 'GREEN',
@@ -544,7 +545,7 @@ class ScanController extends Controller
         return response()->json([
             'status' => 'success',
             'action' => 'OPEN',
-            'duration_ms' => 5000,
+            'duration_ms' => 10000,
             'beep_count' => 2,
             'led' => 'GREEN',
             'flow' => 'TICKET_ENTRY',

@@ -18,7 +18,7 @@ return new class extends Migration
                 $table->string('email', 100)->unique();
                 $table->string('password');
                 $table->string('phone', 20)->nullable();
-                $table->enum('role', ['admin', 'client', 'owner'])->default('client');
+                $table->enum('role', ['admin', 'client', 'owner', 'petugas'])->default('client');
                 $table->rememberToken();
                 $table->timestamps();
             });

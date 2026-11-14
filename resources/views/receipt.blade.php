@@ -265,15 +265,6 @@
                 </div>
             </div>
 
-            <!-- Tombol Interaktif Gimmick: Simulasi Scan Kasir Admin -->
-            <div class="d-print-none text-center my-2">
-                <button type="button" onclick="simulateAdminBarcodeScan('{{ $receiptData['ticket_code'] }}')" id="btn-simulate-scan" class="btn btn-sm btn-outline-danger w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2 shadow-sm rounded-3">
-                    <i class="bi bi-upc-scan fs-6"></i>
-                    <span id="scan-btn-label">Simulasikan Scan Kasir Admin</span>
-                </button>
-                <small class="text-white-50 d-block mt-1" style="font-size: 9.5px;">Klik untuk simulasi laser scanner kasir &amp; palang keluar dibuka</small>
-            </div>
-
             <div class="receipt-dashed"></div>
 
             <!-- Rincian Masuk -->

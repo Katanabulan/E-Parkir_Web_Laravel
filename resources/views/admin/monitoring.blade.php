@@ -2,7 +2,7 @@
 
 @section('title', 'Gate Simulator & Monitoring IoT')
 @section('header_title', 'Gate Simulator & Hardware IoT')
-@section('header_subtitle', 'Simulasi visual pergerakan palang servo, lampu lalu lintas, audio buzzer, dan pengujian kartu RFID')
+@section('header_subtitle', 'Simulasi visual pergerakan palang servo, lampu indikator gerbang (Merah & Hijau), audio buzzer, dan pengujian kartu RFID')
 
 @section('content')
 <!-- SIMULATOR CONTAINER -->
@@ -11,198 +11,224 @@
     <!-- LEFT COLUMN: VISUAL HARDWARE INTERACTION (7 Cols) -->
     <div class="col-12 col-lg-7 d-flex flex-column gap-4">
 
-        <!-- Visual Gate Display Card -->
+        <!-- DUAL GATE CONTROLLER CARD -->
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-white position-relative overflow-hidden">
-            <!-- Header bar of simulator -->
+            <!-- Header bar -->
             <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between pb-3 border-bottom gap-3">
                 <div>
                     <div class="d-flex align-items-center gap-2">
                         <h5 class="fw-bold mb-0 text-dark">Gerbang Fisik IoT</h5>
-                        <span id="gate-state-badge" class="badge bg-danger-subtle text-danger border border-danger-subtle">
-                            TERTUTUP (0°)
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                            <i class="bi bi-cpu me-1"></i>ESP8266
                         </span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 mt-1">
-                        <small class="text-muted font-monospace" id="current-device-display">Device: {{ $selectedDevice }}</small>
                         <span id="esp-status-badge" class="badge bg-light text-secondary border">
                             Memeriksa ESP...
                         </span>
                     </div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <small class="text-muted font-monospace">
+                            <i class="bi bi-arrow-down-circle-fill text-success me-1"></i>GATE_MASUK_01
+                            &nbsp;·&nbsp;
+                            <i class="bi bi-arrow-up-circle-fill text-danger me-1"></i>GATE_KELUAR_01
+                        </small>
+                    </div>
                 </div>
-
-                <!-- Kontrol Printer Eppos EP589 V2 & Auto-Print -->
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <input type="hidden" id="device-select" value="{{ $devices->first()->device_code ?? 'Gate-01' }}">
+                    <input type="hidden" id="device-select" value="GATE_MASUK_01">
                     <div class="form-check form-switch small">
                         <input class="form-check-input" type="checkbox" role="switch" id="autoprint-toggle" checked>
                         <label class="form-check-label small fw-semibold text-dark" for="autoprint-toggle">
                             <i class="bi bi-printer text-primary me-1"></i>Auto-Cetak
                         </label>
                     </div>
-
-                    <button type="button" onclick="connectBluetoothPrinter()" id="btn-quick-bt-connect" class="btn btn-primary btn-sm rounded-3 d-flex align-items-center gap-1 shadow-sm" title="Hubungkan Bluetooth Eppos EP589 V2">
+                    <button type="button" onclick="connectBluetoothPrinter()" id="btn-quick-bt-connect" class="btn btn-primary btn-sm rounded-3 d-flex align-items-center gap-1 shadow-sm">
                         <i class="bi bi-bluetooth"></i>
                         <span id="bt-quick-label">Connect EP589</span>
                     </button>
-
-                    <button type="button" onclick="testPrintBluetooth()" id="btn-quick-bt-test" class="btn btn-warning btn-sm rounded-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Cetak struk tes ke Eppos EP589 V2">
+                    <button type="button" onclick="testPrintBluetooth()" id="btn-quick-bt-test" class="btn btn-warning btn-sm rounded-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
                         <i class="bi bi-receipt"></i>
-                        <span>Tes Cetak EP589</span>
+                        <span>Tes EP589</span>
+                    </button>
+                    <button type="button" onclick="openAllGates()" class="btn btn-danger btn-sm rounded-3 fw-bold d-flex align-items-center gap-1 shadow-sm" title="Buka Palang Masuk & Keluar Bersamaan">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        <span>Buka Semua (ALL)</span>
+                    </button>
+                    <button type="button" onclick="closeBarrierGate()" class="btn btn-outline-secondary btn-sm rounded-3 fw-semibold d-flex align-items-center gap-1 shadow-sm" title="Tutup Semua Palang Gerbang">
+                        <i class="bi bi-lock-fill"></i>
+                        <span>Tutup Semua</span>
                     </button>
                 </div>
             </div>
 
-            <!-- ANIMATED BARRIER & TRAFFIC LIGHT CANVAS -->
-            <div class="my-4 p-4 rounded-4 position-relative overflow-hidden user-select-none d-flex flex-column justify-content-between" style="background-color: #0d1627; min-height: 380px; border: 1px solid #1e293b;">
+            <!-- DUAL GATE ROW -->
+            <div class="row g-3 mt-1">
 
-                <!-- TOP BAR: Traffic Light & Auto-Close Timer -->
-                <div class="d-flex align-items-start justify-content-between w-100 z-3">
-                    <!-- Traffic Light 3-Warna -->
-                    <div class="bg-black bg-opacity-75 border border-secondary border-opacity-50 rounded-4 p-2 d-flex flex-column align-items-center gap-2 shadow">
-                        <div class="text-secondary text-uppercase fw-bold text-center px-1" style="font-size: 0.65rem;">LIGHT</div>
-                        <!-- Red LED -->
-                        <div id="led-red" style="width: 20px; height: 20px; border-radius: 50%; background-color: #ef4444; box-shadow: 0 0 16px #ef4444, 0 0 28px rgba(239, 68, 68, 0.7); border: 1px solid #fca5a5; transition: all 0.3s ease;"></div>
-                        <!-- Yellow LED -->
-                        <div id="led-yellow" style="width: 20px; height: 20px; border-radius: 50%; background-color: #451a03; border: 1px solid #78350f; opacity: 0.35; transition: all 0.3s ease;"></div>
-                        <!-- Green LED -->
-                        <div id="led-green" style="width: 20px; height: 20px; border-radius: 50%; background-color: #022c22; border: 1px solid #064e3b; opacity: 0.35; transition: all 0.3s ease;"></div>
-                    </div>
-
-                    <!-- Live Auto-close timer -->
-                    <div id="timer-box" class="badge bg-warning text-dark px-3 py-2 rounded-pill font-monospace fw-bold d-none align-items-center gap-1 shadow">
-                        <i class="bi bi-stopwatch"></i>
-                        <span>Palang menutup dalam <span id="timer-count" class="fs-6 fw-bold">5</span>s</span>
-                    </div>
-                </div>
-
-                <!-- BOTTOM AREA: REALISTIC BOOM BARRIER & ROAD SCHEMATIC -->
-                <div class="position-relative w-100 mt-4 d-flex align-items-end" style="height: 220px;">
-                    <!-- 1. Full-Width Asphalt Road with Reflective Centerline -->
-                    <div class="position-absolute bottom-0 start-0 end-0 bg-dark border-top border-secondary d-flex align-items-center justify-content-around px-3" style="height: 40px;">
-                        <div class="w-100 d-flex justify-content-around align-items-center">
-                            <span class="bg-warning rounded" style="width: 48px; height: 4px; opacity: 0.7;"></span>
-                            <span class="bg-warning rounded" style="width: 48px; height: 4px; opacity: 0.7;"></span>
-                            <span class="bg-warning rounded" style="width: 48px; height: 4px; opacity: 0.7;"></span>
-                            <span class="bg-warning rounded" style="width: 48px; height: 4px; opacity: 0.7;"></span>
-                        </div>
-                    </div>
-
-                    <!-- 2. Curb / Island Trotoar Kiri -->
-                    <div style="position: absolute; bottom: 24px; left: 24px; width: 144px; height: 16px; background-color: #334155; border-top: 1px solid #64748b; border-radius: 4px 4px 0 0;"></div>
-
-                    <!-- 3. Barrier Gate Housing Cabinet (GATE 01) -->
-                    <div style="position: absolute; bottom: 40px; left: 48px; width: 80px; height: 160px; background-color: #0d6efd; border: 2px solid rgba(255,255,255,0.4); border-radius: 12px 12px 0 0; z-index: 10;" class="shadow-lg d-flex flex-column align-items-center justify-content-between py-3">
-                        <div class="rounded-circle bg-dark border border-warning d-flex align-items-center justify-content-center" style="width: 16px; height: 16px;">
-                            <span class="rounded-circle bg-warning" style="width: 6px; height: 6px;"></span>
-                        </div>
-                        <div class="text-white text-center fw-bold small text-uppercase" style="font-size: 0.65rem; line-height: 1.1;">
-                            GATE<br><span class="text-warning fw-bold">01</span>
-                        </div>
-                        <div class="bg-warning rounded-pill" style="width: 40px; height: 6px;"></div>
-
-                        <!-- Servo Pivot Hub -->
-                        <div style="position: absolute; right: -16px; top: 24px; width: 32px; height: 32px; border-radius: 50%; background-color: #0f172a; border: 2px solid #ffc107; box-shadow: 0 4px 12px rgba(0,0,0,0.6); z-index: 25;">
-                            <!-- Center pin -->
-                            <div style="position: absolute; left: 10px; top: 10px; width: 8px; height: 8px; border-radius: 50%; background-color: #0d6efd;"></div>
-
-                            <!-- THE MOVING BARRIER ARM -->
-                            <div id="gate-arm"
-                                style="position: absolute; left: 14px; top: 9px; width: 230px; height: 14px; transform-origin: 0px 7px; transform: rotate(0deg); transition: transform 1.0s cubic-bezier(0.4, 0, 0.2, 1); z-index: 30; pointer-events: none;">
-                                <div style="width: 100%; height: 100%; display: flex; border-radius: 0 4px 4px 0; border: 1px solid #0f172a; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.4);">
-                                    <div style="flex: 1; background: #ffc107;"></div>
-                                    <div style="flex: 1; background: #ffffff;"></div>
-                                    <div style="flex: 1; background: #ffc107;"></div>
-                                    <div style="flex: 1; background: #ffffff;"></div>
-                                    <div style="flex: 1; background: #ffc107;"></div>
-                                    <div style="flex: 1; background: #ffffff;"></div>
-                                    <div style="flex: 1; background: #ffc107;"></div>
-                                    <div style="flex: 1; background: #ffffff;"></div>
-                                </div>
+                <!-- ===== GATE IN (MASUK) ===== -->
+                <div class="col-12 col-md-6">
+                    <div class="rounded-4 p-3 h-100 d-flex flex-column gap-2" style="background: #0d1627; border: 1px solid #1e3a5f;">
+                        <!-- Gate IN Header -->
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success rounded-pill px-3 fw-bold" style="font-size: 0.75rem;">
+                                    <i class="bi bi-arrow-down-circle-fill me-1"></i>GATE IN
+                                </span>
+                                <span id="gate-state-badge-in" class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.7rem;">
+                                    TERTUTUP (0°)
+                                </span>
+                            </div>
+                            <!-- Timer IN -->
+                            <div id="timer-box-in" class="badge bg-warning text-dark px-2 py-1 rounded-pill font-monospace fw-bold d-none align-items-center gap-1" style="font-size: 0.7rem;">
+                                <i class="bi bi-stopwatch"></i>
+                                <span><span id="timer-count-in">5</span>s</span>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 4. RFID Reader Pedestal -->
-                    <div style="position: absolute; bottom: 40px; right: 40px; width: 44px; height: 112px; background-color: #0d6efd; border: 2px solid rgba(255,255,255,0.4); border-radius: 8px 8px 0 0; z-index: 10;" class="d-flex flex-column align-items-center justify-content-start pt-3 shadow">
-                        <div class="bg-dark border border-white rounded text-white fw-bold d-flex align-items-center justify-content-center text-center" style="width: 32px; height: 32px; font-size: 0.65rem;">
-                            RFID
+                        <!-- Gate IN Canvas -->
+                        <div class="rounded-3 position-relative overflow-hidden user-select-none" style="background: #060d1a; height: 200px; border: 1px solid #1e293b;">
+                            <!-- Traffic Light IN -->
+                            <div class="position-absolute d-flex flex-column align-items-center gap-1 p-1 rounded-3" style="top: 8px; left: 8px; background: rgba(0,0,0,0.7); border: 1px solid #334155; z-index:5;">
+                                <div style="font-size: 0.55rem;" class="text-secondary fw-bold">IN</div>
+                                <div id="led-red-in" title="Merah: Tertutup" style="width: 16px; height: 16px; border-radius: 50%; background-color: #ef4444; box-shadow: 0 0 12px #ef4444, 0 0 20px rgba(239,68,68,0.7); border: 1px solid #fca5a5; transition: all 0.3s ease;"></div>
+                                <div id="led-green-in" title="Hijau: Terbuka" style="width: 16px; height: 16px; border-radius: 50%; background-color: #022c22; border: 1px solid #064e3b; opacity: 0.35; transition: all 0.3s ease;"></div>
+                            </div>
+
+                            <!-- Road -->
+                            <div class="position-absolute bottom-0 start-0 end-0 d-flex align-items-center justify-content-around px-2" style="height: 32px; background: #1e293b; border-top: 1px solid #475569;">
+                                <span class="bg-warning rounded" style="width: 36px; height: 3px; opacity: 0.7;"></span>
+                                <span class="bg-warning rounded" style="width: 36px; height: 3px; opacity: 0.7;"></span>
+                                <span class="bg-warning rounded" style="width: 36px; height: 3px; opacity: 0.7;"></span>
+                            </div>
+
+                            <!-- Gate Cabinet IN -->
+                            <div style="position: absolute; bottom: 32px; left: 28px; width: 54px; height: 110px; background: #0d6efd; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px 8px 0 0; z-index: 10;" class="d-flex flex-column align-items-center justify-content-between py-2">
+                                <div class="rounded-circle bg-dark border border-warning" style="width: 10px; height: 10px;"></div>
+                                <div class="text-white text-center fw-bold text-uppercase" style="font-size: 0.55rem; line-height: 1.1;">MASUK<br><span class="text-warning">01</span></div>
+                                <div class="bg-warning rounded-pill" style="width: 28px; height: 4px;"></div>
+                                <!-- Pivot Hub IN -->
+                                <div style="position: absolute; right: -12px; top: 16px; width: 24px; height: 24px; border-radius: 50%; background: #0f172a; border: 2px solid #ffc107; z-index: 20;">
+                                    <div style="position: absolute; left: 7px; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: #0d6efd;"></div>
+                                    <!-- ARM IN -->
+                                    <div id="gate-arm-in" style="position: absolute; left: 10px; top: 6px; width: 160px; height: 10px; transform-origin: 0px 5px; transform: rotate(0deg); transition: transform 1.0s cubic-bezier(0.4,0,0.2,1); z-index: 30; pointer-events: none;">
+                                        <div style="width: 100%; height: 100%; display: flex; border-radius: 0 3px 3px 0; overflow: hidden; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">
+                                            <div style="flex:1; background:#ffc107;"></div>
+                                            <div style="flex:1; background:#fff;"></div>
+                                            <div style="flex:1; background:#ffc107;"></div>
+                                            <div style="flex:1; background:#fff;"></div>
+                                            <div style="flex:1; background:#ffc107;"></div>
+                                            <div style="flex:1; background:#fff;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RFID IN -->
+                            <div style="position: absolute; bottom: 32px; right: 16px; width: 32px; height: 72px; background: #0d6efd; border: 2px solid rgba(255,255,255,0.3); border-radius: 6px 6px 0 0; z-index: 10;" class="d-flex flex-column align-items-center pt-2">
+                                <div class="bg-dark border border-white rounded text-white fw-bold text-center" style="width: 22px; height: 22px; font-size: 0.45rem; line-height: 22px;">RFID</div>
+                                <div class="rounded-circle bg-success mt-1" style="width: 6px; height: 6px; box-shadow: 0 0 6px #22c55e;"></div>
+                            </div>
+                        </div><!-- /Gate IN Canvas -->
+
+                        <!-- Gate IN Action Buttons (Bootstrap Controls) -->
+                        <div class="pt-2 border-top border-secondary border-opacity-25 mt-auto">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <small class="text-white-50 fw-semibold text-uppercase" style="font-size: 0.68rem;">Kontrol Gate Masuk:</small>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;">GATE_MASUK_01</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <button type="button" onclick="openBarrierGateIn(8000)" class="btn btn-success btn-sm rounded-3 fw-semibold d-flex align-items-center justify-content-center gap-1 flex-grow-1 shadow-sm" title="Buka Palang Masuk (8 detik)">
+                                    <i class="bi bi-unlock-fill"></i>
+                                    <span>Buka Palang</span>
+                                </button>
+                            </div>
                         </div>
-                        <div class="rounded-circle bg-success mt-2" style="width: 8px; height: 8px; box-shadow: 0 0 8px #22c55e;"></div>
-                        <div class="text-white-50 mt-auto mb-2 text-uppercase fw-bold" style="font-size: 0.55rem;">TAP HERE</div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Direct Override Trigger from Simulator -->
-            <div class="d-flex align-items-center justify-content-between pt-2 flex-wrap gap-2">
-                <small class="fw-bold text-muted">Aksi Cepat Gerbang:</small>
-                <div>
-                    <button type="button" onclick="triggerEmergencySimulator()" class="btn btn-warning btn-sm rounded-3 fw-bold d-flex align-items-center gap-1 shadow-sm">
-                        <i class="bi bi-shield-lock-fill"></i>
-                        <span>Override Buka Manual</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+                    </div><!-- /Gate IN Card -->
+                </div><!-- /col-12 col-md-6 -->
 
-        <!-- BARCODE SCANNER POS KASIR (SIMULASI SCAN TIKET KARCIS) -->
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white position-relative overflow-hidden">
-            <div class="d-flex align-items-center justify-content-between pb-3 border-bottom">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-danger-subtle text-danger p-2 rounded-3 fs-6">
-                        <i class="bi bi-upc-scan"></i>
-                    </span>
-                    <div>
-                        <h6 class="fw-bold mb-0 text-dark">Barcode Scanner Pos Kasir</h6>
-                        <small class="text-muted">Simulasi scan karcis optik untuk checkout &amp; pembukaan gerbang keluar</small>
-                    </div>
-                </div>
-                <span class="badge bg-danger-subtle text-danger border border-danger-subtle d-flex align-items-center gap-1 font-monospace px-2 py-1">
-                    <span class="spinner-grow spinner-grow-sm text-danger" style="width: 6px; height: 6px;" role="status"></span>
-                    <span>LASER SCANNER READY</span>
-                </span>
-            </div>
+                <!-- ===== GATE OUT (KELUAR) ===== -->
+                <div class="col-12 col-md-6">
+                    <div class="rounded-4 p-3 h-100 d-flex flex-column gap-2" style="background: #0d1627; border: 1px solid #3f1f5f;">
+                        <!-- Gate OUT Header -->
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-danger rounded-pill px-3 fw-bold" style="font-size: 0.75rem;">
+                                    <i class="bi bi-arrow-up-circle-fill me-1"></i>GATE OUT
+                                </span>
+                                <span id="gate-state-badge-out" class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.7rem;">
+                                    TERTUTUP (0°)
+                                </span>
+                            </div>
+                            <!-- Timer OUT -->
+                            <div id="timer-box-out" class="badge bg-warning text-dark px-2 py-1 rounded-pill font-monospace fw-bold d-none align-items-center gap-1" style="font-size: 0.7rem;">
+                                <i class="bi bi-stopwatch"></i>
+                                <span><span id="timer-count-out">5</span>s</span>
+                            </div>
+                        </div>
 
-            <!-- Optical Scanner Viewport Animation -->
-            <div class="my-3 p-3 rounded-4 position-relative overflow-hidden" style="background-color: #0b111e; border: 1px solid #1e293b;">
-                <div class="position-relative py-3 d-flex flex-column align-items-center justify-content-center text-center user-select-none" style="min-height: 90px;">
-                    <!-- Laser Scanner Red Line Animation -->
-                    <div id="sim-laser-beam" style="position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: #ef4444; box-shadow: 0 0 12px #ef4444, 0 0 20px rgba(239, 68, 68, 0.8); z-index: 5; transition: all 0.25s ease;"></div>
-                    
-                    <i class="bi bi-upc text-secondary opacity-50" style="font-size: 3rem;"></i>
-                    <div id="scanner-status-text" class="small font-monospace text-white-50 mt-1 z-2">
-                        Arahkan barcode karcis ke sensor atau ketik kode di bawah
-                    </div>
-                </div>
+                        <!-- Gate OUT Canvas -->
+                        <div class="rounded-3 position-relative overflow-hidden user-select-none" style="background: #060d1a; height: 200px; border: 1px solid #1e293b;">
+                            <!-- Traffic Light OUT -->
+                            <div class="position-absolute d-flex flex-column align-items-center gap-1 p-1 rounded-3" style="top: 8px; left: 8px; background: rgba(0,0,0,0.7); border: 1px solid #334155; z-index:5;">
+                                <div style="font-size: 0.55rem;" class="text-secondary fw-bold">OUT</div>
+                                <div id="led-red-out" title="Merah: Tertutup" style="width: 16px; height: 16px; border-radius: 50%; background-color: #ef4444; box-shadow: 0 0 12px #ef4444, 0 0 20px rgba(239,68,68,0.7); border: 1px solid #fca5a5; transition: all 0.3s ease;"></div>
+                                <div id="led-green-out" title="Hijau: Terbuka" style="width: 16px; height: 16px; border-radius: 50%; background-color: #022c22; border: 1px solid #064e3b; opacity: 0.35; transition: all 0.3s ease;"></div>
+                            </div>
 
-                <!-- Input Scanner Form -->
-                <form onsubmit="handleBarcodeScannerSubmit(event)" class="mt-2">
-                    <div class="input-group">
-                        <span class="input-group-text bg-dark border-secondary text-danger font-monospace">
-                            <i class="bi bi-upc-scan me-1"></i> SCAN:
-                        </span>
-                        <input type="text" id="barcode-scan-input" class="form-control bg-dark text-white border-secondary font-monospace" placeholder="Scan / masukkan kode karcis (contoh: LT1-20261109-xxxx)..." autocomplete="off">
-                        <button type="submit" id="btn-submit-barcode" class="btn btn-danger fw-bold d-flex align-items-center gap-1 px-3">
-                            <i class="bi bi-lightning-charge-fill"></i>
-                            <span>Scan Karcis</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
+                            <!-- Road -->
+                            <div class="position-absolute bottom-0 start-0 end-0 d-flex align-items-center justify-content-around px-2" style="height: 32px; background: #1e293b; border-top: 1px solid #475569;">
+                                <span class="bg-warning rounded" style="width: 36px; height: 3px; opacity: 0.7;"></span>
+                                <span class="bg-warning rounded" style="width: 36px; height: 3px; opacity: 0.7;"></span>
+                                <span class="bg-warning rounded" style="width: 36px; height: 3px; opacity: 0.7;"></span>
+                            </div>
 
-            <!-- Quick-Scan Buttons for Active Parked Tickets -->
-            <div>
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <small class="text-uppercase fw-bold text-secondary" style="font-size: 0.72rem;">
-                        Karcis Aktif di Parkiran (Klik untuk Simulasi Scan Cepat):
-                    </small>
-                    <small class="text-muted font-monospace" id="quick-ticket-count">0 Karcis</small>
-                </div>
-                <div id="quick-ticket-buttons" class="d-flex flex-wrap gap-2">
-                    <span class="text-muted small fst-italic">Memeriksa karcis aktif...</span>
-                </div>
-            </div>
-        </div>
+                            <!-- Gate Cabinet OUT -->
+                            <div style="position: absolute; bottom: 32px; left: 28px; width: 54px; height: 110px; background: #dc3545; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px 8px 0 0; z-index: 10;" class="d-flex flex-column align-items-center justify-content-between py-2">
+                                <div class="rounded-circle bg-dark border border-warning" style="width: 10px; height: 10px;"></div>
+                                <div class="text-white text-center fw-bold text-uppercase" style="font-size: 0.55rem; line-height: 1.1;">KELUAR<br><span class="text-warning">01</span></div>
+                                <div class="bg-warning rounded-pill" style="width: 28px; height: 4px;"></div>
+                                <!-- Pivot Hub OUT -->
+                                <div style="position: absolute; right: -12px; top: 16px; width: 24px; height: 24px; border-radius: 50%; background: #0f172a; border: 2px solid #ffc107; z-index: 20;">
+                                    <div style="position: absolute; left: 7px; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: #dc3545;"></div>
+                                    <!-- ARM OUT -->
+                                    <div id="gate-arm-out" style="position: absolute; left: 10px; top: 6px; width: 160px; height: 10px; transform-origin: 0px 5px; transform: rotate(0deg); transition: transform 1.0s cubic-bezier(0.4,0,0.2,1); z-index: 30; pointer-events: none;">
+                                        <div style="width: 100%; height: 100%; display: flex; border-radius: 0 3px 3px 0; overflow: hidden; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">
+                                            <div style="flex:1; background:#ffc107;"></div>
+                                            <div style="flex:1; background:#fff;"></div>
+                                            <div style="flex:1; background:#ffc107;"></div>
+                                            <div style="flex:1; background:#fff;"></div>
+                                            <div style="flex:1; background:#ffc107;"></div>
+                                            <div style="flex:1; background:#fff;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RFID Reader Pedestal OUT -->
+                            <div style="position: absolute; bottom: 32px; right: 16px; width: 32px; height: 72px; background: #dc3545; border: 2px solid rgba(255,255,255,0.3); border-radius: 6px 6px 0 0; z-index: 10;" class="d-flex flex-column align-items-center pt-2">
+                                <div class="bg-dark border border-white rounded text-white fw-bold text-center" style="width: 22px; height: 22px; font-size: 0.45rem; line-height: 22px;">RFID</div>
+                                <div class="rounded-circle bg-danger mt-1" style="width: 6px; height: 6px; box-shadow: 0 0 6px #ef4444;"></div>
+                            </div>
+                        </div><!-- /Gate OUT Canvas -->
+
+                        <!-- Gate OUT Action Buttons (Bootstrap Controls) -->
+                        <div class="pt-2 border-top border-secondary border-opacity-25 mt-auto">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <small class="text-white-50 fw-semibold text-uppercase" style="font-size: 0.68rem;">Kontrol Gate Keluar:</small>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.65rem;">GATE_KELUAR_01</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <button type="button" onclick="openBarrierGateOut(8000)" class="btn btn-danger btn-sm rounded-3 fw-semibold d-flex align-items-center justify-content-center gap-1 flex-grow-1 shadow-sm" title="Buka Palang Keluar (8 detik)">
+                                    <i class="bi bi-unlock-fill"></i>
+                                    <span>Buka Palang</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div><!-- /Gate OUT Card -->
+                </div><!-- /col-12 col-md-6 -->
+
+            </div><!-- /row dual gate -->
+        </div><!-- /DUAL GATE CONTROLLER CARD -->
 
     </div>
 
@@ -392,24 +418,95 @@ Memuat struk parkir...
         </div>
     </div>
 </div>
+<!-- MODAL RFID SIMULATOR -->
+<div class="modal fade" id="rfidSimModal" tabindex="-1" aria-labelledby="rfidSimModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom">
+                <h6 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="rfidSimModalLabel">
+                    <i class="bi bi-credit-card-2-front-fill text-primary"></i>
+                    <span>Simulasi Tap Kartu RFID</span>
+                    <span id="rfid-modal-target-badge" class="badge bg-primary ms-1">Gate IN</span>
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <!-- Manual UID -->
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-muted text-uppercase">Input UID Manual:</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-primary font-monospace">
+                            <i class="bi bi-broadcast-pin"></i>
+                        </span>
+                        <input type="text" id="rfid-manual-uid" class="form-control bg-dark text-white border-secondary font-monospace"
+                               placeholder="Contoh: A1B2C3D4" autocomplete="off">
+                        <button type="button" onclick="tapManualUid()" class="btn btn-primary fw-bold d-flex align-items-center gap-1 px-3">
+                            <i class="bi bi-wifi"></i>
+                            <span>TAP!</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Registered Cards -->
+                <div>
+                    <small class="text-uppercase fw-bold text-secondary" style="font-size: 0.72rem;">Kartu Terdaftar (Klik untuk Simulasi Tap):</small>
+                    <div class="d-flex flex-column gap-2 mt-2" style="max-height: 280px; overflow-y: auto;">
+                        @forelse($testCards as $card)
+                            <div class="card border rounded-3 p-2 bg-light d-flex flex-row align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary p-2 rounded-3">
+                                        <i class="bi bi-person-fill"></i>
+                                    </span>
+                                    <div>
+                                        <div class="fw-semibold small text-dark">{{ $card->user->name ?? 'Tanpa Pemilik' }}</div>
+                                        <div class="font-monospace text-muted" style="font-size: 0.72rem;">UID: {{ $card->uid }}</div>
+                                        @if($card->balance !== null)
+                                            <div class="text-success" style="font-size: 0.7rem;">Saldo: Rp {{ number_format($card->balance, 0, ',', '.') }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+                                <button type="button"
+                                        onclick="simulateCardTap('{{ $card->uid }}')"
+                                        class="btn btn-sm btn-primary rounded-3 d-flex align-items-center gap-1 fw-bold">
+                                    <i class="bi bi-wifi"></i>
+                                    <span style="font-size: 0.75rem;">TAP</span>
+                                </button>
+                            </div>
+                        @empty
+                            <div class="text-center text-muted small py-3">
+                                <i class="bi bi-credit-card me-1"></i>Belum ada kartu RFID terdaftar
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top bg-light p-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
-    let currentDevice = '{{ $selectedDevice }}';
-    let gateTimer = null;
-    let openPhase1Timer = null;
-    let openPhase2Timer = null;
-    let countdownInterval = null;
-    let isGateCurrentlyOpen = false;
+    // ── Device codes (fixed, tidak perlu dipilih) ─────────────────────
+    const DEVICE_IN  = 'GATE_MASUK_01';
+    const DEVICE_OUT = 'GATE_KELUAR_01';
+    // backward-compat (beberapa fungsi lama masih pakai currentDevice)
+    let currentDevice = DEVICE_IN;
+    let isGateInOpen  = false;
+    let isGateOutOpen = false;
+    // timers IN
+    let gateInTimer = null, gateInPhase1 = null, gateInPhase2 = null, gateInCountdown = null;
+    // timers OUT
+    let gateOutTimer = null, gateOutPhase1 = null, gateOutPhase2 = null, gateOutCountdown = null;
+    // polling
     let lastProcessedLogId = 0;
     let isHardwarePollerReady = false;
+    // RFID modal target ('IN' | 'OUT')
+    let rfidModalTarget = 'IN';
 
-    function switchDevice(dev) {
-        currentDevice = dev;
-        document.getElementById('current-device-display').textContent = 'Device: ' + dev;
-    }
-
+    function switchDevice(dev) { /* deprecated — gate sudah fixed IN/OUT */ }
     async function pingEspWifi(espIp) {
         if (!espIp) return false;
         try {
@@ -465,10 +562,13 @@ Memuat struk parkir...
                 let isConnected = isWifiDirect || (statsRes && statsRes.esp_online);
 
                 if (statsRes && statsRes.status === 'success' && statsRes.devices) {
-                    const dev = statsRes.devices.find(d => d.device_code === currentDevice || (currentDevice === 'Gate-01' && (d.device_code === 'Gate-01' || d.device_code === 'GATE_MASUK_01')));
-                    if (dev) {
+                    // Cek apakah salah satu dari kedua gate terhubung
+                    const devIn  = statsRes.devices.find(d => d.device_code === DEVICE_IN);
+                    const devOut = statsRes.devices.find(d => d.device_code === DEVICE_OUT);
+                    const anyDev = devIn || devOut;
+                    if (anyDev) {
                         const now = new Date((statsRes.server_time || '').replace(' ', 'T')).getTime();
-                        const lastSeen = dev.last_seen ? new Date(dev.last_seen.replace(' ', 'T')).getTime() : 0;
+                        const lastSeen = anyDev.last_seen ? new Date(anyDev.last_seen.replace(' ', 'T')).getTime() : 0;
                         const diffSec = Math.max(0, Math.round((now - lastSeen) / 1000));
                         if (isConnected || (lastSeen > 0 && diffSec <= 25)) {
                             isConnected = true;
@@ -518,8 +618,7 @@ Memuat struk parkir...
                         if (isTicketEntry) {
                             showToast('Karcis Masuk Dicetak!', 'Silakan ambil tiket karcis Anda. Palang akan terbuka sebentar lagi...', 'info');
 
-                            setTrafficLight('yellow');
-                            const badgeEl = document.getElementById('gate-state-badge');
+                            const badgeEl = document.getElementById('gate-state-badge-in');
                             if (badgeEl) {
                                 badgeEl.className = 'badge bg-warning-subtle text-warning border border-warning-subtle animate-pulse';
                                 badgeEl.textContent = 'AMBIL TIKET...';
@@ -536,7 +635,7 @@ Memuat struk parkir...
                                         if (d.transaction_id && !openedTicketGates.has(d.transaction_id)) {
                                             openedTicketGates.add(d.transaction_id);
                                             setTimeout(() => {
-                                                openBarrierGate(8000);
+                                                openBarrierGateIn(8000);
                                             }, 2500);
                                         }
                                     }
@@ -545,9 +644,13 @@ Memuat struk parkir...
                                 });
 
                         } else {
-                            if (latestLog.device_code === currentDevice || isTapOut) {
+                            // Tentukan gate mana berdasarkan device_code log, bukan currentDevice
+                            const isGateOut = latestLog.device_code === DEVICE_OUT || isTapOut;
+
+                            if (latestLog.device_code === DEVICE_IN || latestLog.device_code === DEVICE_OUT || isTapOut) {
                                 showToast('Akses Hardware Diterima', latestLog.notes || 'Palang fisik dibuka!', 'success');
-                                openBarrierGate(5000);
+                                if (isGateOut) openBarrierGateOut(5000);
+                                else            openBarrierGateIn(5000);
                             }
 
                             if (isTapOut && !isTicketLog) {
@@ -562,9 +665,10 @@ Memuat struk parkir...
                                     });
                             }
                         }
-                    } else if (latestLog.device_code === currentDevice) {
+                    } else if (latestLog.device_code === DEVICE_IN || latestLog.device_code === DEVICE_OUT) {
                         showToast('Akses Hardware Ditolak', latestLog.notes || 'Akses ditolak pada perangkat fisik!', 'danger');
-                        blinkRedLed();
+                        const isOut = latestLog.device_code === DEVICE_OUT;
+                        blinkRedLed(isOut ? 'OUT' : 'IN');
                     }
                 }
             }
@@ -573,8 +677,246 @@ Memuat struk parkir...
     setInterval(checkHardwareSync, 1500);
     checkHardwareSync();
 
-    function triggerEmergencySimulator() {
-        openEmergencyModal(currentDevice);
+    function triggerEmergencySimulator(target) {
+        const gate = target || 'IN';
+        openEmergencyModal(gate === 'OUT' ? DEVICE_OUT : DEVICE_IN);
+    }
+
+    function openAllGates() {
+        openBarrierGate(8000, 'IN');
+        setTimeout(() => openBarrierGate(8000, 'OUT'), 300);
+    }
+
+    // ── Traffic Light helpers ──────────────────────────────────────────
+    function setTrafficLightIn(color) {
+        const r = document.getElementById('led-red-in');
+        const g = document.getElementById('led-green-in');
+        if (!r || !g) return;
+        r.style.backgroundColor = '#450a0a'; r.style.boxShadow = 'none'; r.style.borderColor = '#7f1d1d'; r.style.opacity = '0.35';
+        g.style.backgroundColor = '#022c22'; g.style.boxShadow = 'none'; g.style.borderColor = '#064e3b'; g.style.opacity = '0.35';
+        if (color === 'red')   { r.style.backgroundColor = '#ef4444'; r.style.boxShadow = '0 0 12px #ef4444, 0 0 20px rgba(239,68,68,0.7)'; r.style.borderColor = '#fca5a5'; r.style.opacity = '1'; }
+        if (color === 'green') { g.style.backgroundColor = '#10b981'; g.style.boxShadow = '0 0 12px #10b981, 0 0 20px rgba(16,185,129,0.85)'; g.style.borderColor = '#6ee7b7'; g.style.opacity = '1'; }
+    }
+
+    function setTrafficLightOut(color) {
+        const r = document.getElementById('led-red-out');
+        const g = document.getElementById('led-green-out');
+        if (!r || !g) return;
+        r.style.backgroundColor = '#450a0a'; r.style.boxShadow = 'none'; r.style.borderColor = '#7f1d1d'; r.style.opacity = '0.35';
+        g.style.backgroundColor = '#022c22'; g.style.boxShadow = 'none'; g.style.borderColor = '#064e3b'; g.style.opacity = '0.35';
+        if (color === 'red')   { r.style.backgroundColor = '#ef4444'; r.style.boxShadow = '0 0 12px #ef4444, 0 0 20px rgba(239,68,68,0.7)'; r.style.borderColor = '#fca5a5'; r.style.opacity = '1'; }
+        if (color === 'green') { g.style.backgroundColor = '#10b981'; g.style.boxShadow = '0 0 12px #10b981, 0 0 20px rgba(16,185,129,0.85)'; g.style.borderColor = '#6ee7b7'; g.style.opacity = '1'; }
+    }
+
+    // Legacy alias (backward compat dengan checkHardwareSync lama)
+    function setTrafficLight(color) { setTrafficLightIn(color); setTrafficLightOut(color); }
+
+    // ── Clear gate timers ─────────────────────────────────────────────
+    function clearGateInTimers()  { [gateInTimer, gateInPhase1, gateInPhase2].forEach(t => t && clearTimeout(t));  if (gateInCountdown)  clearInterval(gateInCountdown);  gateInTimer = gateInPhase1 = gateInPhase2 = gateInCountdown = null; }
+    function clearGateOutTimers() { [gateOutTimer, gateOutPhase1, gateOutPhase2].forEach(t => t && clearTimeout(t)); if (gateOutCountdown) clearInterval(gateOutCountdown); gateOutTimer = gateOutPhase1 = gateOutPhase2 = gateOutCountdown = null; }
+    function clearAllGateTimers() { clearGateInTimers(); clearGateOutTimers(); }
+
+    // ── Generic open/close helpers ────────────────────────────────────
+    function _startCountdown(timerBoxId, timerCountId, durationMs, onDone) {
+        const box = document.getElementById(timerBoxId);
+        const cnt = document.getElementById(timerCountId);
+        if (!box || !cnt) return null;
+        box.classList.remove('d-none'); box.classList.add('d-flex');
+        let rem = Math.round(durationMs / 1000);
+        cnt.textContent = rem;
+        const iv = setInterval(() => { rem--; if (rem >= 0) cnt.textContent = rem; else clearInterval(iv); }, 1000);
+        return iv;
+    }
+    function _hideTimer(timerBoxId) {
+        const box = document.getElementById(timerBoxId);
+        if (box) { box.classList.add('d-none'); box.classList.remove('d-flex'); }
+    }
+
+    // ── Open Gate IN ──────────────────────────────────────────────────
+    function openBarrierGateIn(durationMs = 5000) {
+        clearGateInTimers();
+        const arm   = document.getElementById('gate-arm-in');
+        const badge = document.getElementById('gate-state-badge-in');
+
+        if (isGateInOpen) {
+            setTrafficLightIn('green');
+            if (badge) { badge.className = 'badge bg-success-subtle text-success border border-success-subtle'; badge.textContent = 'TERBUKA (90°)'; }
+            if (arm) arm.style.transform = 'rotate(-90deg)';
+            gateInCountdown = _startCountdown('timer-box-in', 'timer-count-in', durationMs);
+            gateInTimer = setTimeout(() => closeBarrierGateIn(), durationMs);
+            return;
+        }
+
+        setTrafficLightIn('green');
+        playWebBuzzer(2, 'high');
+        if (badge) { badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle'; badge.textContent = 'MEMBUKA (NAIK)...'; }
+
+        gateInPhase1 = setTimeout(() => {
+            if (arm) arm.style.transform = 'rotate(-90deg)';
+            gateInPhase2 = setTimeout(() => {
+                isGateInOpen = true;
+                setTrafficLightIn('green');
+                if (badge) { badge.className = 'badge bg-success-subtle text-success border border-success-subtle'; badge.textContent = 'TERBUKA (90°)'; }
+                gateInCountdown = _startCountdown('timer-box-in', 'timer-count-in', durationMs);
+                gateInTimer = setTimeout(() => closeBarrierGateIn(), durationMs);
+            }, 1000);
+        }, 1020);
+    }
+
+    function closeBarrierGateIn() {
+        clearGateInTimers();
+        const arm   = document.getElementById('gate-arm-in');
+        const badge = document.getElementById('gate-state-badge-in');
+        playWebBuzzer(1, 'medium');
+        if (badge) { badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle'; badge.textContent = 'MENUTUP (TURUN)...'; }
+        gateInPhase1 = setTimeout(() => {
+            if (arm) arm.style.transform = 'rotate(0deg)';
+            gateInPhase2 = setTimeout(() => {
+                isGateInOpen = false;
+                setTrafficLightIn('red');
+                _hideTimer('timer-box-in');
+                if (badge) { badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle'; badge.textContent = 'TERTUTUP (0°)'; }
+            }, 1000);
+        }, 1000);
+    }
+
+    // ── Open Gate OUT ─────────────────────────────────────────────────
+    function openBarrierGateOut(durationMs = 5000) {
+        clearGateOutTimers();
+        const arm   = document.getElementById('gate-arm-out');
+        const badge = document.getElementById('gate-state-badge-out');
+
+        if (isGateOutOpen) {
+            setTrafficLightOut('green');
+            if (badge) { badge.className = 'badge bg-success-subtle text-success border border-success-subtle'; badge.textContent = 'TERBUKA (90°)'; }
+            if (arm) arm.style.transform = 'rotate(-90deg)';
+            gateOutCountdown = _startCountdown('timer-box-out', 'timer-count-out', durationMs);
+            gateOutTimer = setTimeout(() => closeBarrierGateOut(), durationMs);
+            return;
+        }
+
+        setTrafficLightOut('green');
+        playWebBuzzer(2, 'high');
+        if (badge) { badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle'; badge.textContent = 'MEMBUKA (NAIK)...'; }
+
+        gateOutPhase1 = setTimeout(() => {
+            if (arm) arm.style.transform = 'rotate(-90deg)';
+            gateOutPhase2 = setTimeout(() => {
+                isGateOutOpen = true;
+                setTrafficLightOut('green');
+                if (badge) { badge.className = 'badge bg-success-subtle text-success border border-success-subtle'; badge.textContent = 'TERBUKA (90°)'; }
+                gateOutCountdown = _startCountdown('timer-box-out', 'timer-count-out', durationMs);
+                gateOutTimer = setTimeout(() => closeBarrierGateOut(), durationMs);
+            }, 1000);
+        }, 1020);
+    }
+
+    function closeBarrierGateOut() {
+        clearGateOutTimers();
+        const arm   = document.getElementById('gate-arm-out');
+        const badge = document.getElementById('gate-state-badge-out');
+        playWebBuzzer(1, 'medium');
+        if (badge) { badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle'; badge.textContent = 'MENUTUP (TURUN)...'; }
+        gateOutPhase1 = setTimeout(() => {
+            if (arm) arm.style.transform = 'rotate(0deg)';
+            gateOutPhase2 = setTimeout(() => {
+                isGateOutOpen = false;
+                setTrafficLightOut('red');
+                _hideTimer('timer-box-out');
+                if (badge) { badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle'; badge.textContent = 'TERTUTUP (0°)'; }
+            }, 1000);
+        }, 1000);
+    }
+
+    // ── Legacy alias: openBarrierGate(ms, target) ─────────────────────
+    function openBarrierGate(durationMs = 5000, target) {
+        const t = (target || 'IN').toUpperCase();
+        if (t === 'OUT')  openBarrierGateOut(durationMs);
+        else if (t === 'BOTH') { openBarrierGateIn(durationMs); setTimeout(() => openBarrierGateOut(durationMs), 300); }
+        else openBarrierGateIn(durationMs);
+    }
+    function closeBarrierGate() { closeBarrierGateIn(); closeBarrierGateOut(); }
+
+    // ── Blink red LED ─────────────────────────────────────────────────
+    function blinkRedLed(target) {
+        const gate = (target || 'IN').toUpperCase();
+        const id = gate === 'OUT' ? 'led-red-out' : 'led-red-in';
+        const setFn = gate === 'OUT' ? setTrafficLightOut : setTrafficLightIn;
+        setFn('none');
+        const ledRed = document.getElementById(id);
+        if (!ledRed) return;
+        let count = 0;
+        const blinker = setInterval(() => {
+            if (count % 2 === 0) { ledRed.style.backgroundColor = '#450a0a'; ledRed.style.boxShadow = 'none'; ledRed.style.opacity = '0.3'; }
+            else { ledRed.style.backgroundColor = '#ef4444'; ledRed.style.boxShadow = '0 0 20px #ef4444, 0 0 30px rgba(239,68,68,0.8)'; ledRed.style.borderColor = '#fca5a5'; ledRed.style.opacity = '1'; }
+            count++;
+            if (count > 5) { clearInterval(blinker); setFn('red'); }
+        }, 120);
+    }
+
+    // ── Ticket simulation (Gate IN) ───────────────────────────────────
+    async function triggerTicketSimulation() {
+        try {
+            const res = await fetch('{{ route('admin.api.stats') }}').then(r => r.json()).catch(() => null);
+            if (!res) { showToast('Simulasi Karcis', 'Koneksi server tidak tersedia', 'danger'); return; }
+            showToast('Ambil Karcis Masuk', 'Memproses karcis parkir masuk...', 'info');
+            const badge = document.getElementById('gate-state-badge-in');
+            if (badge) { badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle animate-pulse'; badge.textContent = 'AMBIL TIKET...'; }
+            setTimeout(() => openBarrierGateIn(8000), 2500);
+        } catch (e) {
+            showToast('Error', e.message, 'danger');
+        }
+    }
+
+    // ── RFID Modal ────────────────────────────────────────────────────
+    function openRfidModal(target) {
+        rfidModalTarget = target || 'IN';
+        const badge = document.getElementById('rfid-modal-target-badge');
+        if (badge) {
+            badge.textContent = rfidModalTarget === 'OUT' ? 'Gate OUT (Keluar)' : 'Gate IN (Masuk)';
+            badge.className   = rfidModalTarget === 'OUT' ? 'badge bg-danger ms-1' : 'badge bg-success ms-1';
+        }
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('rfidSimModal'));
+        modal.show();
+    }
+
+    async function simulateCardTap(uid) {
+        const deviceCode = rfidModalTarget === 'OUT' ? 'GATE_KELUAR_01' : 'GATE_MASUK_01';
+        try {
+            const res = await fetch('{{ url('/api/scan') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ device_code: deviceCode, scan_uid: uid })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                playWebBuzzer(2);
+                showToast('✅ Kartu Diterima', data.message || 'Palang dibuka!', 'success');
+                if (rfidModalTarget === 'OUT') openBarrierGateOut(data.duration_ms || 5000);
+                else                           openBarrierGateIn(data.duration_ms || 5000);
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('rfidSimModal')).hide();
+            } else {
+                playWebBuzzer(3, 'low');
+                showToast('❌ Kartu Ditolak', data.message || 'Akses ditolak', 'danger');
+                blinkRedLed(rfidModalTarget);
+            }
+        } catch (err) {
+            showToast('Error', err.message, 'danger');
+        }
+    }
+
+    function tapManualUid() {
+        const inp = document.getElementById('rfid-manual-uid');
+        const uid = inp ? inp.value.trim() : '';
+        if (!uid) { showToast('RFID Simulator', 'Masukkan UID terlebih dahulu', 'warning'); return; }
+        simulateCardTap(uid);
+        if (inp) inp.value = '';
+    }
+
+    function focusBarcodeScanner() {
+        const inp = document.getElementById('barcode-scan-input');
+        if (inp) { inp.focus(); inp.select(); }
+        showToast('Scanner Siap', 'Arahkan barcode karcis ke scanner atau ketik kode karcis', 'info');
     }
 
     function showTicketModal(ticketText, ticketCode, receiptUrl) {
@@ -587,196 +929,6 @@ Memuat struk parkir...
 
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('receiptModal'));
         modal.show();
-    }
-
-    function setTrafficLight(color) {
-        const ledRed = document.getElementById('led-red');
-        const ledYellow = document.getElementById('led-yellow');
-        const ledGreen = document.getElementById('led-green');
-        if (!ledRed || !ledYellow || !ledGreen) return;
-
-        ledRed.style.backgroundColor = '#450a0a';
-        ledRed.style.boxShadow = 'none';
-        ledRed.style.borderColor = '#7f1d1d';
-        ledRed.style.opacity = '0.35';
-
-        ledYellow.style.backgroundColor = '#451a03';
-        ledYellow.style.boxShadow = 'none';
-        ledYellow.style.borderColor = '#78350f';
-        ledYellow.style.opacity = '0.35';
-
-        ledGreen.style.backgroundColor = '#022c22';
-        ledGreen.style.boxShadow = 'none';
-        ledGreen.style.borderColor = '#064e3b';
-        ledGreen.style.opacity = '0.35';
-
-        if (color === 'red') {
-            ledRed.style.backgroundColor = '#ef4444';
-            ledRed.style.boxShadow = '0 0 16px #ef4444, 0 0 28px rgba(239, 68, 68, 0.7)';
-            ledRed.style.borderColor = '#fca5a5';
-            ledRed.style.opacity = '1';
-        } else if (color === 'yellow') {
-            ledYellow.style.backgroundColor = '#FFD51E';
-            ledYellow.style.boxShadow = '0 0 16px #FFD51E, 0 0 28px rgba(255, 213, 30, 0.85)';
-            ledYellow.style.borderColor = '#fef08a';
-            ledYellow.style.opacity = '1';
-        } else if (color === 'green') {
-            ledGreen.style.backgroundColor = '#10b981';
-            ledGreen.style.boxShadow = '0 0 16px #10b981, 0 0 28px rgba(16, 185, 129, 0.85)';
-            ledGreen.style.borderColor = '#6ee7b7';
-            ledGreen.style.opacity = '1';
-        }
-    }
-
-    function clearAllGateTimers() {
-        if (gateTimer) clearTimeout(gateTimer);
-        if (openPhase1Timer) clearTimeout(openPhase1Timer);
-        if (openPhase2Timer) clearTimeout(openPhase2Timer);
-        if (countdownInterval) clearInterval(countdownInterval);
-        gateTimer = null;
-        openPhase1Timer = null;
-        openPhase2Timer = null;
-        countdownInterval = null;
-    }
-
-    function openBarrierGate(durationMs = 5000) {
-        clearAllGateTimers();
-
-        const arm = document.getElementById('gate-arm');
-        const badge = document.getElementById('gate-state-badge');
-        const timerBox = document.getElementById('timer-box');
-        const timerCount = document.getElementById('timer-count');
-
-        if (isGateCurrentlyOpen) {
-            setTrafficLight('green');
-            if (badge) {
-                badge.className = 'badge bg-success-subtle text-success border border-success-subtle';
-                badge.textContent = 'TERBUKA (90°)';
-            }
-            if (arm) arm.style.transform = 'rotate(-90deg)';
-            if (timerBox && timerCount) {
-                timerBox.classList.remove('d-none');
-                timerBox.classList.add('d-flex');
-                let remaining = Math.round(durationMs / 1000);
-                timerCount.textContent = remaining;
-                countdownInterval = setInterval(() => {
-                    remaining--;
-                    if (remaining >= 0) {
-                        timerCount.textContent = remaining;
-                    } else {
-                        clearInterval(countdownInterval);
-                    }
-                }, 1000);
-            }
-            gateTimer = setTimeout(() => {
-                closeBarrierGate();
-            }, durationMs);
-            return;
-        }
-
-        setTrafficLight('yellow');
-        playWebBuzzer(2, 'high');
-        if (badge) {
-            badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle';
-            badge.textContent = 'PERSIAPAN BUKA...';
-        }
-
-        openPhase1Timer = setTimeout(() => {
-            if (badge) {
-                badge.textContent = 'MEMBUKA (NAIK)...';
-            }
-            if (arm) arm.style.transform = 'rotate(-90deg)';
-
-            openPhase2Timer = setTimeout(() => {
-                isGateCurrentlyOpen = true;
-                setTrafficLight('green');
-                if (badge) {
-                    badge.className = 'badge bg-success-subtle text-success border border-success-subtle';
-                    badge.textContent = 'TERBUKA (90°)';
-                }
-
-                if (timerBox && timerCount) {
-                    timerBox.classList.remove('d-none');
-                    timerBox.classList.add('d-flex');
-                    let remaining = Math.round(durationMs / 1000);
-                    timerCount.textContent = remaining;
-
-                    countdownInterval = setInterval(() => {
-                        remaining--;
-                        if (remaining >= 0) {
-                            timerCount.textContent = remaining;
-                        } else {
-                            clearInterval(countdownInterval);
-                        }
-                    }, 1000);
-                }
-
-                gateTimer = setTimeout(() => {
-                    closeBarrierGate();
-                }, durationMs);
-
-            }, 1000);
-        }, 1020);
-    }
-
-    function closeBarrierGate() {
-        clearAllGateTimers();
-
-        const arm = document.getElementById('gate-arm');
-        const badge = document.getElementById('gate-state-badge');
-        const timerBox = document.getElementById('timer-box');
-
-        setTrafficLight('yellow');
-        playWebBuzzer(1, 'medium');
-        if (badge) {
-            badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle';
-            badge.textContent = 'PERSIAPAN TUTUP...';
-        }
-
-        openPhase1Timer = setTimeout(() => {
-            if (badge) {
-                badge.textContent = 'MENUTUP (TURUN)...';
-            }
-            if (arm) arm.style.transform = 'rotate(0deg)';
-
-            openPhase2Timer = setTimeout(() => {
-                isGateCurrentlyOpen = false;
-                setTrafficLight('red');
-                if (badge) {
-                    badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
-                    badge.textContent = 'TERTUTUP (0°)';
-                }
-
-                if (timerBox) {
-                    timerBox.classList.add('d-none');
-                    timerBox.classList.remove('d-flex');
-                }
-            }, 1000);
-        }, 1000);
-    }
-
-    function blinkRedLed() {
-        setTrafficLight('none');
-        const ledRed = document.getElementById('led-red');
-        if (!ledRed) return;
-        let count = 0;
-        const blinker = setInterval(() => {
-            if (count % 2 === 0) {
-                ledRed.style.backgroundColor = '#450a0a';
-                ledRed.style.boxShadow = 'none';
-                ledRed.style.opacity = '0.3';
-            } else {
-                ledRed.style.backgroundColor = '#ef4444';
-                ledRed.style.boxShadow = '0 0 20px #ef4444, 0 0 30px rgba(239, 68, 68, 0.8)';
-                ledRed.style.borderColor = '#fca5a5';
-                ledRed.style.opacity = '1';
-            }
-            count++;
-            if (count > 5) {
-                clearInterval(blinker);
-                setTrafficLight('red');
-            }
-        }, 120);
     }
 
     function updateSideParkingStatus(list, count) {
@@ -1009,7 +1161,7 @@ Memuat struk parkir...
                     statusText.innerHTML = `<span class="text-success fw-bold font-monospace">✓ Karcis #${ticketCode} Selesai (${data.data?.total_fee_formatted || ''}) - Palang Dibuka</span>`;
                 }
 
-                openBarrierGate(data.duration_ms || 6000);
+                openBarrierGateOut(data.duration_ms || 6000);
 
                 if (data.data && data.data.receipt_id) {
                     setTimeout(() => {
@@ -1074,7 +1226,7 @@ Memuat struk parkir...
                 checkHardwareSync();
 
                 if (data.action === 'OPEN' || data.flow === 'TAP_OUT_TICKET' || data.flow === 'TAP_OUT_TICKET_COMPLETED') {
-                    openBarrierGate(data.duration_ms || 5000);
+                    openBarrierGateOut(data.duration_ms || 5000);
                 }
 
                 if (data.data && data.data.receipt_id && !data.data.ticket_code && data.flow !== 'TAP_OUT_TICKET') {

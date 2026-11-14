@@ -50,8 +50,8 @@ class OverrideController extends Controller
                 if ($overrideType === 2) {
                     return response()->json([
                         'action' => 'TICKET_DELAY_OPEN',
-                        'delay_ms' => 2500,
-                        'duration_ms' => 8000,
+                        'delay_ms' => 3000,
+                        'duration_ms' => 10000,
                         'device_code' => $device->device_code,
                         'message' => 'Tiket karcis masuk dicetak. Menunggu pengambilan karcis...'
                     ]);

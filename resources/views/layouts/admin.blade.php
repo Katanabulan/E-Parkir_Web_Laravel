@@ -77,58 +77,79 @@
             </a>
 
             <!-- Navigation Links -->
-            <div class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mb-2" style="font-size: 0.75rem;">Menu Utama</div>
-            <ul class="nav nav-pills flex-column mb-auto">
-                <li class="nav-item">
-                    <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                        <i class="bi bi-speedometer2 fs-5"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.status.index') }}" class="nav-link {{ request()->routeIs('admin.status.*') ? 'active' : '' }}">
-                        <i class="bi bi-grid-3x3-gap-fill fs-5"></i>
-                        <span>Status Slot Parkir</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.cards.index') }}" class="nav-link {{ request()->routeIs('admin.cards.*') ? 'active' : '' }}">
-                        <i class="bi bi-credit-card-2-front-fill fs-5"></i>
-                        <span>Kelola Kartu RFID</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.monitoring') }}" class="nav-link d-flex align-items-center justify-content-between {{ request()->routeIs('admin.monitoring') ? 'active' : '' }}">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-cpu-fill fs-5"></i>
-                            <span>Gate Simulator</span>
-                        </div>
-                        <span class="badge bg-danger">LIVE</span>
-                    </a>
-                </li>
+            @if (auth()->user()->role === 'petugas')
+                <div class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mb-2" style="font-size: 0.75rem;">Pos Palang Keluar</div>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="{{ route('admin.monitoring') }}" class="nav-link d-flex align-items-center justify-content-between {{ request()->routeIs('admin.monitoring') ? 'active' : '' }}">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-cpu-fill fs-5"></i>
+                                <span>Pos Gerbang & Kasir</span>
+                            </div>
+                            <span class="badge bg-danger">LIVE</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.status.index') }}" class="nav-link {{ request()->routeIs('admin.status.*') ? 'active' : '' }}">
+                            <i class="bi bi-grid-3x3-gap-fill fs-5"></i>
+                            <span>Status Slot Parkir</span>
+                        </a>
+                    </li>
+                </ul>
+            @else
+                <div class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mb-2" style="font-size: 0.75rem;">Menu Utama</div>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                            <i class="bi bi-speedometer2 fs-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.status.index') }}" class="nav-link {{ request()->routeIs('admin.status.*') ? 'active' : '' }}">
+                            <i class="bi bi-grid-3x3-gap-fill fs-5"></i>
+                            <span>Status Slot Parkir</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.cards.index') }}" class="nav-link {{ request()->routeIs('admin.cards.*') ? 'active' : '' }}">
+                            <i class="bi bi-credit-card-2-front-fill fs-5"></i>
+                            <span>Kelola Kartu RFID</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.monitoring') }}" class="nav-link d-flex align-items-center justify-content-between {{ request()->routeIs('admin.monitoring') ? 'active' : '' }}">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-cpu-fill fs-5"></i>
+                                <span>Gate Simulator</span>
+                            </div>
+                            <span class="badge bg-danger">LIVE</span>
+                        </a>
+                    </li>
 
-                <li class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mt-3 mb-2" style="font-size: 0.75rem;">Laporan & Audit</li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.reports.index') }}" class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
-                        <i class="bi bi-graph-up-arrow fs-5"></i>
-                        <span>Laporan Finansial</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.logs.index') }}" class="nav-link {{ request()->routeIs('admin.logs.*') ? 'active' : '' }}">
-                        <i class="bi bi-clock-history fs-5"></i>
-                        <span>Audit Log Akses</span>
-                    </a>
-                </li>
+                    <li class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mt-3 mb-2" style="font-size: 0.75rem;">Laporan & Audit</li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.reports.index') }}" class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                            <i class="bi bi-graph-up-arrow fs-5"></i>
+                            <span>Laporan Finansial</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.logs.index') }}" class="nav-link {{ request()->routeIs('admin.logs.*') ? 'active' : '' }}">
+                            <i class="bi bi-clock-history fs-5"></i>
+                            <span>Audit Log Akses</span>
+                        </a>
+                    </li>
 
-                <li class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mt-3 mb-2" style="font-size: 0.75rem;">Master Data</li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                        <i class="bi bi-people-fill fs-5"></i>
-                        <span>Kelola Pengguna</span>
-                    </a>
-                </li>
-            </ul>
+                    <li class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mt-3 mb-2" style="font-size: 0.75rem;">Master Data</li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                            <i class="bi bi-people-fill fs-5"></i>
+                            <span>Kelola Pengguna</span>
+                        </a>
+                    </li>
+                </ul>
+            @endif
 
             <!-- Sidebar Bottom Info -->
             <div class="pt-3 border-top border-white-50 small text-white-50 d-flex align-items-center justify-content-between">
@@ -149,43 +170,59 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body d-flex flex-column p-3">
-                <ul class="nav nav-pills flex-column mb-auto">
-                    <li class="nav-item">
-                        <a href="{{ route('admin.dashboard') }}" class="nav-link text-white {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                            <i class="bi bi-speedometer2 me-2"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('admin.status.index') }}" class="nav-link text-white {{ request()->routeIs('admin.status.*') ? 'active' : '' }}">
-                            <i class="bi bi-grid-3x3-gap-fill me-2"></i> Status Slot Parkir
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('admin.cards.index') }}" class="nav-link text-white {{ request()->routeIs('admin.cards.*') ? 'active' : '' }}">
-                            <i class="bi bi-credit-card-2-front-fill me-2"></i> Kelola Kartu RFID
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('admin.monitoring') }}" class="nav-link text-white {{ request()->routeIs('admin.monitoring') ? 'active' : '' }}">
-                            <i class="bi bi-cpu-fill me-2"></i> Gate Simulator
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('admin.reports.index') }}" class="nav-link text-white {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
-                            <i class="bi bi-graph-up-arrow me-2"></i> Laporan Finansial
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('admin.logs.index') }}" class="nav-link text-white {{ request()->routeIs('admin.logs.*') ? 'active' : '' }}">
-                            <i class="bi bi-clock-history me-2"></i> Audit Log Akses
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('admin.users.index') }}" class="nav-link text-white {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                            <i class="bi bi-people-fill me-2"></i> Kelola Pengguna
-                        </a>
-                    </li>
-                </ul>
+                @if (auth()->user()->role === 'petugas')
+                    <div class="nav-heading text-uppercase text-white-50 small fw-bold px-2 mb-2" style="font-size: 0.75rem;">Pos Palang Keluar</div>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.monitoring') }}" class="nav-link text-white {{ request()->routeIs('admin.monitoring') ? 'active' : '' }}">
+                                <i class="bi bi-cpu-fill me-2"></i> Pos Gerbang & Kasir
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.status.index') }}" class="nav-link text-white {{ request()->routeIs('admin.status.*') ? 'active' : '' }}">
+                                <i class="bi bi-grid-3x3-gap-fill me-2"></i> Status Slot Parkir
+                            </a>
+                        </li>
+                    </ul>
+                @else
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.dashboard') }}" class="nav-link text-white {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.status.index') }}" class="nav-link text-white {{ request()->routeIs('admin.status.*') ? 'active' : '' }}">
+                                <i class="bi bi-grid-3x3-gap-fill me-2"></i> Status Slot Parkir
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.cards.index') }}" class="nav-link text-white {{ request()->routeIs('admin.cards.*') ? 'active' : '' }}">
+                                <i class="bi bi-credit-card-2-front-fill me-2"></i> Kelola Kartu RFID
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.monitoring') }}" class="nav-link text-white {{ request()->routeIs('admin.monitoring') ? 'active' : '' }}">
+                                <i class="bi bi-cpu-fill me-2"></i> Gate Simulator
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.reports.index') }}" class="nav-link text-white {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                                <i class="bi bi-graph-up-arrow me-2"></i> Laporan Finansial
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.logs.index') }}" class="nav-link text-white {{ request()->routeIs('admin.logs.*') ? 'active' : '' }}">
+                                <i class="bi bi-clock-history me-2"></i> Audit Log Akses
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.users.index') }}" class="nav-link text-white {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                                <i class="bi bi-people-fill me-2"></i> Kelola Pengguna
+                            </a>
+                        </li>
+                    </ul>
+                @endif
             </div>
         </div>
 
@@ -221,7 +258,13 @@
                             <li class="px-3 py-2 border-bottom">
                                 <p class="mb-0 fw-bold small text-dark">{{ auth()->user()->name ?? 'Admin' }}</p>
                                 <small class="text-muted d-block text-truncate" style="max-width: 180px;">{{ auth()->user()->email ?? '' }}</small>
-                                <span class="badge bg-primary-subtle text-primary mt-1">Administrator</span>
+                                @if (auth()->user()->role === 'admin')
+                                    <span class="badge bg-primary-subtle text-primary mt-1">Administrator</span>
+                                @elseif (auth()->user()->role === 'petugas')
+                                    <span class="badge bg-success-subtle text-success mt-1">Petugas Palang Keluar</span>
+                                @elseif (auth()->user()->role === 'owner')
+                                    <span class="badge bg-warning-subtle text-warning mt-1">Owner</span>
+                                @endif
                             </li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}" id="logout-form">
@@ -258,7 +301,7 @@
 
     </div>
 
-    @if (auth()->user()->role === 'admin')
+    @if (in_array(auth()->user()->role, ['admin', 'petugas']))
     <!-- EMERGENCY OVERRIDE MODAL -->
     <div class="modal fade no-print" id="emergencyModal" tabindex="-1" aria-labelledby="emergencyModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -279,7 +322,9 @@
                         </p>
                         <div class="mb-3">
                             <label class="form-label small fw-semibold text-secondary">Pilih Gerbang Tujuan</label>
-                            <select id="emergency-device-code" required class="form-select">
+                            <select id="emergency-device-code" required class="form-select rounded-3">
+                                <option value="GATE_MASUK_01">GATE_MASUK_01 (Palang Gerbang Masuk)</option>
+                                <option value="GATE_KELUAR_01">GATE_KELUAR_01 (Palang Gerbang Keluar)</option>
                                 <option value="Gate-01">Gate-01 (Palang Gerbang Utama)</option>
                             </select>
                         </div>
@@ -325,7 +370,21 @@
             const modalEl = document.getElementById('emergencyModal');
             if (!modalEl) return;
             if (deviceCode) {
-                document.getElementById('emergency-device-code').value = deviceCode;
+                const selectEl = document.getElementById('emergency-device-code');
+                if (selectEl) {
+                    let exists = false;
+                    for (let i = 0; i < selectEl.options.length; i++) {
+                        if (selectEl.options[i].value === deviceCode) {
+                            selectEl.selectedIndex = i;
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        const opt = new Option(deviceCode, deviceCode, true, true);
+                        selectEl.add(opt);
+                    }
+                }
             }
             const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
             modal.show();
@@ -369,7 +428,8 @@
                         refreshDashboardData();
                     }
                     if (typeof openBarrierGate === 'function') {
-                        openBarrierGate(8000);
+                        const target = (deviceCode === 'GATE_KELUAR_01') ? 'OUT' : ((deviceCode === 'GATE_MASUK_01') ? 'IN' : 'BOTH');
+                        openBarrierGate(8000, target);
                     }
                 } else {
                     showToast('Gagal', data.message, 'danger');

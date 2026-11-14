@@ -102,49 +102,57 @@ Route::redirect('/owner/transactions', '/login')->name('owner.transactions.index
 Route::redirect('/owner/reports/export', '/login')->name('owner.reports.export');
 
 // =========================================================================
-// 3. ADMIN PORTAL (Full Operasional Web: Protected by Auth and Role: admin)
+// 3. ADMIN & PETUGAS PORTAL (Operasional Web: Protected by Auth and Role: admin, petugas)
 // =========================================================================
-Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'role:admin,petugas'])->group(function () {
     Route::get('/', function () {
+        if (auth()->user()->role === 'petugas') {
+            return redirect()->route('admin.monitoring');
+        }
         return redirect()->route('admin.dashboard');
     });
 
-    // Dashboard & Live Stats
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/api-stats', [DashboardController::class, 'apiStats'])->name('admin.api.stats');
-    Route::get('/api_stats.php', [DashboardController::class, 'apiStats'])->name('admin.api-stats');
-
-    // Monitoring & Hardware Simulator
+    // Monitoring & Pos Palang Keluar (Akses Utama Petugas & Admin)
     Route::get('/monitoring', [MonitoringController::class, 'index'])->name('admin.monitoring');
     Route::post('/monitoring/tap', [MonitoringController::class, 'tap'])->name('admin.monitoring.tap');
     Route::post('/monitoring/override', [MonitoringController::class, 'override'])->name('admin.monitoring.override');
     Route::post('/monitoring/checkout', [MonitoringController::class, 'checkout'])->name('admin.monitoring.checkout');
     Route::post('/monitoring/ticket', [MonitoringController::class, 'generateTicket'])->name('admin.monitoring.ticket');
 
-    // RFID Cards Management
-    Route::get('/cards', [CardController::class, 'index'])->name('admin.cards.index');
-    Route::post('/cards', [CardController::class, 'store'])->name('admin.cards.store');
-    Route::post('/cards/toggle-status', [CardController::class, 'toggleStatus'])->name('admin.cards.toggle-status');
-    Route::match(['post', 'put'], '/cards/{id}', [CardController::class, 'update'])->name('admin.cards.update');
-    Route::post('/cards/{id}/topup', [CardController::class, 'topup'])->name('admin.cards.topup');
-    Route::match(['post', 'delete'], '/cards/{id}/delete', [CardController::class, 'destroy'])->name('admin.cards.destroy');
-    Route::match(['post', 'delete'], '/cards/pending/{id}/delete', [CardController::class, 'destroyPendingMember'])->name('admin.cards.destroy-pending');
-    Route::get('/cards-latest-scan', [CardController::class, 'latestScan'])->name('admin.cards.latest-scan');
-    Route::get('/api_register_scan.php', [CardController::class, 'latestScan']);
-
-    // Reports & Analytics (Versi Admin)
-    Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
-    Route::get('/reports/export', [ReportController::class, 'exportCsv'])->name('admin.reports.export');
-
-    // Audit Logs
-    Route::get('/logs', [LogController::class, 'index'])->name('admin.logs.index');
-
-    // Parking Slot Map
+    // Live Stats & Status Slot Parkir
+    Route::get('/api-stats', [DashboardController::class, 'apiStats'])->name('admin.api.stats');
+    Route::get('/api_stats.php', [DashboardController::class, 'apiStats'])->name('admin.api-stats');
     Route::get('/status', [StatusController::class, 'index'])->name('admin.status.index');
 
-    // Manajemen Akun Pengelola (Admin & Owner)
-    Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
-    Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
-    Route::match(['post', 'put'], '/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
-    Route::match(['post', 'delete'], '/users/{id}/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
+    // =====================================================================
+    // KHUSUS ADMINISTRATOR (Dashboard, Kelola Kartu, Laporan, Log, User)
+    // =====================================================================
+    Route::middleware('role:admin')->group(function () {
+        // Dashboard & Live Summary
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+        // RFID Cards Management
+        Route::get('/cards', [CardController::class, 'index'])->name('admin.cards.index');
+        Route::post('/cards', [CardController::class, 'store'])->name('admin.cards.store');
+        Route::post('/cards/toggle-status', [CardController::class, 'toggleStatus'])->name('admin.cards.toggle-status');
+        Route::match(['post', 'put'], '/cards/{id}', [CardController::class, 'update'])->name('admin.cards.update');
+        Route::post('/cards/{id}/topup', [CardController::class, 'topup'])->name('admin.cards.topup');
+        Route::match(['post', 'delete'], '/cards/{id}/delete', [CardController::class, 'destroy'])->name('admin.cards.destroy');
+        Route::match(['post', 'delete'], '/cards/pending/{id}/delete', [CardController::class, 'destroyPendingMember'])->name('admin.cards.destroy-pending');
+        Route::get('/cards-latest-scan', [CardController::class, 'latestScan'])->name('admin.cards.latest-scan');
+        Route::get('/api_register_scan.php', [CardController::class, 'latestScan']);
+
+        // Reports & Analytics (Versi Admin)
+        Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
+        Route::get('/reports/export', [ReportController::class, 'exportCsv'])->name('admin.reports.export');
+
+        // Audit Logs
+        Route::get('/logs', [LogController::class, 'index'])->name('admin.logs.index');
+
+        // Manajemen Akun Pengelola (Admin, Petugas, Owner)
+        Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+        Route::match(['post', 'put'], '/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
+        Route::match(['post', 'delete'], '/users/{id}/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
+    });
 });

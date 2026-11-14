@@ -34,11 +34,15 @@ class CheckRole
                 return redirect()->route('admin.dashboard')->with('error', 'Akses ditolak: Anda terautentikasi sebagai Administrator.');
             }
 
+            if ($user->role === 'petugas') {
+                return redirect()->route('admin.monitoring')->with('error', 'Akses ditolak: Menu ini hanya untuk Administrator.');
+            }
+
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('login')->with('error', 'Akses web hanya untuk Administrator. Akun Pengendara dan Owner silakan akses melalui aplikasi Mobile.');
+            return redirect()->route('login')->with('error', 'Akses web hanya untuk Administrator dan Petugas. Akun Pengendara dan Owner silakan akses melalui aplikasi Mobile.');
         }
 
         return $next($request);

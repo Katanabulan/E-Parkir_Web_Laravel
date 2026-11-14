@@ -17,10 +17,12 @@ class AuthController extends Controller
             $user = Auth::user();
             if ($user->role === 'admin') {
                 return redirect()->route('admin.dashboard');
+            } elseif ($user->role === 'petugas') {
+                return redirect()->route('admin.monitoring');
             }
             Auth::logout();
             return redirect()->route('login')->withErrors([
-                'email' => 'Portal web ini khusus untuk Administrator. Akun Pengendara dan Owner silakan masuk melalui aplikasi Mobile.'
+                'email' => 'Portal web ini khusus untuk Administrator dan Petugas. Akun Pengendara dan Owner silakan masuk melalui aplikasi Mobile.'
             ]);
         }
 
@@ -57,10 +59,10 @@ class AuthController extends Controller
             }
 
             if ($isPasswordValid) {
-                // Khusus portal Web, hanya izinkan role admin
-                if ($user->role !== 'admin') {
+                // Khusus portal Web, hanya izinkan role admin dan petugas
+                if (!in_array($user->role, ['admin', 'petugas'])) {
                     return back()->withInput($request->only('email'))->withErrors([
-                        'email' => 'Akses portal web hanya untuk Administrator. Akun ' . ucfirst($user->role) . ' silakan masuk melalui aplikasi Mobile.',
+                        'email' => 'Akses portal web hanya untuk Administrator dan Petugas. Akun ' . ucfirst($user->role) . ' silakan masuk melalui aplikasi Mobile.',
                     ]);
                 }
 
@@ -72,6 +74,10 @@ class AuthController extends Controller
 
                 Auth::login($user, $request->boolean('remember'));
                 $request->session()->regenerate();
+
+                if ($user->role === 'petugas') {
+                    return redirect()->intended(route('admin.monitoring'));
+                }
 
                 return redirect()->intended(route('admin.dashboard'));
             }
@@ -149,8 +155,8 @@ class AuthController extends Controller
             return redirect()->route('login')->with('error', "Akun Google ({$googleUser['email']}) belum terdaftar sebagai Administrator. Untuk pendaftaran pengendara, silakan gunakan aplikasi Mobile.");
         }
 
-        if ($user->role !== 'admin') {
-            return redirect()->route('login')->with('error', 'Akses portal web hanya untuk Administrator. Akun ' . ucfirst($user->role) . ' silakan masuk melalui aplikasi Mobile.');
+        if (!in_array($user->role, ['admin', 'petugas'])) {
+            return redirect()->route('login')->with('error', 'Akses portal web hanya untuk Administrator dan Petugas. Akun ' . ucfirst($user->role) . ' silakan masuk melalui aplikasi Mobile.');
         }
 
         $updates = [];
