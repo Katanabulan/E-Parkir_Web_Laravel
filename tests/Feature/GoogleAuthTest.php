@@ -32,6 +32,7 @@ class GoogleAuthTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/client/google', [
+            'mode' => 'register',
             'id_token' => 'fake-google-id-token',
             'phone' => '081299988877',
             'license_plate' => 'd 9876 abc',

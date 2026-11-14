@@ -286,9 +286,9 @@ class ClientApiController extends Controller
         // - 'login': HANYA untuk akun yang sudah terdaftar di sistem
         // - 'register': HANYA untuk akun baru yang belum terdaftar di sistem
         // - Di luar kedua mode tersebut tidak diperbolehkan
-        $mode = strtolower(trim((string) ($request->input('mode') ?? '')));
+        $mode = strtolower(trim((string) ($request->input('mode') ?? $request->query('mode') ?? $request->json('mode') ?? '')));
         if ($mode === '') {
-            $action = strtolower(trim((string) ($request->input('action') ?? '')));
+            $action = strtolower(trim((string) ($request->input('action') ?? $request->query('action') ?? '')));
             if ($action === 'google_login' || $action === 'login') {
                 $mode = 'login';
             } elseif ($action === 'google_register' || $action === 'register') {
@@ -296,8 +296,6 @@ class ClientApiController extends Controller
             } elseif ($request->is('*google_login*') || $request->is('*client/login*')) {
                 $mode = 'login';
             } elseif ($request->is('*google_register*') || $request->is('*client/register*')) {
-                $mode = 'register';
-            } elseif ($request->has('phone') || $request->has('license_plate')) {
                 $mode = 'register';
             }
         }
