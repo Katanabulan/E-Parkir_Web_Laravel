@@ -1775,11 +1775,16 @@ class ClientApiController extends Controller
 
         $totalRecords = (clone $query)->count();
         $totalRevenue = (int) (clone $query)->where('status', 'COMPLETED')->sum('total_fee');
+        $completedCount = (int) (clone $query)->where('status', 'COMPLETED')->count();
+        $parkedCount = (int) (clone $query)->where('status', '!=', 'COMPLETED')->count();
 
         $transactions = $query->orderBy('id', 'desc')->limit($limit)->get()->map(function ($t) {
             $isTicket = !empty($t->ticket_code);
             $userName = $isTicket ? 'Pengendara Umum' : ($t->user->name ?? 'Member');
             $codeOrUid = $isTicket ? $t->ticket_code : ($t->card->license_plate ?? ($t->card->uid ?? '-'));
+            $durMin = (int) ($t->duration_minutes ?? 0);
+            $billedHours = (int) ceil(max(1, $durMin) / 60);
+
             return [
                 'id' => (int) $t->id,
                 'transaction_id' => (int) $t->id,
@@ -1806,9 +1811,11 @@ class ClientApiController extends Controller
                 'tap_out_time' => $t->tap_out_time ? Carbon::parse($t->tap_out_time)->toDateTimeString() : null,
                 'tap_in_formatted' => $t->tap_in_time ? Carbon::parse($t->tap_in_time)->format('d/m/Y H:i') : '-',
                 'tap_out_formatted' => $t->tap_out_time ? Carbon::parse($t->tap_out_time)->format('d/m/Y H:i') : '-',
-                'duration_minutes' => (int) ($t->duration_minutes ?? 0),
-                'duration' => (int) ($t->duration_minutes ?? 0),
-                'duration_formatted' => $t->duration_minutes ? $t->duration_minutes . ' menit' : '-',
+                'duration_minutes' => $durMin,
+                'duration' => $durMin,
+                'duration_formatted' => $durMin ? $durMin . ' menit' : '-',
+                'billed_hours' => $billedHours,
+                'hours' => $billedHours,
                 'total_fee' => (int) ($t->total_fee ?? 0),
                 'total_fee_formatted' => 'Rp ' . number_format($t->total_fee ?? 0, 0, ',', '.'),
                 'fee' => (int) ($t->total_fee ?? 0),
@@ -1830,13 +1837,25 @@ class ClientApiController extends Controller
             'total_count' => $totalRecords,
             'total_revenue' => $totalRevenue,
             'total_revenue_formatted' => 'Rp ' . number_format($totalRevenue, 0, ',', '.'),
+            'completed_count' => $completedCount,
+            'parked_count' => $parkedCount,
             'transactions' => $transactions,
             'reports' => $transactions,
             'data' => $transactions,
+            'summary' => [
+                'total_revenue' => $totalRevenue,
+                'total_revenue_formatted' => 'Rp ' . number_format($totalRevenue, 0, ',', '.'),
+                'completed_count' => $completedCount,
+                'completed_transactions' => $completedCount,
+                'parked_count' => $parkedCount,
+            ],
             'stats' => [
                 'total_records' => $totalRecords,
                 'total_revenue' => $totalRevenue,
                 'total_revenue_formatted' => 'Rp ' . number_format($totalRevenue, 0, ',', '.'),
+                'completed_count' => $completedCount,
+                'completed_transactions' => $completedCount,
+                'parked_count' => $parkedCount,
             ]
         ];
 
