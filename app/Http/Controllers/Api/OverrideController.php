@@ -33,7 +33,7 @@ class OverrideController extends Controller
                 ->update(['status' => 'online', 'last_seen' => now()]);
 
             $deviceQuery = Device::whereIn('manual_override', [1, 2]);
-            if (!empty($deviceCode) && $deviceCode !== 'ALL' && $deviceCode !== 'GATE_CONTROLLER') {
+            if (!empty($deviceCode) && !in_array($deviceCode, ['ALL', 'GATE_CONTROLLER', 'Gate-01'])) {
                 $deviceQuery->where(function ($q) use ($deviceCode) {
                     $q->where('device_code', $deviceCode)->orWhere('device_code', 'Gate-01');
                 });
